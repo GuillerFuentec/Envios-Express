@@ -1,0 +1,11 @@
+{
+  "name": "paqueteria-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "packageManager": "pnpm@10.14.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -C apps/server build",
+    "start": "pnpm -C apps/server start"
+  }
+}

@@ -1,0 +1,24 @@
+# Node / workspace artifacts
+node_modules
+apps/*/node_modules
+.pnpm-store
+pnpm-lock.yaml.tmp
+pnpm-debug.log
+
+# Build outputs
+dist
+build
+.cache
+.tmp
+
+# Env & secrets
+.env
+**/.env
+
+# VCS / editor junk
+.git
+.gitignore
+.DS_Store
+*.swp
+*.swo
+Thumbs.db
