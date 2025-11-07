@@ -1,4 +1,6 @@
 import { postJson } from './http.js';
+import { getRecaptchaToken } from './recaptcha.js';
+import { validateContactFields } from './components/validators.js';
 
 const CLIENTS_ENDPOINT = '/api/clients';
 
@@ -151,15 +153,48 @@ const initFunnel = () => {
     : null;
   const prevBtn = funnelForm.querySelector('[data-funnel-prev]');
   const nextBtn = funnelForm.querySelector('[data-funnel-next]');
-  const submitBtn = funnelForm.querySelector('[data-funnel-submit]');
   const statusEl = document.getElementById('funnelStatus');
+  const paymentPreferenceField = funnelForm.querySelector(
+    '[data-field="preferences.paymentPreference"]'
+  );
+  const paymentChoiceButtons = funnelForm.querySelectorAll('[data-payment-choice]');
+  const paymentActionButtons = funnelForm.querySelectorAll('[data-payment-action]');
+  const checkoutButton = funnelForm.querySelector('[data-payment-action="online"]');
   let currentStep = 0;
   const totalSteps = stepElements.length || 1;
+  let pendingAction = null;
+  let checkoutWindow = null;
+  let isSubmitting = false;
 
   const funnelData = {
-    contact: { name: '', email: '', phone: '' },
+    contact: { name: '', email: '', phone: '', smsConsent: false },
     shipment: { weight: '', city: '', mode: '', content: '' },
-    preferences: { targetDate: '', pickupAddress: '', notes: '' },
+    preferences: {
+      targetDate: '',
+      pickupAddress: '',
+      notes: '',
+      paymentPreference: 'sin_definir',
+    },
+  };
+
+  const paymentLabels = {
+    online: 'Pago en linea (Stripe)',
+    cod: 'Pago al entregar',
+    sin_definir: 'Pendiente de confirmacion',
+  };
+
+  const setStatus = (message, type = 'info') => {
+    if (!statusEl) {
+      return;
+    }
+    statusEl.textContent = message || '';
+    statusEl.classList.remove('is-success', 'is-error');
+    if (type === 'error') {
+      statusEl.classList.add('is-error');
+    }
+    if (type === 'success') {
+      statusEl.classList.add('is-success');
+    }
   };
 
   const setNestedValue = (obj, path, value) => {
@@ -177,6 +212,17 @@ const initFunnel = () => {
         ref[key] = {};
       }
       ref = ref[key];
+    });
+  };
+
+  const setPaymentPreference = (value) => {
+    if (paymentPreferenceField) {
+      paymentPreferenceField.value = value;
+    }
+    setNestedValue(funnelData, 'preferences.paymentPreference', value);
+    paymentChoiceButtons.forEach((button) => {
+      const choice = button.getAttribute('data-payment-choice');
+      button.classList.toggle('is-selected', choice === value);
     });
   };
 
@@ -206,6 +252,10 @@ const initFunnel = () => {
       { label: 'Correo', value: funnelData.contact.email || 'No indicado' },
       { label: 'Telefono', value: funnelData.contact.phone || 'No indicado' },
       {
+        label: 'Recibir SMS',
+        value: funnelData.contact.smsConsent ? 'Si, autorizado' : 'Sin autorizacion',
+      },
+      {
         label: 'Peso estimado',
         value: funnelData.shipment.weight
           ? `${funnelData.shipment.weight} lb`
@@ -220,10 +270,29 @@ const initFunnel = () => {
         value: funnelData.preferences.pickupAddress || 'No indicado',
       },
       { label: 'Notas', value: funnelData.preferences.notes || 'Sin notas' },
+      {
+        label: 'Metodo de pago',
+        value:
+          paymentLabels[funnelData.preferences.paymentPreference] ||
+          paymentLabels.sin_definir,
+      },
     ];
-    summaryBody.innerHTML = template
-      .map((item) => `<p><span>${item.label}:</span> ${item.value}</p>`)
+    const summaryMarkup = template
+      .map(
+        (item) => `
+          <dt>${item.label}</dt>
+          <dd>${item.value}</dd>
+        `
+      )
       .join('');
+    summaryBody.innerHTML = `<dl class="funnel__summary-list">${summaryMarkup}</dl>`;
+  };
+
+  const togglePaymentButtons = (disabled) => {
+    paymentActionButtons.forEach((button) => {
+      button.disabled = disabled;
+      button.classList.toggle('is-disabled', disabled);
+    });
   };
 
   const updateControls = () => {
@@ -245,9 +314,6 @@ const initFunnel = () => {
     if (nextBtn) {
       nextBtn.hidden = currentStep >= totalSteps - 1;
     }
-    if (submitBtn) {
-      submitBtn.hidden = currentStep < totalSteps - 1;
-    }
   };
 
   const goToStep = (nextIndex) => {
@@ -260,10 +326,7 @@ const initFunnel = () => {
       collectStepData(currentStep);
       updateSummary();
     }
-    if (statusEl) {
-      statusEl.textContent = '';
-      statusEl.classList.remove('is-success', 'is-error');
-    }
+    setStatus('');
   };
 
   const validateStep = (index) => {
@@ -278,7 +341,39 @@ const initFunnel = () => {
         return false;
       }
     }
+
+    if (index === 0) {
+      const name = step.querySelector('[data-field="contact.name"]')?.value || '';
+      const email = step.querySelector('[data-field="contact.email"]')?.value || '';
+      const phone = step.querySelector('[data-field="contact.phone"]')?.value || '';
+      const validation = validateContactFields({ name, email, phone });
+      if (!validation.valid) {
+        setStatus(validation.message, 'error');
+        const field = step.querySelector(`[data-field="${validation.field}"]`);
+        field?.focus();
+        return false;
+      }
+    }
+
     return true;
+  };
+
+  const triggerSubmission = (action) => {
+    pendingAction = action;
+    setPaymentPreference(action === 'cod' ? 'cod' : 'online');
+    if (action === 'online') {
+      checkoutWindow = window.open('', '_blank', 'noopener');
+      if (checkoutWindow) {
+        checkoutWindow.document.write(
+          '<p style="font-family:monospace;padding:16px;">Preparando checkout seguro...</p>'
+        );
+      }
+    }
+    if (typeof funnelForm.requestSubmit === 'function') {
+      funnelForm.requestSubmit();
+    } else {
+      funnelForm.dispatchEvent(new Event('submit', { cancelable: true }));
+    }
   };
 
   if (nextBtn) {
@@ -297,24 +392,60 @@ const initFunnel = () => {
     });
   }
 
+  if (paymentActionButtons.length) {
+    paymentActionButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const action = button.getAttribute('data-payment-action');
+        if (!action) {
+          return;
+        }
+        triggerSubmission(action);
+      });
+    });
+  }
+
+  setPaymentPreference(paymentPreferenceField?.value || 'sin_definir');
+
   funnelForm.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (isSubmitting) {
+      return;
+    }
+    if (!pendingAction) {
+      setStatus('Selecciona como deseas continuar.', 'error');
+      return;
+    }
     if (!validateStep(currentStep)) {
+      if (checkoutWindow && !checkoutWindow.closed) {
+        checkoutWindow.close();
+      }
+      checkoutWindow = null;
+      pendingAction = null;
       return;
     }
     collectStepData(currentStep);
     updateSummary();
     const payload = JSON.parse(JSON.stringify(funnelData));
 
-    if (statusEl) {
-      statusEl.textContent = 'Enviando informacion...';
-      statusEl.classList.remove('is-success', 'is-error');
+    let captchaToken = '';
+    try {
+      captchaToken = await getRecaptchaToken('funnel_form');
+    } catch (error) {
+      console.error('[funnel] No se pudo obtener reCAPTCHA', error);
+      setStatus('No pudimos verificar que eres humano. Intenta nuevamente.', 'error');
+      if (checkoutWindow && !checkoutWindow.closed) {
+        checkoutWindow.close();
+        checkoutWindow = null;
+      }
+      pendingAction = null;
+      return;
     }
 
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Enviando...';
-    }
+    setStatus('Registrando tu informacion...');
+    togglePaymentButtons(true);
+    isSubmitting = true;
+    const actionUsed = pendingAction;
+    let submissionSuccessful = false;
 
     try {
       localStorage.setItem('funnelDraft', JSON.stringify(payload));
@@ -323,27 +454,50 @@ const initFunnel = () => {
     }
 
     try {
-      const response = await postJson(CLIENTS_ENDPOINT, { client_info: payload });
+      const response = await postJson(
+        CLIENTS_ENDPOINT,
+        { client_info: payload },
+        { captchaToken }
+      );
 
       if (!response.ok) {
         throw new Error(`Respuesta inesperada (${response.status})`);
       }
 
-      if (statusEl) {
-        statusEl.textContent = 'Listo. Revisaremos la informacion y te contactaremos en breve.';
-        statusEl.classList.add('is-success');
+      submissionSuccessful = true;
+
+      if (actionUsed === 'online') {
+        setStatus('Informacion guardada. Abriendo el checkout seguro...', 'success');
+        const url =
+          checkoutButton?.getAttribute('data-checkout-url') ||
+          './src/pages/checkout.html';
+        window.setTimeout(() => {
+          if (checkoutWindow && !checkoutWindow.closed) {
+            checkoutWindow.location.href = url;
+          } else {
+            window.open(url, '_blank', 'noopener');
+          }
+        }, 400);
+      } else {
+        setStatus(
+          'Listo. Te enviaremos un SMS para confirmar el pago contra entrega.',
+          'success'
+        );
       }
     } catch (error) {
       console.error('Error al enviar el funnel', error);
-      if (statusEl) {
-        statusEl.textContent = 'No se pudo enviar la informacion. Intentalo de nuevo mas tarde.';
-        statusEl.classList.add('is-error');
-      }
+      setStatus('No se pudo enviar la informacion. Intentalo de nuevo mas tarde.', 'error');
     } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Enviar informacion';
+      if (checkoutWindow && (!submissionSuccessful || actionUsed !== 'online')) {
+        checkoutWindow.close();
+        checkoutWindow = null;
       }
+      if (submissionSuccessful && actionUsed === 'online') {
+        checkoutWindow = null;
+      }
+      pendingAction = null;
+      isSubmitting = false;
+      togglePaymentButtons(false);
     }
   });
 

@@ -31,6 +31,10 @@ La API queda disponible en `http://localhost:1337`.
 | `DATABASE_URL` | Cadena de conexion PostgreSQL; Railway la expone al crear la base |
 | `DATABASE_CLIENT` | `postgres` en Railway, `sqlite` para local |
 | `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `NOTIFY_EMAIL` | Credenciales para notificaciones por correo |
+| `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` | Claves de Stripe para crear intents y validar webhooks |
+| `STRIPE_DEFAULT_CURRENCY`, `STRIPE_PAYMENT_DESCRIPTION` | Valores por defecto para los cargos |
+| `NOTIFICATION_API_CLIENT_ID`, `NOTIFICATION_API_CLIENT_SECRET`, `NOTIFICATION_API_BASE_URL`, `NOTIFICATION_API_CLIENT_TEMPLATE_ID` | Parametros para enviar SMS mediante NotificationAPI |
+| `RECAPTCHA_SECRET_KEY` | Llave privada de Google reCAPTCHA para validar los formularios |
 
 Revisa `.env.example` para ver todas las variables soportadas.
 
@@ -51,6 +55,28 @@ Revisa `.env.example` para ver todas las variables soportadas.
 4. Conecta una base de datos PostgreSQL (add-on) y redeploy.
 
 El `Dockerfile` construye solamente el paquete `apps/server`, ejecuta `pnpm --filter server build` para generar el panel de Strapi y expone el puerto `1337`. Railway solo tiene que ejecutar `docker run` sobre esa imagen; no hacen falta start scripts adicionales.
+
+### Pagos con Stripe
+
+- Endpoint para iniciar el pago: `POST /api/payments/create-intent` (sin auth). Recibe `amount`, `currency`, `email` y `metadata`.
+- Webhook: `POST /stripe/webhook`. Configura `STRIPE_WEBHOOK_SECRET` para validar la firma. El middleware deja el cuerpo sin parsear para que Stripe verifique el evento.
+- Define `STRIPE_PUBLISHABLE_KEY` en el frontend para usar el Payment Element.
+
+Asegúrate de exponer el webhook público de Railway en el dashboard de Stripe (`https://<tu-servicio>.up.railway.app/stripe/webhook`).
+
+Para pruebas locales:
+
+```bash
+stripe listen --forward-to http://localhost:1337/stripe/webhook
+```
+
+En producción, registra el endpoint `https://<tu-servicio>.up.railway.app/stripe/webhook` en Stripe Dashboard.
+
+### SMS y reCAPTCHA
+
+- Cada nuevo cliente creado desde el funnel dispara un SMS a traves de NotificationAPI usando el `notificationId` definido en `NOTIFICATION_API_CLIENT_TEMPLATE_ID` (por defecto `new_client`).
+- Los formularios del sitio requieren un token valido de Google reCAPTCHA. Configura `VITE_RECAPTCHA_SITE_KEY` en el frontend y `RECAPTCHA_SECRET_KEY` en el backend.
+- Si faltan estas variables, el servidor registrara advertencias y el formulario sera rechazado.
 
 ### Build y prueba local con Docker
 

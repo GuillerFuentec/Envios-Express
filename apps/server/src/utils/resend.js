@@ -4,6 +4,9 @@ const { Resend } = require('resend');
 
 let resendClient;
 
+const RECENT_TTL = 60 * 1000;
+const recentMessages = new Map();
+
 const getResendClient = () => {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
@@ -23,6 +26,20 @@ const getLogger = () => {
   }
 
   return console;
+};
+
+const shouldSendSignature = (key) => {
+  const now = Date.now();
+  for (const [signature, timestamp] of recentMessages.entries()) {
+    if (now - timestamp > RECENT_TTL) {
+      recentMessages.delete(signature);
+    }
+  }
+  if (recentMessages.has(key)) {
+    return false;
+  }
+  recentMessages.set(key, now);
+  return true;
 };
 
 const sendNotificationEmail = async ({ subject, html, text }) => {
@@ -45,6 +62,12 @@ const sendNotificationEmail = async ({ subject, html, text }) => {
 
   if (!recipients.length) {
     logger.warn('[notifications] NOTIFY_EMAIL is empty. Skipping email send.');
+    return;
+  }
+
+  const signature = `${subject}|${text}`;
+  if (!shouldSendSignature(signature)) {
+    logger.warn('[notifications] Duplicate email detected. Skipping send.');
     return;
   }
 

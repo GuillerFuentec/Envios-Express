@@ -44,6 +44,7 @@
                 <a href="#beneficios" class="site-navbar__link" data-scroll="true">Beneficios</a>
                 <a href="#proceso" class="site-navbar__link" data-scroll="true">Proceso</a>
                 <a href="#funnel" class="site-navbar__link" data-scroll="true">Planifica</a>
+                <a href="./src/pages/checkout.html" class="site-navbar__link" target="_blank" rel="noopener">Checkout</a>
                 <a href="#quienes" class="site-navbar__link" data-scroll="true">Quienes somos</a>
                 <a href="#ubicacion" class="site-navbar__link" data-scroll="true">Ubicacion</a>
                 <a href="#faq" class="site-navbar__link" data-scroll="true">Preguntas frecuentes</a>
@@ -51,6 +52,8 @@
             </div>
             <div class="site-navbar__actions">
                 <a href="#funnel" class="site-navbar__cta" data-scroll="true">Iniciar envio</a>
+                <a href="./src/pages/checkout.html" class="site-navbar__cta --ghost" target="_blank" rel="noopener">Pagar
+                    ahora</a>
             </div>
         </div>
         <div class="site-navbar__mobile" id="mobile-menu" hidden>
@@ -58,6 +61,7 @@
             <a href="#beneficios" class="site-navbar__mobile-link" data-scroll="true">Beneficios</a>
             <a href="#proceso" class="site-navbar__mobile-link" data-scroll="true">Proceso</a>
             <a href="#funnel" class="site-navbar__mobile-link" data-scroll="true">Planifica</a>
+            <a href="./src/pages/checkout.html" class="site-navbar__mobile-link" target="_blank" rel="noopener">Checkout</a>
             <a href="#quienes" class="site-navbar__mobile-link" data-scroll="true">Quienes somos</a>
             <a href="#ubicacion" class="site-navbar__mobile-link" data-scroll="true">Ubicacion</a>
             <a href="#faq" class="site-navbar__mobile-link" data-scroll="true">Preguntas frecuentes</a>
@@ -75,7 +79,7 @@
                     cercano y opciones flexibles de recogida o entrega en agencia.</p>
                 <div class="flex flex-wrap gap-4 mt-8">
                     <a href="#funnel"
-                        class="bg-accent hover:bg-teal-800 text-white font-bold py-3 px-6 rounded-lg transition"
+                        class="bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 px-6 rounded-lg transition"
                         data-scroll="true">Planificar envio</a>
                     <a href="#contacto"
                         class="bg-white hover:bg-gray-100 text-accent font-bold py-3 px-6 rounded-lg transition"
@@ -104,7 +108,7 @@
     <section id="funnel" class="py-20 px-4">
         <div class="max-w-5xl mx-auto surface-card">
             <div class="funnel__header">
-                <div class="eyebrow">Paso <span data-funnel-step-label>1</span> de 3</div>
+                <div class="eyebrow">Paso <span data-funnel-step-label>1</span> de 4</div>
                 <h2 class="text-3xl font-bold text-slate mt-4">Planifica tu envio en minutos</h2>
                 <p class="muted-copy">Completa esta guia rapida para que podamos darte una propuesta personalizada.</p>
                 <div class="funnel__progress">
@@ -119,17 +123,24 @@
                             <label class="funnel__label">
                                 Nombre completo
                                 <input type="text" class="funnel__input" data-field="contact.name"
-                                    placeholder="Tu nombre" required autocomplete="name">
+                                    placeholder="Tu nombre" required autocomplete="name" minlength="3">
                             </label>
                             <label class="funnel__label">
                                 Correo electronico
                                 <input type="email" class="funnel__input" data-field="contact.email"
-                                    placeholder="correo@ejemplo.com" required autocomplete="email">
+                                    placeholder="correo@ejemplo.com" required autocomplete="email" inputmode="email">
                             </label>
                             <label class="funnel__label">
                                 Telefono
                                 <input type="tel" class="funnel__input" data-field="contact.phone"
-                                    placeholder="+1 555 000 0000" required autocomplete="tel">
+                                    placeholder="+1 555 000 0000" required autocomplete="tel"
+                                    pattern="\+?[0-9\s-]{7,}">
+                            </label>
+                            <label class="funnel__label funnel__label--checkbox">
+                                <input type="checkbox" class="funnel__checkbox" data-field="contact.smsConsent"
+                                    required>
+                                <span>Acepto recibir mensajes de texto para confirmar mi solicitud y estar al tanto del
+                                    envio.</span>
                             </label>
                         </div>
                     </div>
@@ -162,7 +173,7 @@
                         </div>
                     </div>
                     <div class="funnel__step" data-funnel-step="2">
-                        <h3 class="funnel__step-title">Preferencias y confirmacion</h3>
+                        <h3 class="funnel__step-title">Preferencias y verificacion</h3>
                         <div class="funnel__fields">
                             <label class="funnel__label">
                                 Fecha ideal de entrega
@@ -178,20 +189,50 @@
                                 <textarea class="funnel__input funnel__textarea" data-field="preferences.notes" rows="4"
                                     placeholder="Cuentanos detalles importantes"></textarea>
                             </label>
-                            <div class="funnel__summary" data-funnel-summary>
-                                <h4 class="funnel__summary-title">Resumen del envio</h4>
-                                <div class="funnel__summary-body">
-                                    Completa los campos para ver el resumen.
-                                </div>
+                            <p class="funnel__helper-text">Protegido con Google reCAPTCHA. Solo usamos tus datos para
+                                coordinar el envio.</p>
+                        </div>
+                    </div>
+                    <div class="funnel__step" data-funnel-step="3">
+                        <h3 class="funnel__step-title">Resumen final y pago</h3>
+                        <input type="hidden" value="sin_definir"
+                            data-field="preferences.paymentPreference"
+                            id="paymentPreferenceField">
+                        <div class="funnel__summary" data-funnel-summary>
+                            <h4 class="funnel__summary-title">Resumen del envio</h4>
+                            <div class="funnel__summary-body">
+                                Completa cada paso para ver tu resumen completo aqui.
                             </div>
+                        </div>
+                        <div class="funnel__test-panel" role="note">
+                            <h4>Demostracion de pagos</h4>
+                            <p>Este sitio opera en modo pruebas. Puedes usar la tarjeta <strong>4242 4242 4242
+                                    4242</strong> con cualquier fecha futura y CVC <strong>424</strong>. Apple Pay y
+                                Google Pay estaran disponibles si tu dispositivo los soporta.</p>
+                        </div>
+                        <div class="funnel__payment-options">
+                            <p class="funnel__label funnel__label--inline">Elige como continuar</p>
+                            <div class="funnel__payment-buttons">
+                                <button type="button"
+                                    class="funnel__btn funnel__payment-btn"
+                                    data-payment-choice="online" data-payment-action="online"
+                                    data-checkout-url="./src/pages/checkout.html">
+                                    Pagar ahora (se abre en pestaña nueva)
+                                </button>
+                                <button type="button"
+                                    class="funnel__btn funnel__btn--ghost funnel__payment-btn"
+                                    data-payment-choice="cod" data-payment-action="cod">
+                                    Pagare al entregar
+                                </button>
+                            </div>
+                            <p class="funnel__helper-text">Al elegir pagar al entregar enviaremos tu informacion y
+                                recibirás el SMS de confirmacion sin pasar por el checkout.</p>
                         </div>
                     </div>
                 </div>
                 <div class="funnel__actions">
                     <button type="button" class="funnel__btn funnel__btn--ghost" data-funnel-prev>Regresar</button>
                     <button type="button" class="funnel__btn" data-funnel-next>Continuar</button>
-                    <button type="submit" class="funnel__btn funnel__btn--primary" data-funnel-submit>Enviar
-                        informacion</button>
                 </div>
                 <div class="funnel__status" id="funnelStatus" role="status" aria-live="polite"></div>
             </form>
@@ -392,10 +433,19 @@
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent">
                         </div>
                         <div class="mb-4">
-                            <label for="contactPhone" class="block text-gray-700 mb-2">Telefono (opcional)</label>
-                            <input type="tel" id="contactPhone" name="phone" placeholder="+1 555 000 0000"
+                            <label for="contactPhone" class="block text-gray-700 mb-2">Telefono</label>
+                            <input type="tel" id="contactPhone" name="phone" placeholder="+1 555 000 0000" required
+                                pattern="\+?[0-9\s-]{7,}"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent">
                         </div>
+                        <div class="mb-4 flex items-start gap-3">
+                            <input type="checkbox" id="contactSmsConsent" required
+                                class="mt-1 w-4 h-4 border-gray-300 text-accent focus:ring-accent">
+                            <label for="contactSmsConsent" class="text-gray-700 text-sm leading-relaxed">Acepto recibir
+                                mensajes de texto para confirmar mi solicitud y coordinar detalles del envio.</label>
+                        </div>
+                        <p class="text-gray-500 text-sm mb-4">Protegido con Google reCAPTCHA. Usamos tus datos solo para
+                            coordinar el envio.</p>
                         <div class="mb-4">
                             <label for="contactMessage" class="block text-gray-700 mb-2">Mensaje</label>
                             <textarea id="contactMessage" name="message" rows="4" required
@@ -403,7 +453,7 @@
                         </div>
                         <div class="funnel__status" id="contactStatus" role="status" aria-live="polite"></div>
                         <button type="submit"
-                            class="bg-teal-500 hover:bg-teal-800 text-white font-bold py-2 px-6 rounded-lg transition">Enviar
+                            class="bg-teal-700 hover:bg-teal-800 text-white font-bold py-2 px-6 rounded-lg transition">Enviar
                             mensaje</button>
                     </form>
                 </div>

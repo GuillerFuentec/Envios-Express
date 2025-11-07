@@ -7,6 +7,9 @@
     "build": "vite build",
     "preview": "vite preview --host"
   },
+  "dependencies": {
+    "@stripe/stripe-js": "^3.4.1"
+  },
   "devDependencies": {
     "vite": "^5.0.0"
   }

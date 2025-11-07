@@ -271,6 +271,78 @@ body {
 	resize: vertical;
 }
 
+.funnel__label--checkbox {
+	flex-direction: row;
+	align-items: flex-start;
+	gap: 0.75rem;
+	font-size: 0.9rem;
+}
+
+.funnel__checkbox {
+	width: 1.15rem;
+	height: 1.15rem;
+	accent-color: var(--color-accent);
+	margin-top: 0.35rem;
+}
+
+.funnel__label--inline {
+	display: inline-block;
+	margin-bottom: 0.5rem;
+	color: var(--color-ink);
+	font-weight: 600;
+}
+
+.funnel__payment-options {
+	margin-top: 1rem;
+	padding: 1.25rem;
+	border-radius: 1rem;
+	border: 1px dashed var(--border-soft);
+	background-color: rgba(255, 255, 255, 0.85);
+}
+
+.funnel__payment-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	align-items: center;
+}
+
+.funnel__payment-btn {
+	min-width: 180px;
+	text-align: center;
+	color: inherit;
+}
+
+.funnel__payment-btn.is-selected {
+	box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.5);
+}
+
+.funnel__test-panel {
+	margin-top: 1rem;
+	padding: 1rem 1.25rem;
+	border-radius: 1rem;
+	background: rgba(15, 118, 110, 0.08);
+	border: 1px solid rgba(15, 118, 110, 0.2);
+}
+
+.funnel__test-panel h4 {
+	margin: 0 0 0.35rem;
+	font-size: 1rem;
+	color: var(--color-ink);
+}
+
+.funnel__test-panel p {
+	margin: 0;
+	font-size: 0.95rem;
+	color: var(--color-muted);
+}
+
+.funnel__helper-text {
+	margin-top: 0.5rem;
+	font-size: 0.9rem;
+	color: var(--color-muted);
+}
+
 .funnel__summary {
 	margin-top: 1rem;
 	padding: 1.25rem;
@@ -296,6 +368,21 @@ body {
 	margin-right: 0.35rem;
 }
 
+.funnel__summary-list {
+	display: grid;
+	gap: 0.45rem;
+}
+
+.funnel__summary-list dt {
+	font-weight: 600;
+	color: var(--color-ink);
+}
+
+.funnel__summary-list dd {
+	margin: 0;
+	color: var(--color-muted);
+}
+
 .funnel__actions {
 	display: flex;
 	flex-wrap: wrap;
@@ -316,6 +403,11 @@ body {
 	color: #ffffff;
 	box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
 	transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.funnel__btn.is-disabled {
+	opacity: 0.6;
+	pointer-events: none;
 }
 
 .funnel__btn:hover {

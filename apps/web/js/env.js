@@ -40,27 +40,65 @@ const getMetaConfig = () => {
     return {};
   }
 
-  const meta = document.querySelector('meta[name="backend-url"]');
-  if (meta && typeof meta.getAttribute === 'function') {
-    const value = meta.getAttribute('content');
+  const config = {};
+
+  const backendMeta = document.querySelector('meta[name="backend-url"]');
+  if (backendMeta && typeof backendMeta.getAttribute === 'function') {
+    const value = backendMeta.getAttribute('content');
     if (value) {
-      return { apiBaseUrl: value };
+      config.apiBaseUrl = value;
     }
   }
 
-  return {};
+  const stripeMeta = document.querySelector('meta[name="stripe-publishable-key"]');
+  if (stripeMeta && typeof stripeMeta.getAttribute === 'function') {
+    const stripeValue = stripeMeta.getAttribute('content');
+    if (stripeValue) {
+      config.stripePublicKey = stripeValue;
+    }
+  }
+
+  const recaptchaMeta = document.querySelector('meta[name="recaptcha-site-key"]');
+  if (recaptchaMeta && typeof recaptchaMeta.getAttribute === 'function') {
+    const recaptchaValue = recaptchaMeta.getAttribute('content');
+    if (recaptchaValue) {
+      config.recaptchaSiteKey = recaptchaValue;
+    }
+  }
+
+  return config;
 };
 
 const getBuildTimeConfig = () => {
+  const config = {};
   if (
     typeof import.meta !== 'undefined' &&
     import.meta.env &&
     import.meta.env.VITE_API_BASE_URL
   ) {
-    return { apiBaseUrl: import.meta.env.VITE_API_BASE_URL };
+    config.apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   }
 
-  return {};
+  if (
+    typeof import.meta !== 'undefined' &&
+    import.meta.env &&
+    import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+  ) {
+    config.stripePublicKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+  }
+
+  if (
+    typeof import.meta !== 'undefined' &&
+    import.meta.env &&
+    (import.meta.env.VITE_RECAPTCHA_SITE_KEY ||
+      import.meta.env.VITE_RECAPTCHA_SECRET_KEY)
+  ) {
+    config.recaptchaSiteKey =
+      import.meta.env.VITE_RECAPTCHA_SITE_KEY ||
+      import.meta.env.VITE_RECAPTCHA_SECRET_KEY;
+  }
+
+  return config;
 };
 
 export const getApiBaseUrl = () => {
@@ -83,3 +121,41 @@ export const getApiBaseUrl = () => {
 };
 
 export const API_BASE_URL = getApiBaseUrl();
+
+export const getStripePublicKey = () => {
+  const runtimeConfig = getRuntimeConfig();
+  if (runtimeConfig.stripePublicKey || runtimeConfig.stripePublishableKey) {
+    return runtimeConfig.stripePublicKey || runtimeConfig.stripePublishableKey;
+  }
+
+  const buildConfig = getBuildTimeConfig();
+  if (buildConfig.stripePublicKey) {
+    return buildConfig.stripePublicKey;
+  }
+
+  const metaConfig = getMetaConfig();
+  if (metaConfig.stripePublicKey) {
+    return metaConfig.stripePublicKey;
+  }
+
+  return '';
+};
+
+export const getRecaptchaSiteKey = () => {
+  const runtimeConfig = getRuntimeConfig();
+  if (runtimeConfig.recaptchaSiteKey) {
+    return runtimeConfig.recaptchaSiteKey;
+  }
+
+  const buildConfig = getBuildTimeConfig();
+  if (buildConfig.recaptchaSiteKey) {
+    return buildConfig.recaptchaSiteKey;
+  }
+
+  const metaConfig = getMetaConfig();
+  if (metaConfig.recaptchaSiteKey) {
+    return metaConfig.recaptchaSiteKey;
+  }
+
+  return '';
+};

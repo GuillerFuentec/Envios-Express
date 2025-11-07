@@ -27,7 +27,12 @@ export default defineConfig(({ mode }) => {
       assetsDir: 'assets',
       assetsInlineLimit: 0,
       rollupOptions: {
-        input: path.resolve(__dirname, 'index.html'),
+        input: {
+          main: path.resolve(__dirname, 'index.html'),
+          checkout: path.resolve(__dirname, 'src/pages/checkout.html'),
+          checkoutSuccess: path.resolve(__dirname, 'src/pages/checkout-success.html'),
+          checkoutFailed: path.resolve(__dirname, 'src/pages/checkout-failed.html'),
+        },
       },
     },
   };
