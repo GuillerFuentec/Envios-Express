@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagar envio | Paqueteria Caribena Express</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <meta name="stripe-publishable-key" content="">
+  <script src="https://js.stripe.com/v3/"></script>
+  <script type="module" crossorigin src="/assets/checkout--hUjEW-F.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/env-CiJp0Il3.js">
+  <link rel="stylesheet" crossorigin href="/assets/styles-DtAQ4V6a.css">
+  <link rel="stylesheet" crossorigin href="/assets/checkout-Bj0VcRpy.css">
+</head>
+
+<body class="checkout typewriter-theme" data-success-url="/src/pages/checkout-success.html"
+  data-failed-url="/src/pages/checkout-failed.html">
+  <div class="checkout__shell">
+    <header class="checkout__header">
+      <a href="../../index.html" class="checkout__brand">
+        Paqueteria Caribeña Express
+        <span>Pagos seguros con Stripe</span>
+      </a>
+      <a href="../../index.html#funnel" class="checkout__back">Volver al formulario</a>
+    </header>
+    <div class="checkout-warning" role="alert">
+      <strong>Modo demostracion:</strong> Ningun cargo es real. Usa la tarjeta <code>4242 4242 4242 4242</code>, fecha
+      futura y CVC <code>424</code>. Apple Pay y Google Pay tambien estan disponibles en navegadores compatibles.
+    </div>
+
+    <div class="checkout__grid">
+      <article class="checkout-card">
+        <div class="checkout-highlight">3.50 USD por libra · Entrega en 48-72h</div>
+        <h1>Completa tu pago en linea</h1>
+        <p>Utilizamos Stripe para procesar pagos seguros con tarjetas internacionales. Selecciona el monto a abonar y
+          completa tus datos para confirmar la reserva del envio.</p>
+        <ul class="checkout-list">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+            Encriptado extremo a extremo.
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 8v4l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
+            </svg>
+            Confirmacion inmediata y recibo por correo.
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M4 12l1.5 4.5c.2.6.8 1 1.5 1h10c.7 0 1.3-.4 1.5-1L20 12" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M10 12h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              <path d="M8 16V9a4 4 0 1 1 8 0v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+            Soporte cercano si necesitas ayuda.
+          </li>
+        </ul>
+      </article>
+
+      <article class="checkout-card">
+        <h2>Datos de pago</h2>
+        <form id="checkoutForm" class="checkout-form">
+          <label class="checkout-label">
+            Correo electronico
+            <input type="email" class="checkout-input" id="checkoutEmail" required placeholder="correo@ejemplo.com"
+              autocomplete="email">
+          </label>
+          <label class="checkout-label">
+            Nombre del remitente (opcional)
+            <input type="text" class="checkout-input" id="checkoutName" placeholder="Nombre completo" autocomplete="name">
+          </label>
+          <label class="checkout-label">
+            Monto a pagar
+            <select class="checkout-select" id="checkoutAmount">
+              <option value="9.99">USD 9.99 · Reserva express</option>
+              <option value="25">USD 25.00 · Pago parcial</option>
+              <option value="50">USD 50.00 · Pagar envio completo</option>
+            </select>
+            <p class="checkout-amount-note">Puedes actualizar el monto antes de finalizar.</p>
+          </label>
+          <div id="payment-element" class="checkout-payment-element" aria-live="polite"></div>
+          <div id="payment-request-button" class="checkout-payment-request" hidden></div>
+          <p class="checkout-applepay-hint">Si ves el boton anterior puedes pagar con Apple Pay o Google Pay.</p>
+          <button type="submit" class="checkout-button" id="checkoutSubmit">Pagar ahora</button>
+          <div id="checkoutStatus" class="checkout-status" role="status" aria-live="polite"></div>
+        </form>
+      </article>
+    </div>
+  </div>
+
+</body>
+
+</html>

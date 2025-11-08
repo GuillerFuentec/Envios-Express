@@ -1,15 +1,14 @@
-module.exports = ({ env }) => [
+module.exports = [
   'strapi::logger',
   'strapi::errors',
   'strapi::security',
   {
     name: 'strapi::cors',
     config: {
-      enabled: true,
-      origin: env.array('CORS_ORIGIN', ['http://localhost:5173']),
-      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      headers: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
-      keepHeaderOnError: true,
+      origin: ['http://miapp.local:5173', 'http://localhost:5173'],
+      headers: ['Content-Type', 'Authorization'],
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
+      credentials: true,
     },
   },
   'strapi::poweredBy',
@@ -23,6 +22,7 @@ module.exports = ({ env }) => [
       textLimit: '3mb',
     },
   },
+  // { resolve: './src/middlewares/recaptchaBypass' },
   'strapi::session',
   'strapi::favicon',
   'strapi::public',

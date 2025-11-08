@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="./css/styles.css">
     <link rel="stylesheet" href="./css/navbar.css">
     <link rel="stylesheet" href="./css/footer.css">
+    <script
+        src="https://www.google.com/recaptcha/enterprise.js?render=6LfmXwUsAAAAAFlgy0evN_peaOpsSjltKXk1I5C9"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
@@ -23,8 +25,9 @@
     <nav class="site-navbar">
         <div class="site-navbar__container">
             <div class="site-navbar__brand-group">
-                <a href="#inicio" class="site-navbar__brand" data-scroll="true">
-                    <span class="site-navbar__brand-text">Paqueteria Caribena Express</span>
+                <img src="./logo.png" alt="Logo Paqueteria Caribeña Express" class="site-navbar__brand-logo"
+                    loading="lazy" />
+                <a href="#inicio" class="site-navbar__brand" data-scroll="true" aria-label="Inicio Paqueteria Caribeña">
                 </a>
                 <button type="button" class="site-navbar__toggle" aria-controls="mobile-menu" aria-expanded="false">
                     <span class="sr-only">Abrir menu principal</span>
@@ -41,31 +44,41 @@
             </div>
             <div class="site-navbar__links">
                 <a href="#inicio" class="site-navbar__link" data-scroll="true">Inicio</a>
-                <a href="#beneficios" class="site-navbar__link" data-scroll="true">Beneficios</a>
-                <a href="#proceso" class="site-navbar__link" data-scroll="true">Proceso</a>
-                <a href="#funnel" class="site-navbar__link" data-scroll="true">Planifica</a>
-                <a href="./src/pages/checkout.html" class="site-navbar__link" target="_blank" rel="noopener">Checkout</a>
-                <a href="#quienes" class="site-navbar__link" data-scroll="true">Quienes somos</a>
-                <a href="#ubicacion" class="site-navbar__link" data-scroll="true">Ubicacion</a>
-                <a href="#faq" class="site-navbar__link" data-scroll="true">Preguntas frecuentes</a>
+                <div class="site-navbar__dropdown">
+                    <button type="button" class="site-navbar__dropdown-button">
+                        Atajos
+                    </button>
+                    <div class="site-navbar__dropdown-menu">
+                        <a href="#beneficios" class="site-navbar__dropdown-link" data-scroll="true">Beneficios</a>
+                        <a href="#proceso" class="site-navbar__dropdown-link" data-scroll="true">Proceso</a>
+                        <a href="#funnel" class="site-navbar__dropdown-link" data-scroll="true">Planifica</a>
+                        <a href="#quienes" class="site-navbar__dropdown-link" data-scroll="true">Quienes somos</a>
+                        <a href="#ubicacion" class="site-navbar__dropdown-link" data-scroll="true">Ubicacion</a>
+                        <a href="#faq" class="site-navbar__dropdown-link" data-scroll="true">Preguntas frecuentes</a>
+                    </div>
+                </div>
                 <a href="#contacto" class="site-navbar__link" data-scroll="true">Contacto</a>
             </div>
             <div class="site-navbar__actions">
-                <a href="#funnel" class="site-navbar__cta" data-scroll="true">Iniciar envio</a>
-                <a href="./src/pages/checkout.html" class="site-navbar__cta --ghost" target="_blank" rel="noopener">Pagar
-                    ahora</a>
+                <a href="#funnel" class="site-navbar__cta !text-white" data-scroll="true">Iniciar envio</a>
             </div>
         </div>
         <div class="site-navbar__mobile" id="mobile-menu" hidden>
             <a href="#inicio" class="site-navbar__mobile-link" data-scroll="true">Inicio</a>
-            <a href="#beneficios" class="site-navbar__mobile-link" data-scroll="true">Beneficios</a>
-            <a href="#proceso" class="site-navbar__mobile-link" data-scroll="true">Proceso</a>
-            <a href="#funnel" class="site-navbar__mobile-link" data-scroll="true">Planifica</a>
-            <a href="./src/pages/checkout.html" class="site-navbar__mobile-link" target="_blank" rel="noopener">Checkout</a>
-            <a href="#quienes" class="site-navbar__mobile-link" data-scroll="true">Quienes somos</a>
-            <a href="#ubicacion" class="site-navbar__mobile-link" data-scroll="true">Ubicacion</a>
-            <a href="#faq" class="site-navbar__mobile-link" data-scroll="true">Preguntas frecuentes</a>
+            <a href="./src/pages/checkout.html" class="site-navbar__mobile-link" target="_blank"
+                rel="noopener">Checkout</a>
             <a href="#contacto" class="site-navbar__mobile-link" data-scroll="true">Contacto</a>
+            <div class="site-navbar__mobile-group">
+                <p class="site-navbar__mobile-heading">Atajos</p>
+                <div class="site-navbar__mobile-submenu">
+                    <a href="#beneficios" class="site-navbar__mobile-link" data-scroll="true">Beneficios</a>
+                    <a href="#proceso" class="site-navbar__mobile-link" data-scroll="true">Proceso</a>
+                    <a href="#funnel" class="site-navbar__mobile-link" data-scroll="true">Planifica</a>
+                    <a href="#quienes" class="site-navbar__mobile-link" data-scroll="true">Quienes somos</a>
+                    <a href="#ubicacion" class="site-navbar__mobile-link" data-scroll="true">Ubicacion</a>
+                    <a href="#faq" class="site-navbar__mobile-link" data-scroll="true">Preguntas frecuentes</a>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -79,7 +92,7 @@
                     cercano y opciones flexibles de recogida o entrega en agencia.</p>
                 <div class="flex flex-wrap gap-4 mt-8">
                     <a href="#funnel"
-                        class="bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 px-6 rounded-lg transition"
+                        class="bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 px-6 rounded-lg transition !text-white"
                         data-scroll="true">Planificar envio</a>
                     <a href="#contacto"
                         class="bg-white hover:bg-gray-100 text-accent font-bold py-3 px-6 rounded-lg transition"
@@ -97,9 +110,8 @@
                     </span>
                 </div>
             </div>
-            <div class="hidden md:block">
-                <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=80"
-                    alt="Personas preparando envios" class="rounded-lg shadow-lg">
+            <div class="hero__media hidden md:block">
+                <img src="./hero.webp" alt="Equipo preparando envios para Cuba" loading="lazy">
             </div>
         </div>
     </section>
@@ -133,8 +145,7 @@
                             <label class="funnel__label">
                                 Telefono
                                 <input type="tel" class="funnel__input" data-field="contact.phone"
-                                    placeholder="+1 555 000 0000" required autocomplete="tel"
-                                    pattern="\+?[0-9\s-]{7,}">
+                                    placeholder="+1 555 000 0000" required autocomplete="tel" pattern="\+?[0-9\- ]{7,}">
                             </label>
                             <label class="funnel__label funnel__label--checkbox">
                                 <input type="checkbox" class="funnel__checkbox" data-field="contact.smsConsent"
@@ -189,14 +200,17 @@
                                 <textarea class="funnel__input funnel__textarea" data-field="preferences.notes" rows="4"
                                     placeholder="Cuentanos detalles importantes"></textarea>
                             </label>
-                            <p class="funnel__helper-text">Protegido con Google reCAPTCHA. Solo usamos tus datos para
-                                coordinar el envio.</p>
+                            <p class="text-gray-500 text-sm mt-4">
+                                Este formulario esta protegido por reCAPTCHA v3. <a
+                                    href="https://policies.google.com/privacy" target="_blank" rel="noopener"
+                                    class="underline">Privacidad</a> y <a href="https://policies.google.com/terms"
+                                    target="_blank" rel="noopener" class="underline">Terminos</a> aplican.
+                            </p>
                         </div>
                     </div>
                     <div class="funnel__step" data-funnel-step="3">
                         <h3 class="funnel__step-title">Resumen final y pago</h3>
-                        <input type="hidden" value="sin_definir"
-                            data-field="preferences.paymentPreference"
+                        <input type="hidden" value="sin_definir" data-field="preferences.paymentPreference"
                             id="paymentPreferenceField">
                         <div class="funnel__summary" data-funnel-summary>
                             <h4 class="funnel__summary-title">Resumen del envio</h4>
@@ -213,20 +227,18 @@
                         <div class="funnel__payment-options">
                             <p class="funnel__label funnel__label--inline">Elige como continuar</p>
                             <div class="funnel__payment-buttons">
-                                <button type="button"
-                                    class="funnel__btn funnel__payment-btn"
+                                <button type="button" class="funnel__btn funnel__payment-btn !text-white"
                                     data-payment-choice="online" data-payment-action="online"
                                     data-checkout-url="./src/pages/checkout.html">
-                                    Pagar ahora (se abre en pestaña nueva)
+                                    Pagar ahora
                                 </button>
-                                <button type="button"
-                                    class="funnel__btn funnel__btn--ghost funnel__payment-btn"
+                                <button type="button" class="funnel__btn funnel__btn--ghost funnel__payment-btn"
                                     data-payment-choice="cod" data-payment-action="cod">
                                     Pagare al entregar
                                 </button>
                             </div>
                             <p class="funnel__helper-text">Al elegir pagar al entregar enviaremos tu informacion y
-                                recibirás el SMS de confirmacion sin pasar por el checkout.</p>
+                                recibiras el SMS de confirmacion sin pasar por el checkout.</p>
                         </div>
                     </div>
                 </div>
@@ -368,15 +380,18 @@
             <div class="space-y-4">
                 <div class="surface-card surface-card--subtle">
                     <h3 class="text-xl font-bold text-slate mb-2">Cuanto tarda en llegar el paquete?</h3>
-                    <p class="text-gray-600">El tiempo promedio es de 48 a 72 horas desde que recibimos el paquete en Miami.</p>
+                    <p class="text-gray-600">El tiempo promedio es de 48 a 72 horas desde que recibimos el paquete en
+                        Miami.</p>
                 </div>
                 <div class="surface-card surface-card--subtle">
                     <h3 class="text-xl font-bold text-slate mb-2">Puedo solicitar reembolso?</h3>
-                    <p class="text-gray-600">Solo procesamos reembolsos en caso de perdida total. Nuestro equipo te mantiene informado en todo momento.</p>
+                    <p class="text-gray-600">Solo procesamos reembolsos en caso de perdida total. Nuestro equipo te
+                        mantiene informado en todo momento.</p>
                 </div>
                 <div class="surface-card surface-card--subtle">
                     <h3 class="text-xl font-bold text-slate mb-2">Que pasa si mi paquete llega danado?</h3>
-                    <p class="text-gray-600">Abrimos un reporte y evaluamos compensaciones segun el caso. Documenta el contenido y aseguralo si es necesario.</p>
+                    <p class="text-gray-600">Abrimos un reporte y evaluamos compensaciones segun el caso. Documenta el
+                        contenido y aseguralo si es necesario.</p>
                 </div>
             </div>
         </div>
@@ -435,23 +450,27 @@
                         <div class="mb-4">
                             <label for="contactPhone" class="block text-gray-700 mb-2">Telefono</label>
                             <input type="tel" id="contactPhone" name="phone" placeholder="+1 555 000 0000" required
-                                pattern="\+?[0-9\s-]{7,}"
+                                pattern="\+?[0-9\- ]{7,}"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent">
                         </div>
-                        <div class="mb-4 flex items-start gap-3">
-                            <input type="checkbox" id="contactSmsConsent" required
-                                class="mt-1 w-4 h-4 border-gray-300 text-accent focus:ring-accent">
-                            <label for="contactSmsConsent" class="text-gray-700 text-sm leading-relaxed">Acepto recibir
-                                mensajes de texto para confirmar mi solicitud y coordinar detalles del envio.</label>
-                        </div>
-                        <p class="text-gray-500 text-sm mb-4">Protegido con Google reCAPTCHA. Usamos tus datos solo para
-                            coordinar el envio.</p>
-                        <div class="mb-4">
+                        <div class="my-4">
                             <label for="contactMessage" class="block text-gray-700 mb-2">Mensaje</label>
                             <textarea id="contactMessage" name="message" rows="4" required
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"></textarea>
                         </div>
                         <div class="funnel__status" id="contactStatus" role="status" aria-live="polite"></div>
+                        <div class="my-4 flex items-start  gap-3">
+                            <input type="checkbox" id="contactSmsConsent" required
+                                class="mt-1 w-4 h-4 border-gray-300 text-accent focus:ring-accent">
+                            <label for="contactSmsConsent" class="text-gray-700 text-sm leading-relaxed">Acepto recibir
+                                mensajes de texto para confirmar mi solicitud y coordinar detalles del envio.</label>
+                        </div>
+                        <p class="text-gray-500 text-xs">
+                            Sitio protegido por reCAPTCHA v3. <a href="https://policies.google.com/privacy"
+                                target="_blank" rel="noopener" class="underline">Privacidad</a> y <a
+                                href="https://policies.google.com/terms" target="_blank" rel="noopener"
+                                class="underline">Terminos</a> de Google aplican.
+                        </p>
                         <button type="submit"
                             class="bg-teal-700 hover:bg-teal-800 text-white font-bold py-2 px-6 rounded-lg transition">Enviar
                             mensaje</button>
@@ -503,8 +522,17 @@
         </div>
     </footer>
 
-    <script type="module" src="./js/nav-and-funnel.js"></script>
+    <script type="module" src="./js/nav.js"></script>
+    <script type="module" src="./js/funnel.js"></script>
     <script type="module" src="./js/contact-form.js"></script>
+    <script>
+        function onClick(e) {
+            e.preventDefault();
+            grecaptcha.enterprise.ready(async () => {
+                const token = await grecaptcha.enterprise.execute('6LfmXwUsAAAAAFlgy0evN_peaOpsSjltKXk1I5C9', { action: 'LOGIN' });
+            });
+        }
+    </script>
 </body>
 
 </html>

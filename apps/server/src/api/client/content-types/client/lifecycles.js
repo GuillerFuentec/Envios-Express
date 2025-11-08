@@ -1,7 +1,7 @@
 'use strict';
 
 const { sendNotificationEmail } = require('../../../../utils/resend');
-const { sendClientNotification } = require('../../../../utils/notification-api');
+const { sendClientThankYouSms } = require('../../../../utils/notification-api');
 
 const escapeHtml = (value = '') =>
   value
@@ -38,11 +38,9 @@ module.exports = {
     await sendNotificationEmail({ subject, html, text });
 
     if (payload?.contact?.smsConsent) {
-      await sendClientNotification({
+      await sendClientThankYouSms({
         phone: payload.contact.phone,
-        email: payload.contact.email,
         name: payload.contact.name,
-        payload,
       });
     }
   },

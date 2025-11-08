@@ -1,6 +1,8 @@
-import { postJson } from './http.js';
-import { getRecaptchaToken } from './recaptcha.js';
+import './polyfills/public-key.js';
+import { sendForm } from '@/src/lib/sendForm.js';
+import { loadRecaptcha } from '@/src/lib/recaptcha.js';
 import { validateContactFields } from './components/validators.js';
+import { normalizePhoneNumber } from './components/phone.js';
 
 const CONTACTS_ENDPOINT = '/api/contacts';
 
@@ -18,12 +20,17 @@ const initContactForm = () => {
   const contactStatus = document.getElementById('contactStatus');
   const contactSubmit = contactForm.querySelector('button[type="submit"]');
 
+  loadRecaptcha().catch((error) => {
+    console.warn('[recaptcha] No se pudo precargar el script', error);
+  });
+
   contactForm.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const normalizedPhone = normalizePhoneNumber(contactPhone?.value || '');
     const validation = validateContactFields({
       name: contactName?.value || '',
       email: contactEmail?.value || '',
-      phone: contactPhone?.value || '',
+      phone: normalizedPhone,
     });
     if (!validation.valid) {
       if (contactStatus) {
@@ -54,20 +61,6 @@ const initContactForm = () => {
       return;
     }
 
-    let captchaToken = '';
-    try {
-      captchaToken = await getRecaptchaToken('contact_form');
-    } catch (error) {
-      console.error('[contact] No se pudo obtener reCAPTCHA', error);
-      if (contactStatus) {
-        contactStatus.textContent =
-          'No pudimos verificar que eres humano. Intenta nuevamente.';
-        contactStatus.classList.remove('is-success');
-        contactStatus.classList.add('is-error');
-      }
-      return;
-    }
-
     if (contactStatus) {
       contactStatus.textContent = 'Enviando mensaje...';
       contactStatus.classList.remove('is-success', 'is-error');
@@ -81,17 +74,17 @@ const initContactForm = () => {
     const payload = {
       name: contactName?.value.trim() || '',
       email: contactEmail?.value.trim() || '',
-      phone: contactPhone?.value.trim() || '',
+      phone: normalizedPhone,
       message: contactMessage?.value.trim() || '',
       smsConsent: Boolean(contactSmsConsent?.checked),
       sentAt: new Date().toISOString(),
     };
 
     try {
-      const response = await postJson(
+      const response = await sendForm(
         CONTACTS_ENDPOINT,
-        { contact_info: payload },
-        { captchaToken }
+        { data: { contact_info: payload } },
+        { action: 'contact_form' }
       );
 
       if (!response.ok) {
@@ -106,9 +99,13 @@ const initContactForm = () => {
       contactForm.reset();
     } catch (error) {
       console.error('Error al enviar el contacto', error);
+      const isRecaptchaError =
+        typeof error?.message === 'string' &&
+        error.message.toLowerCase().includes('recaptcha');
       if (contactStatus) {
-        contactStatus.textContent =
-          'No pudimos enviar tu mensaje. Intentalo nuevamente.';
+        contactStatus.textContent = isRecaptchaError
+          ? 'No pudimos verificar que eres humano. Intenta nuevamente.'
+          : 'No pudimos enviar tu mensaje. Intentalo nuevamente.';
         contactStatus.classList.add('is-error');
       }
     } finally {
@@ -121,3 +118,6 @@ const initContactForm = () => {
 };
 
 document.addEventListener('DOMContentLoaded', initContactForm);
+    if (normalizedPhone) {
+      contactPhone.value = normalizedPhone;
+    }

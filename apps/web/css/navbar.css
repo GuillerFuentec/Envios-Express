@@ -14,9 +14,9 @@
   max-width: 72rem;
   margin: 0 auto;
   padding: 1rem 1.5rem;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
 }
 
@@ -41,8 +41,9 @@
 }
 
 .site-navbar__brand-logo {
-  width: 40px;
-  height: 40px;
+  height: 56px;
+  width: auto;
+  max-width: 140px;
 }
 
 .site-navbar__brand-text {
@@ -92,6 +93,7 @@
   align-items: center;
   gap: 0.75rem;
   font-family: inherit;
+  justify-content: flex-end;
 }
 
 .site-navbar__link {
@@ -109,9 +111,86 @@
   background-color: rgba(15, 118, 110, 0.14);
 }
 
+.site-navbar__dropdown {
+  position: relative;
+}
+
+.site-navbar__dropdown-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: rgba(31, 41, 51, 0.82);
+  font-weight: 500;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.site-navbar__dropdown-button::after {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.site-navbar__dropdown:hover .site-navbar__dropdown-button,
+.site-navbar__dropdown:focus-within .site-navbar__dropdown-button {
+  color: var(--color-accent, #0f766e);
+  background-color: rgba(15, 118, 110, 0.12);
+}
+
+.site-navbar__dropdown:hover .site-navbar__dropdown-button::after,
+.site-navbar__dropdown:focus-within .site-navbar__dropdown-button::after {
+  transform: rotate(225deg);
+}
+
+.site-navbar__dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  min-width: 220px;
+  padding: 0.75rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  box-shadow: 0 18px 32px rgba(15, 118, 110, 0.16);
+  display: none;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: 20;
+}
+
+.site-navbar__dropdown:hover .site-navbar__dropdown-menu,
+.site-navbar__dropdown:focus-within .site-navbar__dropdown-menu {
+  display: flex;
+}
+
+.site-navbar__dropdown-link {
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.75rem;
+  color: rgba(31, 41, 51, 0.82);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.site-navbar__dropdown-link:hover {
+  color: var(--color-accent, #0f766e);
+  background-color: rgba(15, 118, 110, 0.12);
+}
+
 .site-navbar__actions {
   display: none;
   align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
 }
 
 /* =========================================
@@ -321,6 +400,8 @@
   padding: 0.75rem 1.5rem 1.25rem;
   background-color: rgba(255, 255, 255, 0.92);
   border-bottom: 1px solid rgba(15, 118, 110, 0.18);
+  align-items: flex-end;
+  text-align: right;
 }
 
 .site-navbar__mobile[hidden] {
@@ -347,10 +428,35 @@
   margin-top: 0.5rem;
 }
 
+.site-navbar__mobile-group {
+  margin-top: 0.75rem;
+  width: 100%;
+  border-top: 1px solid rgba(15, 118, 110, 0.18);
+  padding-top: 0.75rem;
+}
+
+.site-navbar__mobile-heading {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: rgba(31, 41, 51, 0.65);
+  margin-bottom: 0.35rem;
+}
+
+.site-navbar__mobile-submenu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
 @media (min-width: 768px) {
   .site-navbar {
     border-radius: 1rem;
     margin-bottom: 1.5rem;
+  }
+
+  .site-navbar__container {
+    grid-template-columns: 1fr auto 1fr;
   }
 
   .site-navbar__toggle {
@@ -373,6 +479,7 @@
 @media (min-width: 1024px) {
   .site-navbar__container {
     padding: 1.25rem 2.5rem;
+    grid-template-columns: 1fr auto 1fr;
   }
 
   .site-navbar__brand-text {
@@ -382,5 +489,16 @@
 
   .site-navbar__link {
     padding: 0.6rem 1rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .site-navbar__container {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .site-navbar__brand-group {
+    justify-content: flex-start;
   }
 }

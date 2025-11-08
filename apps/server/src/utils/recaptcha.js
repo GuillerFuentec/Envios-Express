@@ -1,60 +1,87 @@
 'use strict';
 
-const SITE_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify';
+const ENTERPRISE_URL = 'https://recaptchaenterprise.googleapis.com/v1';
 
-const getLogger = () => {
-  if (global.strapi && global.strapi.log) {
-    return global.strapi.log;
+const requireEnv = (key, label) => {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`Missing ${label}`);
   }
-  return console;
+  return value;
 };
 
-const verifyRecaptchaToken = async (token) => {
-  const logger = getLogger();
-  const secret = process.env.RECAPTCHA_SECRET_KEY;
+const getSiteKey = () =>
+  process.env.RECAPTCHA_SITE_KEY ||
+  process.env.RECAPTCHA_ENTERPRISE_SITE_KEY ||
+  '';
 
-  if (!secret) {
-    logger.warn('[recaptcha] RECAPTCHA_SECRET_KEY not set. Skipping verification.');
-    return true;
-  }
-
+const verifyRecaptchaEnterprise = async (token, expectedAction, ip) => {
   if (!token) {
-    logger.warn('[recaptcha] Missing token in request.');
-    return false;
+    throw new Error('Missing reCAPTCHA token');
   }
 
-  try {
-    const params = new URLSearchParams();
-    params.append('secret', secret);
-    params.append('response', token);
+  const projectId = requireEnv('RECAPTCHA_PROJECT_ID', 'RECAPTCHA_PROJECT_ID');
+  const apiKey = requireEnv('RECAPTCHA_API_KEY', 'RECAPTCHA_API_KEY');
+  const siteKey = getSiteKey();
+  if (!siteKey) {
+    throw new Error('Missing RECAPTCHA_SITE_KEY');
+  }
 
-    const response = await fetch(SITE_VERIFY_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: params.toString(),
+  const event = {
+    token,
+    siteKey,
+  };
+
+  if (expectedAction) {
+    event.expectedAction = expectedAction;
+  }
+
+  if (ip) {
+    event.userIpAddress = ip;
+  }
+
+  const endpoint = `${ENTERPRISE_URL}/projects/${projectId}/assessments?key=${apiKey}`;
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ event }),
+  });
+
+  const data = await res.json();
+  const tokenProperties = data.tokenProperties || {};
+  const riskAnalysis = data.riskAnalysis || {};
+  const score = riskAnalysis.score ?? 0;
+  const threshold = Number(process.env.RECAPTCHA_MIN_SCORE ?? 0.5);
+
+  const ok =
+    res.ok &&
+    tokenProperties.valid === true &&
+    (!expectedAction || tokenProperties.action === expectedAction) &&
+    score >= threshold;
+
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('reCAPTCHA verify:', {
+      ok,
+      score,
+      action: tokenProperties.action,
+      reasons: riskAnalysis.reasons,
+      invalidReason: tokenProperties.invalidReason,
+      errors: data.error,
     });
-
-    const data = await response.json();
-
-    if (!data.success) {
-      logger.warn('[recaptcha] Invalid token', data['error-codes']);
-      return false;
-    }
-
-    if (typeof data.score === 'number' && data.score < 0.5) {
-      logger.warn('[recaptcha] Low score received', data.score);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    logger.error('[recaptcha] Verification failed', error);
-    return false;
   }
+
+  return {
+    ok,
+    score,
+    action: tokenProperties.action,
+    reasons: riskAnalysis.reasons || [],
+    invalidReason: tokenProperties.invalidReason,
+    raw: data,
+  };
 };
 
 module.exports = {
-  verifyRecaptchaToken,
+  verifyRecaptchaEnterprise,
 };

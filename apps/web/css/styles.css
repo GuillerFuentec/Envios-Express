@@ -1,13 +1,14 @@
 :root {
-	--font-typewriter: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-	--color-background: #f5f7fa;
-	--color-surface: #ffffff;
-	--color-soft-surface: rgba(255, 255, 255, 0.72);
-	--color-ink: #1f2933;
-	--color-muted: #4b5563;
-	--color-accent: #0f766e;
-	--border-soft: rgba(15, 118, 110, 0.18);
-	--shadow-soft: 0 18px 36px rgba(15, 118, 110, 0.08);
+  --font-typewriter: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo,
+    monospace;
+  --color-background: #f5f7fa;
+  --color-surface: #ffffff;
+  --color-soft-surface: rgba(255, 255, 255, 0.72);
+  --color-ink: #1f2933;
+  --color-muted: #4b5563;
+  --color-accent: #0f766e;
+  --border-soft: rgba(15, 118, 110, 0.18);
+  --shadow-soft: 0 18px 36px rgba(15, 118, 110, 0.08);
 }
 
 body {
@@ -15,453 +16,488 @@ body {
 	background-color: var(--color-background);
 	color: var(--color-ink);
 	font-family: var(--font-typewriter);
-	font-size: 16px;
-	line-height: 1.7;
-	letter-spacing: 0.0125em;
-	-webkit-font-smoothing: antialiased;
-	text-rendering: optimizeLegibility;
+  font-size: 16px;
+  line-height: 1.7;
+  letter-spacing: 0.0125em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 .typewriter-theme {
-	font-family: var(--font-typewriter);
-	letter-spacing: 0.015em;
+  font-family: var(--font-typewriter);
+  letter-spacing: 0.015em;
 }
 
 .typewriter-theme section[id] {
-	scroll-margin-top: 110px;
+  scroll-margin-top: 110px;
 }
 
 .typewriter-theme h1,
 .typewriter-theme h2,
 .typewriter-theme h3,
 .typewriter-theme h4 {
-	color: var(--color-ink);
-	font-weight: 600;
-	letter-spacing: 0.005em;
-	margin-bottom: 0.75rem;
+  color: var(--color-ink);
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  margin-bottom: 0.75rem;
 }
 
 .typewriter-theme h1 {
-	font-size: clamp(2.75rem, 4vw, 3.25rem);
+  font-size: clamp(2.75rem, 4vw, 3.25rem);
 }
 
 .typewriter-theme h2 {
-	font-size: clamp(2rem, 3vw, 2.5rem);
+  font-size: clamp(2rem, 3vw, 2.5rem);
 }
 
 .typewriter-theme h3 {
-	font-size: clamp(1.25rem, 2vw, 1.5rem);
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
 }
 
 .typewriter-theme h4 {
-	font-size: clamp(1.125rem, 1.5vw, 1.35rem);
+  font-size: clamp(1.125rem, 1.5vw, 1.35rem);
 }
 
 .typewriter-theme p {
-	color: var(--color-muted);
-	font-size: 1.0625rem;
-	line-height: 1.8;
-	margin-top: 0.75rem;
-	margin-bottom: 1.25rem;
+  color: var(--color-muted);
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  margin-top: 0.75rem;
+  margin-bottom: 1.25rem;
 }
 
 .typewriter-theme p strong {
-	color: var(--color-ink);
-	font-weight: 600;
+  color: var(--color-ink);
+  font-weight: 600;
 }
 
 .typewriter-theme a {
-	color: inherit;
-	text-decoration: none;
-	transition: color 0.2s ease, text-decoration 0.2s ease;
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease, text-decoration 0.2s ease;
 }
 
 .typewriter-theme a:hover {
 	text-decoration: underline;
 }
 
+.hero__media {
+	position: relative;
+	border-radius: 24px;
+	overflow: hidden;
+	box-shadow: 0 20px 40px rgba(15, 118, 110, 0.18);
+}
+
+.hero__media img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
 .typewriter-theme p a,
 .typewriter-theme .link-accent,
 .typewriter-theme .surface-card a {
-	color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .typewriter-theme p a:hover,
 .typewriter-theme .link-accent:hover,
 .typewriter-theme .surface-card a:hover {
-	color: #0b5a51;
-	text-decoration: underline;
+  color: #0b5a51;
+  text-decoration: underline;
 }
 
 .typewriter-theme input,
 .typewriter-theme textarea,
 .typewriter-theme select,
 .typewriter-theme button {
-	font-family: var(--font-typewriter);
-	letter-spacing: 0.02em;
+  font-family: var(--font-typewriter);
+  letter-spacing: 0.02em;
 }
 
 .typewriter-theme input,
 .typewriter-theme textarea,
 .typewriter-theme select {
-	background-color: #ffffff;
-	border-radius: 0.85rem;
-	border: 1px solid rgba(15, 118, 110, 0.18);
-	padding: 0.85rem 1rem;
-	color: var(--color-ink);
-	box-shadow: inset 0 1px 1px rgba(15, 118, 110, 0.06);
-	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background-color: #ffffff;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  padding: 0.85rem 1rem;
+  color: var(--color-ink);
+  box-shadow: inset 0 1px 1px rgba(15, 118, 110, 0.06);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .typewriter-theme input:focus,
 .typewriter-theme textarea:focus,
 .typewriter-theme select:focus {
-	outline: none;
-	border-color: rgba(15, 118, 110, 0.6);
-	box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+  outline: none;
+  border-color: rgba(15, 118, 110, 0.6);
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
 }
 
 .typewriter-theme button {
-	cursor: pointer;
-	transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .typewriter-theme button:hover {
-	transform: translateY(-1px);
+  transform: translateY(-1px);
 }
 
 .typewriter-theme button:active {
-	transform: translateY(0);
+  transform: translateY(0);
 }
 
 .typewriter-theme .surface-card {
-	background: var(--color-soft-surface);
-	backdrop-filter: blur(16px);
-	border: 1px solid var(--border-soft);
-	border-radius: 1.5rem;
-	padding: 2.25rem;
-	box-shadow: var(--shadow-soft);
+  background: var(--color-soft-surface);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-soft);
+  border-radius: 1.5rem;
+  padding: 2.25rem;
+  box-shadow: var(--shadow-soft);
 }
 
 .typewriter-theme .surface-card--subtle {
-	background: rgba(255, 255, 255, 0.56);
-	border-color: rgba(15, 118, 110, 0.14);
-	box-shadow: 0 12px 28px rgba(15, 118, 110, 0.06);
+  background: rgba(255, 255, 255, 0.56);
+  border-color: rgba(15, 118, 110, 0.14);
+  box-shadow: 0 12px 28px rgba(15, 118, 110, 0.06);
 }
 
 .typewriter-theme .badge {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.4rem;
-	padding: 0.35rem 0.75rem;
-	border-radius: 999px;
-	background-color: rgba(15, 118, 110, 0.12);
-	color: var(--color-accent);
-	font-weight: 500;
-	font-size: 0.85rem;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background-color: rgba(15, 118, 110, 0.12);
+  color: var(--color-accent);
+  font-weight: 500;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .typewriter-theme .eyebrow {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.5rem;
-	padding: 0.35rem 0.85rem;
-	border-radius: 999px;
-	background-color: rgba(15, 118, 110, 0.16);
-	color: var(--color-accent);
-	font-size: 0.75rem;
-	font-weight: 600;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background-color: rgba(15, 118, 110, 0.16);
+  color: var(--color-accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .typewriter-theme .grid-card {
-	background: var(--color-surface);
-	border: 1px solid rgba(15, 118, 110, 0.12);
-	border-radius: 1.25rem;
-	padding: 1.75rem;
-	box-shadow: 0 12px 26px rgba(15, 118, 110, 0.08);
-	transition: transform 0.25s ease, box-shadow 0.25s ease;
+  background: var(--color-surface);
+  border: 1px solid rgba(15, 118, 110, 0.12);
+  border-radius: 1.25rem;
+  padding: 1.75rem;
+  box-shadow: 0 12px 26px rgba(15, 118, 110, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .typewriter-theme .grid-card:hover {
-	transform: translateY(-4px);
-	box-shadow: 0 18px 38px rgba(15, 118, 110, 0.12);
+  transform: translateY(-4px);
+  box-shadow: 0 18px 38px rgba(15, 118, 110, 0.12);
 }
 
 .typewriter-theme .muted-copy {
-	color: rgba(31, 41, 51, 0.72);
+  color: rgba(31, 41, 51, 0.72);
 }
 
 .funnel__header {
-	display: flex;
-	flex-direction: column;
-	gap: 1rem;
-	margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
 
 .funnel__progress {
-	position: relative;
-	height: 6px;
-	width: 100%;
-	background-color: rgba(15, 118, 110, 0.12);
-	border-radius: 999px;
-	overflow: hidden;
+  position: relative;
+  height: 6px;
+  width: 100%;
+  background-color: rgba(15, 118, 110, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
 }
 
 .funnel__progress-bar {
-	position: absolute;
-	top: 0;
-	left: 0;
-	height: 100%;
-	width: 33%;
-	background-color: var(--color-accent);
-	transition: width 0.25s ease;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 33%;
+  background-color: var(--color-accent);
+  transition: width 0.25s ease;
 }
 
 .funnel__form {
-	display: flex;
-	flex-direction: column;
-	gap: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .funnel__steps {
-	display: flex;
-	flex-direction: column;
-	gap: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .funnel__step {
-	display: none;
+  display: none;
 }
 
 .funnel__step.is-active {
-	display: block;
+  display: block;
 }
 
 .funnel__step-title {
-	font-size: 1.25rem;
-	font-weight: 600;
-	color: var(--color-ink);
-	margin-bottom: 1.25rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-bottom: 1.25rem;
 }
 
 .funnel__fields {
-	display: grid;
-	gap: 1.5rem;
-	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
 .funnel__label {
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
-	font-size: 0.9rem;
-	color: rgba(31, 41, 51, 0.75);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: rgba(31, 41, 51, 0.75);
 }
 
 .funnel__input {
-	width: 100%;
+  width: 100%;
 }
 
 .funnel__textarea {
-	min-height: 140px;
-	resize: vertical;
+  min-height: 140px;
+  resize: vertical;
 }
 
 .funnel__label--checkbox {
-	flex-direction: row;
-	align-items: flex-start;
-	gap: 0.75rem;
-	font-size: 0.9rem;
+  flex-direction: row;
+  align-items: flex-start;
+  grid-column: auto / span 3;
+  gap: 0.75rem;
+  font-size: 0.9rem;
 }
 
 .funnel__checkbox {
-	width: 1.15rem;
-	height: 1.15rem;
-	accent-color: var(--color-accent);
-	margin-top: 0.35rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--color-accent);
+  margin-top: 0.35rem;
 }
 
 .funnel__label--inline {
-	display: inline-block;
-	margin-bottom: 0.5rem;
-	color: var(--color-ink);
-	font-weight: 600;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  color: var(--color-ink);
+  font-weight: 600;
 }
 
 .funnel__payment-options {
-	margin-top: 1rem;
-	padding: 1.25rem;
-	border-radius: 1rem;
-	border: 1px dashed var(--border-soft);
-	background-color: rgba(255, 255, 255, 0.85);
+  margin-top: 1rem;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  border: 1px dashed var(--border-soft);
+  background-color: rgba(255, 255, 255, 0.85);
 }
 
 .funnel__payment-buttons {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.75rem;
-	align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
 }
 
 .funnel__payment-btn {
-	min-width: 180px;
-	text-align: center;
-	color: inherit;
+  min-width: 180px;
+  text-align: center;
+  color: inherit;
 }
 
 .funnel__payment-btn.is-selected {
-	box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.5);
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.5);
 }
 
 .funnel__test-panel {
-	margin-top: 1rem;
-	padding: 1rem 1.25rem;
-	border-radius: 1rem;
-	background: rgba(15, 118, 110, 0.08);
-	border: 1px solid rgba(15, 118, 110, 0.2);
+  margin-top: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 1rem;
+  background: rgba(15, 118, 110, 0.08);
+  border: 1px solid rgba(15, 118, 110, 0.2);
 }
 
 .funnel__test-panel h4 {
-	margin: 0 0 0.35rem;
-	font-size: 1rem;
-	color: var(--color-ink);
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  color: var(--color-ink);
 }
 
 .funnel__test-panel p {
-	margin: 0;
-	font-size: 0.95rem;
-	color: var(--color-muted);
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-muted);
 }
 
 .funnel__helper-text {
 	margin-top: 0.5rem;
 	font-size: 0.9rem;
 	color: var(--color-muted);
+	grid-column: auto / span 3;
 }
 
-.funnel__summary {
+.recaptcha-box {
 	margin-top: 1rem;
-	padding: 1.25rem;
+	padding: 1rem;
 	border-radius: 1rem;
-	border: 1px dashed rgba(15, 118, 110, 0.25);
-	background: rgba(255, 255, 255, 0.78);
+	border: 1px dashed rgba(15, 118, 110, 0.35);
+	background: rgba(255, 255, 255, 0.86);
 }
 
-.funnel__summary-title {
-	margin: 0 0 0.75rem;
-	font-size: 1rem;
-	font-weight: 600;
-	color: var(--color-ink);
-}
-
-.funnel__summary-body p {
-	margin: 0.25rem 0;
-	font-size: 0.95rem;
-}
-
-.funnel__summary-body p span {
-	font-weight: 600;
-	margin-right: 0.35rem;
-}
-
-.funnel__summary-list {
-	display: grid;
-	gap: 0.45rem;
-}
-
-.funnel__summary-list dt {
-	font-weight: 600;
-	color: var(--color-ink);
-}
-
-.funnel__summary-list dd {
-	margin: 0;
+.recaptcha-box__hint {
+	margin: 0.5rem 0 0;
+	font-size: 0.85rem;
 	color: var(--color-muted);
 }
 
+.recaptcha-box > div[data-recaptcha] {
+	display: inline-block;
+}
+
+
+.funnel__summary {
+  margin-top: 1rem;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  border: 1px dashed rgba(15, 118, 110, 0.25);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.funnel__summary-title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.funnel__summary-body p {
+  margin: 0.25rem 0;
+  font-size: 0.95rem;
+}
+
+.funnel__summary-body p span {
+  font-weight: 600;
+  margin-right: 0.35rem;
+}
+
+.funnel__summary-list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.funnel__summary-list dt {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.funnel__summary-list dd {
+  margin: 0;
+  color: var(--color-muted);
+}
+
 .funnel__actions {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 1rem;
-	justify-content: flex-end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: flex-end;
 }
 
 .funnel__btn {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	padding: 0.85rem 1.6rem;
-	border-radius: 999px;
-	font-weight: 600;
-	letter-spacing: 0.04em;
-	border: none;
-	background: var(--color-accent);
-	color: #ffffff;
-	box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
-	transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 1.6rem;
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border: none;
+  background: var(--color-accent);
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
 }
 
 .funnel__btn.is-disabled {
-	opacity: 0.6;
-	pointer-events: none;
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .funnel__btn:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 16px 28px rgba(15, 118, 110, 0.24);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 28px rgba(15, 118, 110, 0.24);
 }
 
 .funnel__btn:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-	transform: none;
-	box-shadow: none;
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .funnel__btn--ghost {
-	background: transparent;
-	color: var(--color-accent);
-	border: 1px solid rgba(15, 118, 110, 0.35);
-	box-shadow: none;
+  background: transparent;
+  color: var(--color-accent);
+  border: 1px solid rgba(15, 118, 110, 0.35);
+  box-shadow: none;
 }
 
 .funnel__btn--primary {
-	background: var(--color-accent);
+  background: var(--color-accent);
 }
 
 .funnel__actions .funnel__btn--ghost:hover {
-	box-shadow: none;
+  box-shadow: none;
 }
 
 .funnel__actions .funnel__btn--ghost.is-disabled {
-	opacity: 0.45;
-	pointer-events: none;
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 .funnel__status {
-	min-height: 1.5rem;
-	font-size: 0.95rem;
-	color: rgba(31, 41, 51, 0.72);
+  min-height: 1.5rem;
+  font-size: 0.95rem;
+  color: rgba(31, 41, 51, 0.72);
 }
 
 .funnel__status.is-success {
-	color: #0f766e;
+  color: #0f766e;
 }
 
 .funnel__status.is-error {
-	color: #dc2626;
+  color: #dc2626;
 }
 
 @media (max-width: 640px) {
-	.funnel__fields {
-		grid-template-columns: 1fr;
-	}
+  .funnel__fields {
+    grid-template-columns: 1fr;
+  }
 
-	.funnel__actions {
-		justify-content: center;
-	}
+  .funnel__actions {
+    justify-content: center;
+  }
 }

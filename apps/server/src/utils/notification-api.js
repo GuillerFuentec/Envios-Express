@@ -1,4 +1,6 @@
-'use strict';
+"use strict";
+
+const notificationapi = require("notificationapi-node-server-sdk");
 
 const getLogger = () => {
   if (global.strapi && global.strapi.log) {
@@ -7,85 +9,99 @@ const getLogger = () => {
   return console;
 };
 
-const buildAuthHeader = () => {
+let sdkInitialized = false;
+
+const initNotificationApi = () => {
+  if (sdkInitialized) {
+    return true;
+  }
+
   const clientId = process.env.NOTIFICATION_API_CLIENT_ID;
   const clientSecret = process.env.NOTIFICATION_API_CLIENT_SECRET;
+
   if (!clientId || !clientSecret) {
-    return null;
-  }
-  const token = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-  return `Basic ${token}`;
-};
-
-const getBaseUrl = () => {
-  const base = process.env.NOTIFICATION_API_BASE_URL || 'https://api.notificationapi.com';
-  try {
-    return new URL(base).origin;
-  } catch (error) {
-    return 'https://api.notificationapi.com';
-  }
-};
-
-const sendClientNotification = async ({ phone, email, name, payload }) => {
-  const logger = getLogger();
-  if (!phone) {
-    logger.warn('[notificationapi] No phone provided; skipping SMS notification.');
-    return;
-  }
-
-  const authHeader = buildAuthHeader();
-  if (!authHeader) {
-    logger.warn(
-      '[notificationapi] Missing NOTIFICATION_API_CLIENT_ID or NOTIFICATION_API_CLIENT_SECRET.'
+    getLogger().warn(
+      "[notificationapi] Missing NOTIFICATION_API_CLIENT_ID or NOTIFICATION_API_CLIENT_SECRET."
     );
+    return false;
+  }
+
+  const baseUrl = process.env.NOTIFICATION_API_BASE_URL;
+  if (baseUrl) {
+    notificationapi.init(clientId, clientSecret, baseUrl);
+  } else {
+    notificationapi.init(clientId, clientSecret);
+  }
+
+  sdkInitialized = true;
+  return true;
+};
+
+const sendDirectSms = async ({ type, phone, message }) => {
+  const logger = getLogger();
+
+  if (!phone) {
+    logger.warn("[notificationapi] Missing phone; skipping SMS notification.");
     return;
   }
 
-  const notificationId =
-    process.env.NOTIFICATION_API_CLIENT_TEMPLATE_ID || 'new_client';
+  if (!message) {
+    logger.warn("[notificationapi] Missing message; skipping SMS notification.");
+    return;
+  }
 
-  const body = {
-    notificationId,
-    recipients: [
-      {
-        name: name || 'Cliente',
-        email: email || undefined,
-        phone,
-        sms: true,
-      },
-    ],
-    mergeTags: {
-      customer_name: name || 'Cliente',
-      customer_email: email || '',
-      customer_phone: phone,
-      shipment_city: payload?.shipment?.city || '',
-      shipment_weight: payload?.shipment?.weight || '',
-    },
-  };
+  if (!initNotificationApi()) {
+    return;
+  }
 
   try {
-    const response = await fetch(`${getBaseUrl()}/notifications`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: authHeader,
+    await notificationapi.send({
+      type: type || "new_client",
+      to: {
+        id: phone,
+        number: phone,
       },
-      body: JSON.stringify(body),
+      sms: {
+        message,
+      },
     });
-
-    if (!response.ok) {
-      const text = await response.text();
-      logger.error(
-        `[notificationapi] Failed to send SMS (${response.status}): ${text}`
-      );
-    } else {
-      logger.info('[notificationapi] SMS notification dispatched.');
-    }
+    logger.info(`[notificationapi] SMS notification (${type || "new_client"}) dispatched.`);
   } catch (error) {
-    logger.error('[notificationapi] Error sending SMS notification', error);
+    logger.error("[notificationapi] Error sending SMS notification", error);
   }
 };
+
+const buildClientMessage = (name) => {
+  const trimmed = (name || "").trim();
+  if (trimmed) {
+    return `Muchas gracias por ordenar con nosotros, ${trimmed}.`;
+  }
+  return "Muchas gracias por ordenar con nosotros.";
+};
+
+const buildContactMessage = (name) => {
+  const trimmed = (name || "").trim();
+  if (trimmed) {
+    return `Muchas gracias por ponerse en contacto con nosotros, ${trimmed}. Pronto lo contactaremos.`;
+  }
+  return "Muchas gracias por ponerse en contacto con nosotros. Pronto lo contactaremos.";
+};
+
+const sendClientThankYouSms = async ({ phone, name }) =>
+  sendDirectSms({
+    type: process.env.NOTIFICATION_API_CLIENT_SMS_TYPE || "client_thank_you",
+    phone,
+    message: buildClientMessage(name),
+  });
+
+const sendContactThankYouSms = async ({ phone, name }) =>
+  sendDirectSms({
+    type: process.env.NOTIFICATION_API_CONTACT_SMS_TYPE || "contact_thank_you",
+    phone,
+    message: buildContactMessage(name),
+  });
 
 module.exports = {
-  sendClientNotification,
+  sendClientThankYouSms,
+  sendContactThankYouSms,
 };

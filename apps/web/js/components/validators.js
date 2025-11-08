@@ -1,12 +1,12 @@
-'use strict';
+import { normalizePhoneNumber } from './phone.js';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const phoneRegex = /^\+?[0-9\s-]{7,}$/;
+const phoneRegex = /^\+1\d{10}$/;
 
 export const validateContactFields = ({ name = '', email = '', phone = '' }) => {
   const trimmedName = name.trim();
   const trimmedEmail = email.trim();
-  const trimmedPhone = phone.trim();
+  const normalizedPhone = normalizePhoneNumber(phone);
 
   if (trimmedName.length < 3) {
     return {
@@ -24,7 +24,7 @@ export const validateContactFields = ({ name = '', email = '', phone = '' }) => 
     };
   }
 
-  if (!phoneRegex.test(trimmedPhone)) {
+  if (!phoneRegex.test(normalizedPhone)) {
     return {
       valid: false,
       message: 'Ingresa un telefono valido (incluye codigo de pais).',

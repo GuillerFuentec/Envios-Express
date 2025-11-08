@@ -33,8 +33,8 @@ La API queda disponible en `http://localhost:1337`.
 | `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `NOTIFY_EMAIL` | Credenciales para notificaciones por correo |
 | `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` | Claves de Stripe para crear intents y validar webhooks |
 | `STRIPE_DEFAULT_CURRENCY`, `STRIPE_PAYMENT_DESCRIPTION` | Valores por defecto para los cargos |
-| `NOTIFICATION_API_CLIENT_ID`, `NOTIFICATION_API_CLIENT_SECRET`, `NOTIFICATION_API_BASE_URL`, `NOTIFICATION_API_CLIENT_TEMPLATE_ID` | Parametros para enviar SMS mediante NotificationAPI |
-| `RECAPTCHA_SECRET_KEY` | Llave privada de Google reCAPTCHA para validar los formularios |
+| `NOTIFICATION_API_CLIENT_ID`, `NOTIFICATION_API_CLIENT_SECRET`, `NOTIFICATION_API_BASE_URL`, `NOTIFICATION_API_CLIENT_SMS_TYPE`, `NOTIFICATION_API_CONTACT_SMS_TYPE` | Parametros para enviar SMS mediante NotificationAPI |
+| `RECAPTCHA_SITE_KEY`, `RECAPTCHA_PROJECT_ID`, `RECAPTCHA_API_KEY`, `RECAPTCHA_MIN_SCORE` | Configuracion para reCAPTCHA Enterprise |
 
 Revisa `.env.example` para ver todas las variables soportadas.
 
@@ -74,9 +74,9 @@ En producción, registra el endpoint `https://<tu-servicio>.up.railway.app/strip
 
 ### SMS y reCAPTCHA
 
-- Cada nuevo cliente creado desde el funnel dispara un SMS a traves de NotificationAPI usando el `notificationId` definido en `NOTIFICATION_API_CLIENT_TEMPLATE_ID` (por defecto `new_client`).
-- Los formularios del sitio requieren un token valido de Google reCAPTCHA. Configura `VITE_RECAPTCHA_SITE_KEY` en el frontend y `RECAPTCHA_SECRET_KEY` en el backend.
-- Si faltan estas variables, el servidor registrara advertencias y el formulario sera rechazado.
+- Cada nuevo cliente creado desde el funnel y cada contacto registrado reciben un SMS de agradecimiento mediante el SDK oficial de NotificationAPI. Define `NOTIFICATION_API_CLIENT_SMS_TYPE` y `NOTIFICATION_API_CONTACT_SMS_TYPE` (o usa los valores por defecto) y asegúrate de que tus credenciales (`NOTIFICATION_API_CLIENT_ID` / `NOTIFICATION_API_CLIENT_SECRET`) tengan acceso al canal SMS.
+- Los formularios del sitio usan reCAPTCHA Enterprise. Configura `VITE_RECAPTCHA_SITE_KEY` en el frontend y, en el backend, `RECAPTCHA_SITE_KEY`, `RECAPTCHA_PROJECT_ID`, `RECAPTCHA_API_KEY` y `RECAPTCHA_MIN_SCORE`.
+- Si faltan estas variables, el servidor registrará advertencias y el formulario será rechazado.
 
 ### Build y prueba local con Docker
 
