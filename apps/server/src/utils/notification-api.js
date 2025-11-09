@@ -34,6 +34,10 @@ const initNotificationApi = () => {
   }
 
   sdkInitialized = true;
+  getLogger().debug("[notificationapi] SDK initialized.", {
+    pid: process.pid,
+    baseUrl: baseUrl || "default",
+  });
   return true;
 };
 
@@ -44,6 +48,7 @@ const getNotificationType = (envKey) =>
 
 const sendDirectSms = async ({ envKey, phone, message }) => {
   const logger = getLogger();
+  const pid = process.pid;
 
   if (!phone) {
     logger.warn("[notificationapi] Missing phone; skipping SMS notification.");
@@ -61,9 +66,19 @@ const sendDirectSms = async ({ envKey, phone, message }) => {
 
   const type = getNotificationType(envKey);
   if (!type) {
-    logger.warn("[notificationapi] Missing notification type; skipping SMS notification.");
+    logger.warn("[notificationapi] Missing notification type; skipping SMS notification.", {
+      envKey,
+    });
     return;
   }
+
+  logger.debug("[notificationapi] Dispatching SMS notification.", {
+    pid,
+    type,
+    phone,
+    envKey,
+    preview: message.slice(0, 120),
+  });
 
   try {
     await notificationapi.send({
@@ -76,7 +91,7 @@ const sendDirectSms = async ({ envKey, phone, message }) => {
         message,
       },
     });
-    logger.info(`[notificationapi] SMS notification (${type}) dispatched.`);
+    logger.info(`[notificationapi] SMS notification (${type}) dispatched.`, { pid });
   } catch (error) {
     logger.error("[notificationapi] Error sending SMS notification", error);
   }

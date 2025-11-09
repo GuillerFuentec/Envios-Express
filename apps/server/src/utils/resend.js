@@ -1,10 +1,13 @@
 'use strict';
 
+const crypto = require('crypto');
 const { Resend } = require('resend');
 
 let resendClient;
 
-const RECENT_TTL = 60 * 1000;
+const MEMORY_TTL_MS = 60 * 1000;
+const PERSISTED_TTL_MS =
+  Number.parseInt(process.env.NOTIFICATION_DEDUPE_TTL_MS, 10) || MEMORY_TTL_MS;
 const recentMessages = new Map();
 
 const getResendClient = () => {
@@ -28,13 +31,26 @@ const getLogger = () => {
   return console;
 };
 
-const shouldSendSignature = (key) => {
-  const now = Date.now();
+const getStore = () => {
+  if (global.strapi && typeof global.strapi.store === 'function') {
+    return global.strapi.store({ type: 'plugin', name: 'notifications' });
+  }
+  return null;
+};
+
+const buildSignatureHash = (signature) =>
+  crypto.createHash('sha256').update(signature).digest('hex');
+
+const cleanupMemoryKeys = (now) => {
   for (const [signature, timestamp] of recentMessages.entries()) {
-    if (now - timestamp > RECENT_TTL) {
+    if (now - timestamp > MEMORY_TTL_MS) {
       recentMessages.delete(signature);
     }
   }
+};
+
+const markInMemory = (key, now) => {
+  cleanupMemoryKeys(now);
   if (recentMessages.has(key)) {
     return false;
   }
@@ -42,11 +58,41 @@ const shouldSendSignature = (key) => {
   return true;
 };
 
+const markPersisted = async (key, now, logger) => {
+  const store = getStore();
+  if (!store) {
+    return markInMemory(key, now);
+  }
+
+  try {
+    const existing = await store.get({ key });
+    if (existing && existing.timestamp && now - existing.timestamp < PERSISTED_TTL_MS) {
+      return false;
+    }
+
+    if (existing && existing.timestamp && now - existing.timestamp >= PERSISTED_TTL_MS) {
+      await store.delete({ key });
+    }
+
+    await store.set({ key, value: { timestamp: now } });
+    return true;
+  } catch (error) {
+    logger.warn('[notifications] Failed to access dedupe store; falling back to memory.', error);
+    return markInMemory(key, now);
+  }
+};
+
+const shouldSendSignature = async (signature, logger) => {
+  const now = Date.now();
+  return markPersisted(buildSignatureHash(signature), now, logger);
+};
+
 const sendNotificationEmail = async ({ subject, html, text }) => {
   const logger = getLogger();
   const client = getResendClient();
   const from = process.env.RESEND_FROM_EMAIL;
   const to = process.env.NOTIFY_EMAIL;
+  const pid = process.pid;
 
   if (!client || !from || !to) {
     logger.warn(
@@ -66,10 +112,21 @@ const sendNotificationEmail = async ({ subject, html, text }) => {
   }
 
   const signature = `${subject}|${text}`;
-  if (!shouldSendSignature(signature)) {
-    logger.warn('[notifications] Duplicate email detected. Skipping send.');
+  const signatureHash = buildSignatureHash(signature);
+
+  if (!(await shouldSendSignature(signature, logger))) {
+    logger.warn('[notifications] Duplicate email detected. Skipping send.', {
+      pid,
+      signature: signatureHash,
+    });
     return;
   }
+
+  logger.debug('[notifications] Dispatching email via Resend.', {
+    pid,
+    recipients,
+    signature: signatureHash,
+  });
 
   try {
     await client.emails.send({
@@ -79,7 +136,10 @@ const sendNotificationEmail = async ({ subject, html, text }) => {
       html,
       text,
     });
-    logger.info('[notifications] Resend email dispatched successfully.');
+    logger.info('[notifications] Resend email dispatched successfully.', {
+      pid,
+      signature: signatureHash,
+    });
   } catch (error) {
     logger.error('[notifications] Failed to send email via Resend:', error);
   }

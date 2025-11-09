@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('crypto');
 const { sendNotificationEmail } = require('../../../../utils/resend');
 const { sendContactThankYouSms } = require('../../../../utils/notification-api');
 const { normalizePhoneNumber } = require('../../../../utils/phone');
@@ -20,6 +21,9 @@ const formatPayload = (payload) => {
   }
 };
 
+const buildSignatureHash = (subject, text) =>
+  crypto.createHash('sha1').update(`${subject}|${text}`).digest('hex');
+
 module.exports = {
   async afterCreate(event) {
     const { result } = event;
@@ -28,31 +32,53 @@ module.exports = {
     const id = result?.id ?? 'desconocido';
 
     const subject = `Nuevo mensaje de contacto (#${id})`;
-    const text = `Se recibió un nuevo mensaje de contacto (ID: ${id}).\n\nDatos:\n${formatted}`;
+    const text = `Se recibio un nuevo mensaje de contacto (ID: ${id}).\n\nDatos:\n${formatted}`;
     const html = `
       <h1>Nuevo mensaje de contacto</h1>
-      <p>Se registró un nuevo mensaje desde el formulario del sitio.</p>
+      <p>Se registro un nuevo mensaje desde el formulario del sitio.</p>
       <p><strong>ID:</strong> ${escapeHtml(String(id))}</p>
       <pre style="padding:16px;background:#f6f8fa;border-radius:8px;white-space:pre-wrap;font-family:monospace;">${escapeHtml(formatted)}</pre>
     `;
 
+    const signature = buildSignatureHash(subject, text);
+    strapi.log.debug('[contact-lifecycle] Enviando correo de contacto.', {
+      pid: process.pid,
+      id,
+      signature,
+    });
+
     await sendNotificationEmail({ subject, html, text });
 
+    const contactInfo = payload || {};
+    const smsConsent = Boolean(contactInfo.smsConsent);
+
+    strapi.log.debug('[contact-lifecycle] Evaluando SMS.', {
+      pid: process.pid,
+      id,
+      smsConsent,
+      rawPhone: contactInfo.phone,
+    });
+
+    if (!smsConsent) {
+      return;
+    }
+
     try {
-      const stored = await strapi.entityService.findOne('api::contact.contact', result.id);
-      const contactInfo = stored?.contact_info || {};
-      if (contactInfo.smsConsent) {
-        const normalizedPhone = normalizePhoneNumber(contactInfo.phone);
-        if (normalizedPhone) {
-          await sendContactThankYouSms({
-            phone: normalizedPhone,
-            name: contactInfo.name,
-          });
-        } else {
-          strapi.log.warn('No se pudo enviar SMS: telefono invalido en contacto', {
-            id: result.id,
-          });
-        }
+      const normalizedPhone = normalizePhoneNumber(contactInfo.phone);
+      if (normalizedPhone) {
+        await sendContactThankYouSms({
+          phone: normalizedPhone,
+          name: contactInfo.name,
+        });
+        strapi.log.debug('[contact-lifecycle] SMS enviado al contacto.', {
+          pid: process.pid,
+          id,
+          phone: normalizedPhone,
+        });
+      } else {
+        strapi.log.warn('No se pudo enviar SMS: telefono invalido en contacto', {
+          id: result.id,
+        });
       }
     } catch (error) {
       strapi.log.warn('No se pudo enviar el SMS del contacto', error);

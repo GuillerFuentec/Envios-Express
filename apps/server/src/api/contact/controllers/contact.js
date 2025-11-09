@@ -57,6 +57,16 @@ module.exports = createCoreController('api::contact.contact', () => ({
     }
     contactInfo.phone = normalizedPhone;
 
+    strapi.log.debug('[contact-controller] Payload listo para crear contacto.', {
+      pid: process.pid,
+      preview: {
+        name: contactInfo.name,
+        email: contactInfo.email,
+        phone: normalizedPhone,
+        smsConsent: contactInfo.smsConsent,
+      },
+    });
+
     return await super.create(ctx);
   },
 }));

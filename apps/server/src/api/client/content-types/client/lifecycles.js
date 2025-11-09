@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('crypto');
 const { sendNotificationEmail } = require('../../../../utils/resend');
 const { sendClientThankYouSms } = require('../../../../utils/notification-api');
 const { normalizePhoneNumber } = require('../../../../utils/phone');
@@ -20,6 +21,9 @@ const formatPayload = (payload) => {
   }
 };
 
+const buildSignatureHash = (subject, text) =>
+  crypto.createHash('sha1').update(`${subject}|${text}`).digest('hex');
+
 module.exports = {
   async afterCreate(event) {
     const { result } = event;
@@ -36,23 +40,45 @@ module.exports = {
       <pre style="padding:16px;background:#f6f8fa;border-radius:8px;white-space:pre-wrap;font-family:monospace;">${escapeHtml(formatted)}</pre>
     `;
 
+    const signature = buildSignatureHash(subject, text);
+    strapi.log.debug('[client-lifecycle] Enviando correo de cliente.', {
+      pid: process.pid,
+      id,
+      signature,
+    });
+
     await sendNotificationEmail({ subject, html, text });
 
+    const contactInfo = payload?.contact || {};
+    const smsConsent = Boolean(contactInfo.smsConsent);
+
+    strapi.log.debug('[client-lifecycle] Evaluando SMS.', {
+      pid: process.pid,
+      id,
+      smsConsent,
+      rawPhone: contactInfo.phone,
+    });
+
+    if (!smsConsent) {
+      return;
+    }
+
     try {
-      const stored = await strapi.entityService.findOne('api::client.client', result.id);
-      const contactInfo = stored?.client_info?.contact || {};
-      if (contactInfo.smsConsent) {
-        const normalizedPhone = normalizePhoneNumber(contactInfo.phone);
-        if (normalizedPhone) {
-          await sendClientThankYouSms({
-            phone: normalizedPhone,
-            name: contactInfo.name,
-          });
-        } else {
-          strapi.log.warn('No se pudo enviar SMS: telefono invalido en cliente', {
-            id: result.id,
-          });
-        }
+      const normalizedPhone = normalizePhoneNumber(contactInfo.phone);
+      if (normalizedPhone) {
+        await sendClientThankYouSms({
+          phone: normalizedPhone,
+          name: contactInfo.name,
+        });
+        strapi.log.debug('[client-lifecycle] SMS enviado al cliente.', {
+          pid: process.pid,
+          id,
+          phone: normalizedPhone,
+        });
+      } else {
+        strapi.log.warn('No se pudo enviar SMS: telefono invalido en cliente', {
+          id: result.id,
+        });
       }
     } catch (error) {
       strapi.log.warn('No se pudo enviar el SMS del cliente', error);
