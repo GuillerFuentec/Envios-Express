@@ -1,6 +1,7 @@
 "use strict";
 
-const notificationapi = require("notificationapi-node-server-sdk");
+const raw = require("notificationapi-node-server-sdk");
+const notificationapi = raw.default || raw;
 
 const getLogger = () => {
   if (global.strapi && global.strapi.log) {

@@ -27,6 +27,22 @@ const buildSignatureHash = (subject, text) =>
 module.exports = {
   async afterCreate(event) {
     const { result } = event;
+
+    const isDraftCreation =
+      result?.publishedAt === null ||
+      result?.publishedAt === undefined ||
+      event.params?.data?.publishedAt === null ||
+      event.params?.data?.publishedAt === undefined;
+
+    if (!isDraftCreation) {
+      strapi.log.debug('[contact-lifecycle] Skip notification (publish action).', {
+        pid: process.pid,
+        id: result?.id ?? 'desconocido',
+        publishedAt: result?.publishedAt,
+      });
+      return;
+    }
+
     const payload = result?.contact_info ?? {};
     const formatted = formatPayload(payload);
     const id = result?.id ?? 'desconocido';
