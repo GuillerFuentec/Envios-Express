@@ -1,0 +1,14 @@
+
+{
+  "kind": "collectionType",
+  "collectionName": "agency-infos",
+  "info": {
+    "singularName": "agency-info",
+    "pluralName": "agency-infos",
+    "displayName": "agency-info"
+  },
+  "options": {
+    "comment": ""
+  },
+  "attributes": {}
+}

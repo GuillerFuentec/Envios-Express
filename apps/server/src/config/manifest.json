@@ -1,0 +1,44 @@
+{
+    "agency": {
+        "name": "Paqueteria Caribeña Express LLC",
+        "address": "432 Northeast 22nd Street, Miami, FL 33137, USA",
+        "country": "US",
+        "lat": 25.798336,
+        "lng": -80.187402,
+        "zelle_email": "payment@example.com"
+    },
+    "stripe": {
+        "area_limit_per_miles": 25,
+        "cash_fee_per_10_online": 0.89,
+        "cash_fee_per_10_in_person": 1.00,
+        "stripe_fee_percent": 0.029,
+        "stripe_fixed_fee": 0.30,
+        "currency": "USD"
+    },
+    "ciudades_de_destino_cuba": [
+        "Artemisa",
+        "La Habana",
+        "Mayabeque",
+        "Matanzas",
+        "Cienfuegos",
+        "Villa Clara",
+        "Sancti Spiritus",
+        "Ciego de Avila",
+        "Camaguey",
+        "Las Tunas",
+        "Holguin",
+        "Granma",
+        "Santiago de Cuba",
+        "Guantanamo"
+    ],
+    "contenido_principal": [
+        "Documentos",
+        "Ropa",
+        "Medicinas",
+        "Articulos de higiene personal",
+        "Alimentos",
+        "Electrodomesticos pequeños",
+        "Dispositivos electronicos",
+        "Dinero en efectivo"
+    ]
+}
