@@ -37,7 +37,12 @@ const initNotificationApi = () => {
   return true;
 };
 
-const sendDirectSms = async ({ type, phone, message }) => {
+const getNotificationType = (envKey) =>
+  process.env[envKey] ||
+  process.env.NOTIFICATION_API_CLIENT_TEMPLATE_ID ||
+  "new_client";
+
+const sendDirectSms = async ({ envKey, phone, message }) => {
   const logger = getLogger();
 
   if (!phone) {
@@ -54,9 +59,15 @@ const sendDirectSms = async ({ type, phone, message }) => {
     return;
   }
 
+  const type = getNotificationType(envKey);
+  if (!type) {
+    logger.warn("[notificationapi] Missing notification type; skipping SMS notification.");
+    return;
+  }
+
   try {
     await notificationapi.send({
-      type: type || "new_client",
+      type,
       to: {
         id: phone,
         number: phone,
@@ -65,7 +76,7 @@ const sendDirectSms = async ({ type, phone, message }) => {
         message,
       },
     });
-    logger.info(`[notificationapi] SMS notification (${type || "new_client"}) dispatched.`);
+    logger.info(`[notificationapi] SMS notification (${type}) dispatched.`);
   } catch (error) {
     logger.error("[notificationapi] Error sending SMS notification", error);
   }
@@ -89,14 +100,14 @@ const buildContactMessage = (name) => {
 
 const sendClientThankYouSms = async ({ phone, name }) =>
   sendDirectSms({
-    type: process.env.NOTIFICATION_API_CLIENT_SMS_TYPE || "client_thank_you",
+    envKey: "NOTIFICATION_API_CLIENT_SMS_TYPE",
     phone,
     message: buildClientMessage(name),
   });
 
 const sendContactThankYouSms = async ({ phone, name }) =>
   sendDirectSms({
-    type: process.env.NOTIFICATION_API_CONTACT_SMS_TYPE || "contact_thank_you",
+    envKey: "NOTIFICATION_API_CONTACT_SMS_TYPE",
     phone,
     message: buildContactMessage(name),
   });

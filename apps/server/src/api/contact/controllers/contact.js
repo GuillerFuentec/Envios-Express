@@ -7,7 +7,6 @@
 const { createCoreController } = require('@strapi/strapi').factories;
 const { verifyRecaptchaEnterprise } = require('../../../utils/recaptcha');
 const { normalizePhoneNumber } = require('../../../utils/phone');
-const { sendContactThankYouSms } = require('../../../utils/notification-api');
 
 module.exports = createCoreController('api::contact.contact', () => ({
   async create(ctx) {
@@ -58,15 +57,6 @@ module.exports = createCoreController('api::contact.contact', () => ({
     }
     contactInfo.phone = normalizedPhone;
 
-    const response = await super.create(ctx);
-
-    sendContactThankYouSms({
-      phone: normalizedPhone,
-      name: contactInfo.name,
-    }).catch((error) => {
-      strapi.log.warn('No se pudo enviar el SMS de contacto', error);
-    });
-
-    return response;
+    return await super.create(ctx);
   },
 }));

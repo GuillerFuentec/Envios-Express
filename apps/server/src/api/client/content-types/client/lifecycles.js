@@ -2,6 +2,7 @@
 
 const { sendNotificationEmail } = require('../../../../utils/resend');
 const { sendClientThankYouSms } = require('../../../../utils/notification-api');
+const { normalizePhoneNumber } = require('../../../../utils/phone');
 
 const escapeHtml = (value = '') =>
   value
@@ -37,11 +38,24 @@ module.exports = {
 
     await sendNotificationEmail({ subject, html, text });
 
-    if (payload?.contact?.smsConsent) {
-      await sendClientThankYouSms({
-        phone: payload.contact.phone,
-        name: payload.contact.name,
-      });
+    try {
+      const stored = await strapi.entityService.findOne('api::client.client', result.id);
+      const contactInfo = stored?.client_info?.contact || {};
+      if (contactInfo.smsConsent) {
+        const normalizedPhone = normalizePhoneNumber(contactInfo.phone);
+        if (normalizedPhone) {
+          await sendClientThankYouSms({
+            phone: normalizedPhone,
+            name: contactInfo.name,
+          });
+        } else {
+          strapi.log.warn('No se pudo enviar SMS: telefono invalido en cliente', {
+            id: result.id,
+          });
+        }
+      }
+    } catch (error) {
+      strapi.log.warn('No se pudo enviar el SMS del cliente', error);
     }
   },
 };

@@ -83,14 +83,14 @@
     </nav>
 
     <section id="inicio" class="bg-primary py-20 px-4">
-        <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-8 items-center">
+        <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center hero__layout">
             <div>
                 <div class="eyebrow">Envios a Cuba sin complicaciones</div>
                 <h1 class="text-4xl md:text-5xl font-bold text-slate mt-4">Paga solo por libras y entrega en 48-72 horas
                 </h1>
                 <p class="text-xl text-slate mt-6">Te ayudamos a enviar paquetes a Cuba con tarifas claras, soporte
                     cercano y opciones flexibles de recogida o entrega en agencia.</p>
-                <div class="flex flex-wrap gap-4 mt-8">
+                <div class="flex flex-wrap gap-4 mt-8 hero__actions">
                     <a href="#funnel"
                         class="bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 px-6 rounded-lg transition !text-white"
                         data-scroll="true">Planificar envio</a>
@@ -98,7 +98,7 @@
                         class="bg-white hover:bg-gray-100 text-accent font-bold py-3 px-6 rounded-lg transition"
                         data-scroll="true">Hablar con un asesor</a>
                 </div>
-                <div class="flex flex-wrap gap-4 mt-8">
+                <div class="flex flex-wrap gap-4 mt-8 hero__badges">
                     <span class="badge">
                         <i data-feather="check-circle" class="w-4 h-4"></i> Precio transparente
                     </span>
@@ -110,7 +110,7 @@
                     </span>
                 </div>
             </div>
-            <div class="hero__media hidden md:block">
+            <div class="hero__media">
                 <img src="./hero.webp" alt="Equipo preparando envios para Cuba" loading="lazy">
             </div>
         </div>
@@ -118,7 +118,7 @@
 
     <!-- Funnel Section -->
     <section id="funnel" class="py-20 px-4">
-        <div class="max-w-5xl mx-auto surface-card">
+        <div class="max-w-5xl mx-auto surface-card funnel__shell">
             <div class="funnel__header">
                 <div class="eyebrow">Paso <span data-funnel-step-label>1</span> de 4</div>
                 <h2 class="text-3xl font-bold text-slate mt-4">Planifica tu envio en minutos</h2>
@@ -255,7 +255,7 @@
     <section id="beneficios" class="py-16 px-4">
         <div class="max-w-6xl mx-auto">
             <h2 class="text-3xl font-bold text-slate mb-12 text-center">Por que elegirnos</h2>
-            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 highlights__grid">
                 <div class="grid-card transition">
                     <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center mb-4">
                         <i data-feather="dollar-sign" class="text-accent w-6 h-6"></i>
@@ -292,7 +292,7 @@
     <section id="proceso" class="py-16 px-4 bg-white">
         <div class="max-w-6xl mx-auto">
             <h2 class="text-3xl font-bold text-slate mb-12 text-center">Como funciona</h2>
-            <div class="grid md:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 process__grid">
                 <div class="text-center">
                     <div class="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
                         <span class="text-accent text-2xl font-bold">1</span>
@@ -340,7 +340,7 @@
     <section id="ubicacion" class="py-16 px-4 bg-white">
         <div class="max-w-6xl mx-auto">
             <h2 class="text-3xl font-bold text-slate mb-8 text-center">Ubicacion</h2>
-            <div class="grid md:grid-cols-2 gap-8 items-center">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center location__grid">
                 <div>
                     <div class="h-64 md:h-96 bg-gray-200 rounded-lg overflow-hidden">
                         <iframe
@@ -401,11 +401,11 @@
     <section id="contacto" class="py-16 px-4 bg-white">
         <div class="max-w-6xl mx-auto">
             <h2 class="text-3xl font-bold text-slate mb-8 text-center">Contacto</h2>
-            <div class="grid md:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 contact__grid">
                 <div>
                     <p class="text-gray-700 text-lg mb-6">Tienes preguntas? Nuestro equipo esta listo para ayudarte.</p>
                     <div class="space-y-4">
-                        <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-4 contact__info-item">
                             <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
                                 <i data-feather="mail" class="text-accent w-5 h-5"></i>
                             </div>
@@ -415,7 +415,7 @@
                                     class="text-slate hover:text-accent">contact@raccoonstudiosllc.com</a>
                             </div>
                         </div>
-                        <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-4 contact__info-item">
                             <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
                                 <i data-feather="phone" class="text-accent w-5 h-5"></i>
                             </div>
@@ -424,7 +424,7 @@
                                 <a href="tel:+14322321612" class="text-slate hover:text-accent">+1 432 232 1612</a>
                             </div>
                         </div>
-                        <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-4 contact__info-item">
                             <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
                                 <i data-feather="map-pin" class="text-accent w-5 h-5"></i>
                             </div>

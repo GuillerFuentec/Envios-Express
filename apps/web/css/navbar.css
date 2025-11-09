@@ -502,3 +502,23 @@
     justify-content: flex-start;
   }
 }
+
+@media (max-width: 520px) {
+  .site-navbar__container {
+    padding: 0.75rem 1rem;
+    gap: 0.5rem;
+  }
+
+  .site-navbar__brand-logo {
+    height: 44px;
+  }
+
+  .site-navbar__toggle {
+    width: 40px;
+    height: 40px;
+  }
+
+  .site-navbar__mobile {
+    padding: 0.5rem 1rem 1rem;
+  }
+}

@@ -1,6 +1,8 @@
 'use strict';
 
 const { sendNotificationEmail } = require('../../../../utils/resend');
+const { sendContactThankYouSms } = require('../../../../utils/notification-api');
+const { normalizePhoneNumber } = require('../../../../utils/phone');
 
 const escapeHtml = (value = '') =>
   value
@@ -35,5 +37,25 @@ module.exports = {
     `;
 
     await sendNotificationEmail({ subject, html, text });
+
+    try {
+      const stored = await strapi.entityService.findOne('api::contact.contact', result.id);
+      const contactInfo = stored?.contact_info || {};
+      if (contactInfo.smsConsent) {
+        const normalizedPhone = normalizePhoneNumber(contactInfo.phone);
+        if (normalizedPhone) {
+          await sendContactThankYouSms({
+            phone: normalizedPhone,
+            name: contactInfo.name,
+          });
+        } else {
+          strapi.log.warn('No se pudo enviar SMS: telefono invalido en contacto', {
+            id: result.id,
+          });
+        }
+      }
+    } catch (error) {
+      strapi.log.warn('No se pudo enviar el SMS del contacto', error);
+    }
   },
 };
