@@ -1,0 +1,111 @@
+"use strict";
+
+const CACHE_TTL = 5 * 60 * 1000;
+
+let cachedProfile = null;
+let cachedAt = 0;
+
+const toNumber = (value, fallback = 0) => {
+  const num = Number(value);
+  if (Number.isFinite(num)) {
+    return num;
+  }
+  return fallback;
+};
+
+const resolvePricePerLb = (payload) => {
+  if (!payload) {
+    return null;
+  }
+  if (payload.Price_lb) {
+    return toNumber(payload.Price_lb, null);
+  }
+  if (payload.price_lb) {
+    return toNumber(payload.price_lb, null);
+  }
+  if (payload.pricelb) {
+    return toNumber(payload.pricelb, null);
+  }
+  return null;
+};
+
+const normalizeAgencyPayload = (raw) => {
+  const fallbackPrice = toNumber(process.env.DEFAULT_PRICE_PER_LB || 0);
+  const agencySection = raw?.agency || raw?.data?.agency || {};
+  const stripeSection = raw?.stripe || raw?.data?.stripe || {};
+
+  const normalized = {
+    name: agencySection.name || raw?.name || '',
+    address: agencySection.address || raw?.address || '',
+    place_id:
+      agencySection.place_id ||
+      raw?.place_id ||
+      process.env.AGENCY_PLACE_ID ||
+      '',
+    Price_lb:
+      resolvePricePerLb(raw) ||
+      resolvePricePerLb(agencySection) ||
+      fallbackPrice,
+    ciudades_de_destino_cuba:
+      raw?.ciudades_de_destino_cuba || raw?.cities || [],
+    contenido_principal: raw?.contenido_principal || raw?.main_contents || [],
+    stripe_processing_percent:
+      raw?.stripe_processing_percent ??
+      raw?.stripe_fee_percent ??
+      stripeSection.stripe_fee_percent ??
+      toNumber(process.env.STRIPE_PROCESSING_PERCENT || 0.029),
+    stripe_processing_fixed:
+      raw?.stripe_processing_fixed ??
+      stripeSection.stripe_fixed_fee ??
+      toNumber(process.env.STRIPE_PROCESSING_FIXED || 0.3),
+  };
+
+  return normalized;
+};
+
+const fetchAgencyProfile = async () => {
+  const endpoint = process.env.AGENCY_INFO_URL;
+  console.log(endpoint);
+  
+  if (!endpoint) {
+    throw new Error('Falta la variable AGENCY_INFO_URL.');
+  }
+
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+
+  if (process.env.AGENCY_TOKEN) {
+    headers.Authorization = `Bearer ${process.env.AGENCY_TOKEN}`;
+  }
+
+  const response = await fetch(endpoint, {
+    headers,
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(
+      `No se pudo obtener la configuración de la agencia (${response.status}). ${text}`
+    );
+  }
+
+  const payload = await response.json();
+  return normalizeAgencyPayload(payload);
+};
+
+const getAgencyProfile = async () => {
+  const now = Date.now();
+  if (cachedProfile && now - cachedAt < CACHE_TTL) {
+    return cachedProfile;
+  }
+  const profile = await fetchAgencyProfile();
+  cachedProfile = profile;
+  cachedAt = now;
+  return profile;
+};
+
+module.exports = {
+  getAgencyProfile,
+};
