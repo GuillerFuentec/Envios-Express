@@ -226,6 +226,10 @@ export const AddressCaptureInput = ({
           merged.normalized = merged.normalized || {
             full: formatAddressForDisplay(merged),
           };
+
+          // clave: la firma debe ser el valor FINAL del input
+          selectedSignatureRef.current = (merged.line1 || "").trim();
+
           return merged;
         });
       } catch (error) {
