@@ -37,8 +37,9 @@ const PreferencesStep = ({
     (nextAddress) => {
       console.debug("[funnel/preferences] handleAddressChange invoked", {
         hasNext: Boolean(nextAddress),
-        placeId: nextAddress?.placeId || nextAddress?.normalized?.placeId || null,
-        line1Sample: (nextAddress?.line1 || '').slice(0, 60),
+        placeId:
+          nextAddress?.placeId || nextAddress?.normalized?.placeId || null,
+        line1Sample: (nextAddress?.line1 || "").slice(0, 60),
       });
       onFieldChange("preferences", "addressCapture", nextAddress);
       const normalized = nextAddress?.normalized || {};
@@ -50,7 +51,8 @@ const PreferencesStep = ({
         normalized.placeId || nextAddress?.placeId || ""
       );
       const hasCoords =
-        typeof normalized.lat === "number" && typeof normalized.lng === "number";
+        typeof normalized.lat === "number" &&
+        typeof normalized.lng === "number";
       onFieldChange(
         "preferences",
         "pickupLocation",
@@ -158,8 +160,7 @@ const PreferencesStep = ({
                 data?.paymentMethod === method ? "active" : ""
               }`}
               style={{
-                opacity:
-                  method === "agency" && shouldDisableAgency ? 0.5 : 1,
+                opacity: method === "agency" && shouldDisableAgency ? 0.5 : 1,
               }}
             >
               <input

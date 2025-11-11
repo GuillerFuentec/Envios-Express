@@ -51,10 +51,10 @@ const DEFAULT_UI = {
   container: "address-capture space-y-5",
   grid: "fields-grid",
   fieldWrapper: "field",
-  label: "text-sm font-medium",
+  label: "text-sm font-medium relative",
   hint: "text-xs text-slate-500",
   input: "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-teal-600 focus:ring-2 focus:ring-teal-500/30 outline-none transition disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed",
-  suggestions: "address-suggestions absolute z-20 mt-2 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm",
+  suggestions: "address-suggestions absolute z-20 top-full mt-2 left-0 right-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm",
   suggestionButton: "w-full px-4 py-2 text-left text-sm flex flex-col gap-0.5 hover:bg-teal-50 focus:bg-teal-50 focus:outline-none",
   suggestionPrimary: "font-medium text-slate-800 truncate",
   suggestionSecondary: "text-xs text-slate-500 truncate",
@@ -118,6 +118,7 @@ export const AddressCaptureInput = ({
   const [localError, setLocalError] = useState(null);
   const firstRun = useRef(true);
   const suggestionsRef = useRef(null);
+  const selectedSignatureRef = useRef(null); // stores the last accepted suggestion signature
 
   const emitChange = useCallback(
     (nextAddress) => {
@@ -175,6 +176,9 @@ export const AddressCaptureInput = ({
       setSuggestionsOpen(false);
       setSuggestions([]);
       setHighlighted(-1);
+  // store signature so we don't reopen until user edits line1 differently
+  const sig = suggestion.description || suggestion.label || suggestion.placeId || suggestion.id;
+  selectedSignatureRef.current = sig;
 
       if (typeof fetchDetails !== "function") {
         updateDraft((current) => ({
@@ -233,6 +237,15 @@ export const AddressCaptureInput = ({
         setHighlighted(-1);
         return;
       }
+      // If user hasn't modified the accepted suggestion yet, don't reopen
+      if (selectedSignatureRef.current) {
+        const trimmed = query.trim();
+        // if current input still starts with the accepted suggestion first token, or equals description, skip
+        if (selectedSignatureRef.current === trimmed) {
+          console.debug("[address-capture] input matches accepted suggestion; not reopening");
+          return;
+        }
+      }
       console.debug("[address-capture] requesting suggestions", {
         query: query.trim(),
         minSuggestLength,
@@ -277,6 +290,10 @@ export const AddressCaptureInput = ({
         console.debug("[address-capture] no line1 value; clearing suggestions");
         setSuggestions([]);
         setSuggestionsOpen(false);
+        return;
+      }
+      // If user hasn't changed the value after selecting a suggestion, do not re-query
+      if (selectedSignatureRef.current && selectedSignatureRef.current === draft.line1.trim()) {
         return;
       }
       console.debug("[address-capture] debounce fired; will request suggestions", {
@@ -360,6 +377,18 @@ export const AddressCaptureInput = ({
             aria-autocomplete="list"
             aria-expanded={suggestionsOpen}
             aria-controls="address-suggestions-list"
+            onFocus={() => {
+              // Only reopen if the user has modified text after last selection
+              if (
+                selectedSignatureRef.current &&
+                selectedSignatureRef.current === draft.line1.trim()
+              ) {
+                return;
+              }
+              if (suggestions.length > 0) {
+                setSuggestionsOpen(true);
+              }
+            }}
           />
           {suggesting && (
             <div style={{position:'absolute', top:10, right:10}}>
