@@ -1,0 +1,22 @@
+{
+  "name": "@fac/dynamic-form",
+  "version": "0.1.0",
+  "type": "module",
+  "private": false,
+  "main": "src/index.js",
+  "module": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "dependencies": {
+    "react-dropzone": "^14.3.8"
+  }
+}

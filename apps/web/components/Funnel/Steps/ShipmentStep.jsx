@@ -22,6 +22,8 @@ const ShipmentStep = ({
     return null;
   }
 
+  console.log(`Esto es la configuracion de la agencia: \n`, agencyConfig.Price_lb);
+
   return (
     <div className="fields-grid">
       <p style={{ margin: 0, color: "var(--color-muted)" }}>
@@ -35,16 +37,22 @@ const ShipmentStep = ({
           min="0"
           step="0.1"
           value={data.weightLbs}
-          onChange={(event) => onChange("shipment", "weightLbs", event.target.value)}
+          onChange={(event) =>
+            onChange("shipment", "weightLbs", event.target.value)
+          }
         />
-        {errors.weightLbs && <span className="field-error">{errors.weightLbs}</span>}
+        {errors.weightLbs && (
+          <span className="field-error">{errors.weightLbs}</span>
+        )}
       </div>
       <div className="field">
         <label htmlFor="cityCuba">Ciudad de destino en Cuba</label>
         <select
           id="cityCuba"
           value={data.cityCuba}
-          onChange={(event) => onChange("shipment", "cityCuba", event.target.value)}
+          onChange={(event) =>
+            onChange("shipment", "cityCuba", event.target.value)
+          }
         >
           {agencyConfig.ciudades_de_destino_cuba?.map((city) => (
             <option key={city} value={city}>
@@ -52,14 +60,18 @@ const ShipmentStep = ({
             </option>
           ))}
         </select>
-        {errors.cityCuba && <span className="field-error">{errors.cityCuba}</span>}
+        {errors.cityCuba && (
+          <span className="field-error">{errors.cityCuba}</span>
+        )}
       </div>
       <div className="field">
         <label htmlFor="contentType">Contenido principal</label>
         <select
           id="contentType"
           value={data.contentType}
-          onChange={(event) => onChange("shipment", "contentType", event.target.value)}
+          onChange={(event) =>
+            onChange("shipment", "contentType", event.target.value)
+          }
         >
           {agencyConfig.contenido_principal?.map((content) => (
             <option key={content} value={content}>
@@ -67,7 +79,9 @@ const ShipmentStep = ({
             </option>
           ))}
         </select>
-        {errors.contentType && <span className="field-error">{errors.contentType}</span>}
+        {errors.contentType && (
+          <span className="field-error">{errors.contentType}</span>
+        )}
       </div>
       {showPolicyBanner && (
         <div className="policy-banner">
@@ -86,9 +100,13 @@ const ShipmentStep = ({
           type="date"
           min={minDate}
           value={data.deliveryDate}
-          onChange={(event) => onChange("shipment", "deliveryDate", event.target.value)}
+          onChange={(event) =>
+            onChange("shipment", "deliveryDate", event.target.value)
+          }
         />
-        {errors.deliveryDate && <span className="field-error">{errors.deliveryDate}</span>}
+        {errors.deliveryDate && (
+          <span className="field-error">{errors.deliveryDate}</span>
+        )}
       </div>
     </div>
   );

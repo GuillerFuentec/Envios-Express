@@ -25,7 +25,6 @@ const FunnelView = () => {
     shouldDisableAgency,
     GLOBAL_ERROR_MESSAGE,
     updateField,
-    handlePickupAddressSelected,
     handleNext,
     handlePrev,
     handlePrimaryAction,
@@ -69,7 +68,6 @@ const FunnelView = () => {
           errors={preferenceErrors}
           shouldDisableAgency={shouldDisableAgency}
           onFieldChange={updateField}
-          onPickupAddressSelected={handlePickupAddressSelected}
         />
       ),
     },

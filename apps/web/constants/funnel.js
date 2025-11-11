@@ -20,6 +20,8 @@ export const INITIAL_FORM_STATE = {
     pickup: false,
     pickupAddress: "",
     pickupAddressPlaceId: "",
+    pickupLocation: null,
+    addressCapture: null,
     additionalComments: "",
     paymentMethod: "online",
   },

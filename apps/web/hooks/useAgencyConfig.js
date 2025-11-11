@@ -1,33 +1,64 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
-export const useAgencyConfig = () => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+let cachedConfig = null;
+let cachedError = null;
+let inflightPromise = null;
 
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-
-    fetch('/api/agency/config')
+const fetchConfigOnce = () => {
+  if (cachedConfig || cachedError) {
+    return inflightPromise || Promise.resolve({ data: cachedConfig, error: cachedError });
+  }
+  if (!inflightPromise) {
+    inflightPromise = fetch("/api/agency/config")
       .then(async (response) => {
         if (!response.ok) {
           const payload = await response.json().catch(() => ({}));
-          throw new Error(payload?.error || 'No se pudo obtener la configuración.');
+          throw new Error(payload?.error || "No se pudo obtener la configuración.");
         }
         return response.json();
       })
       .then((json) => {
-        if (active) {
-          setData(json);
-          setError('');
-        }
+        cachedConfig = json;
+        cachedError = null;
+        return { data: json, error: null };
       })
       .catch((err) => {
-        console.error('[agency-config]', err);
-        if (active) {
-          setError(err.message || 'Error inesperado.');
+        cachedError = err;
+        throw err;
+      })
+      .finally(() => {
+        inflightPromise = null;
+      });
+  }
+  return inflightPromise;
+};
+
+export const useAgencyConfig = () => {
+  const [data, setData] = useState(cachedConfig);
+  const [loading, setLoading] = useState(!cachedConfig && !cachedError);
+  const [error, setError] = useState(cachedError ? cachedError.message : "");
+
+  useEffect(() => {
+    let active = true;
+    if (cachedConfig || cachedError) {
+      setLoading(false);
+      return undefined;
+    }
+
+    fetchConfigOnce()
+      .then(({ data: fetchedData }) => {
+        if (!active) {
+          return;
         }
+        setData(fetchedData);
+        setError("");
+      })
+      .catch((err) => {
+        if (!active) {
+          return;
+        }
+        console.error("[agency-config]", err);
+        setError(err.message || "Error inesperado.");
       })
       .finally(() => {
         if (active) {

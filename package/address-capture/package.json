@@ -1,0 +1,19 @@
+{
+  "name": "@raccoonstudiosllc/address-capture",
+  "version": "0.1.0",
+  "description": "Reusable address capture input with suggestion + normalization hooks.",
+  "type": "module",
+  "main": "src/index.js",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

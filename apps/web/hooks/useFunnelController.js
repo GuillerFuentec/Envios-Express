@@ -91,21 +91,6 @@ export const useFunnelController = () => {
     [clearFieldError]
   );
 
-  const handlePickupAddressSelected = useCallback(
-    ({ address, placeId }) => {
-      setFormData((prev) => ({
-        ...prev,
-        preferences: {
-          ...prev.preferences,
-          pickupAddress: address,
-          pickupAddressPlaceId: placeId,
-        },
-      }));
-      clearFieldError("preferences", "pickupAddress");
-    },
-    [clearFieldError]
-  );
-
   const runContactValidation = useCallback(() => {
     const { errors, normalizedPhone } = validateContact(formData.contact);
     if (normalizedPhone) {
@@ -356,7 +341,6 @@ export const useFunnelController = () => {
     GLOBAL_ERROR_MESSAGE,
     setStatusMessage,
     updateField,
-    handlePickupAddressSelected,
     handleNext,
     handlePrev,
     handlePrimaryAction,
