@@ -1,21 +1,15 @@
 "use strict";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { useAgencyConfig } from "./useAgencyConfig";
-import { useRecaptcha } from "./useRecaptcha";
 import {
   createAgencyOrder,
   requestCheckout,
   requestQuote,
-  verifyRecaptchaToken,
 } from "../utils/apiClient";
 import { validateContact, validatePreferences, validateShipment } from "../utils/validators";
 import { INITIAL_FORM_STATE, GLOBAL_ERROR_MESSAGE } from "../constants/funnel";
-
-const siteKey =
-  process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ||
-  process.env.NEXT_PUBLIC_RECAPTCHA_SITEKEY ||
-  "";
 
 const buildQuotePayload = (formData) => ({
   weightLbs: Number(formData.shipment.weightLbs) || 0,
@@ -32,7 +26,6 @@ const buildQuotePayload = (formData) => ({
 
 export const useFunnelController = () => {
   const { data: agencyConfig, loading: configLoading, error: configError } = useAgencyConfig();
-  const { ready: recaptchaReady, execute: executeRecaptcha } = useRecaptcha(siteKey);
 
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const [currentStep, setCurrentStep] = useState(0);
@@ -44,13 +37,26 @@ export const useFunnelController = () => {
   const [quoteState, setQuoteState] = useState({ loading: false, data: null, error: "" });
   const [quoteRefreshIndex, setQuoteRefreshIndex] = useState(0);
   const [actionLoading, setActionLoading] = useState(false);
-  const [verifyingCaptcha, setVerifyingCaptcha] = useState(false);
-  const [recaptchaToken, setRecaptchaToken] = useState("");
-  const [recaptchaVerifiedAt, setRecaptchaVerifiedAt] = useState(0);
   const [orderResult, setOrderResult] = useState(null);
 
   const quotePayload = useMemo(() => buildQuotePayload(formData), [formData]);
   const quotePayloadKey = useMemo(() => JSON.stringify(quotePayload), [quotePayload]);
+  const { executeRecaptcha } = useGoogleReCaptcha();
+
+  const getRecaptchaToken = useCallback(
+    async (action) => {
+      if (!executeRecaptcha) {
+        throw new Error("reCAPTCHA aún no está listo. Intenta en unos segundos.");
+      }
+      try {
+        return await executeRecaptcha(action);
+      } catch (error) {
+        console.error("[recaptcha] executeRecaptcha error", error);
+        throw new Error("No pudimos validar tu actividad con reCAPTCHA.");
+      }
+    },
+    [executeRecaptcha]
+  );
 
   const clearFieldError = useCallback((section, field) => {
     const setters = {
@@ -149,12 +155,24 @@ export const useFunnelController = () => {
 
   useEffect(() => {
     if (currentStep !== 3) {
-      return;
+      return undefined;
     }
     let active = true;
-    setQuoteState((prev) => ({ ...prev, loading: true, error: "", data: null }));
-    requestQuote(quotePayload)
-      .then((data) => {
+    setQuoteState({ loading: true, data: null, error: "" });
+
+    if (!executeRecaptcha) {
+      return () => {
+        active = false;
+      };
+    }
+
+    const fetchQuote = async () => {
+      try {
+        const token = await getRecaptchaToken("quote");
+        const data = await requestQuote({
+          ...quotePayload,
+          recaptchaToken: token,
+        });
         if (!active) {
           return;
         }
@@ -165,66 +183,23 @@ export const useFunnelController = () => {
             preferences: { ...prev.preferences, paymentMethod: "online" },
           }));
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         if (active) {
-          setQuoteState({ loading: false, data: null, error: error.message });
+          setQuoteState({
+            loading: false,
+            data: null,
+            error: error.message || "No pudimos generar el desglose.",
+          });
         }
-      });
+      }
+    };
+
+    fetchQuote();
     return () => {
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStep, quotePayloadKey, quoteRefreshIndex]);
-
-  const runRecaptchaVerification = useCallback(async () => {
-    if (!siteKey) {
-      setStatusMessage({
-        text: "Falta NEXT_PUBLIC_RECAPTCHA_SITE_KEY. Configura la variable de entorno.",
-        variant: "error",
-      });
-      return null;
-    }
-    if (!recaptchaReady) {
-      setStatusMessage({
-        text: "reCAPTCHA se está inicializando. Intenta nuevamente en unos segundos.",
-        variant: "error",
-      });
-      return null;
-    }
-    setVerifyingCaptcha(true);
-    try {
-      const token = await executeRecaptcha("funnel");
-      const result = await verifyRecaptchaToken(token);
-      if (!result?.ok) {
-        setStatusMessage({
-          text: "No pudimos verificar reCAPTCHA. Intenta de nuevo.",
-          variant: "error",
-        });
-        return null;
-      }
-      setRecaptchaToken(token);
-      setRecaptchaVerifiedAt(Date.now());
-      setStatusMessage({ text: "Captcha verificado correctamente.", variant: "success" });
-      return token;
-    } catch (error) {
-      setStatusMessage({
-        text: error.message || "No se pudo verificar reCAPTCHA.",
-        variant: "error",
-      });
-      return null;
-    } finally {
-      setVerifyingCaptcha(false);
-    }
-  }, [executeRecaptcha, recaptchaReady]);
-
-  const ensureRecentRecaptcha = useCallback(async () => {
-    const now = Date.now();
-    if (recaptchaToken && now - recaptchaVerifiedAt < 1000 * 100) {
-      return recaptchaToken;
-    }
-    return runRecaptchaVerification();
-  }, [recaptchaToken, recaptchaVerifiedAt, runRecaptchaVerification]);
+  }, [currentStep, quotePayloadKey, quoteRefreshIndex, executeRecaptcha, getRecaptchaToken]);
 
   const handleNext = useCallback(async () => {
     setOrderResult(null);
@@ -241,11 +216,6 @@ export const useFunnelController = () => {
         setShowGlobalError(true);
         return;
       }
-      const token = await runRecaptchaVerification();
-      if (!token) {
-        setShowGlobalError(true);
-        return;
-      }
     }
     setShowGlobalError(false);
     setCurrentStep((prev) => Math.min(prev + 1, 3));
@@ -254,7 +224,6 @@ export const useFunnelController = () => {
     runContactValidation,
     runShipmentValidation,
     runPreferenceValidation,
-    runRecaptchaVerification,
   ]);
 
   const handlePrev = useCallback(() => {
@@ -268,10 +237,6 @@ export const useFunnelController = () => {
       setStatusMessage({ text: "Aún no tenemos el desglose listo.", variant: "error" });
       return;
     }
-    const token = await ensureRecentRecaptcha();
-    if (!token) {
-      return;
-    }
     setActionLoading(true);
     setStatusMessage({ text: "Procesando...", variant: "info" });
     setOrderResult(null);
@@ -281,16 +246,25 @@ export const useFunnelController = () => {
       shipment: formData.shipment,
       preferences: formData.preferences,
       quoteRequest: quotePayload,
-      recaptchaToken: token,
     };
 
+    const prefersOnline = formData.preferences.paymentMethod === "online";
+    const recaptchaAction = prefersOnline ? "checkout" : "order";
+
     try {
-      if (formData.preferences.paymentMethod === "online") {
-        const data = await requestCheckout(payload);
+      const recaptchaToken = await getRecaptchaToken(recaptchaAction);
+      if (prefersOnline) {
+        const data = await requestCheckout({
+          ...payload,
+          recaptchaToken,
+        });
         window.location.assign(data.url);
         return;
       }
-      const data = await createAgencyOrder(payload);
+      const data = await createAgencyOrder({
+        ...payload,
+        recaptchaToken,
+      });
       setOrderResult({ ok: true, orderId: data.orderId });
       setStatusMessage({
         text: "Orden confirmada. Te esperamos en la agencia.",
@@ -304,7 +278,7 @@ export const useFunnelController = () => {
     } finally {
       setActionLoading(false);
     }
-  }, [ensureRecentRecaptcha, formData, quotePayload, quoteState.data]);
+  }, [formData, quotePayload, quoteState.data, getRecaptchaToken]);
 
   const showPolicyBanner = formData.shipment.contentType === "Dinero en efectivo";
   const shouldDisableAgency =
@@ -334,7 +308,6 @@ export const useFunnelController = () => {
     statusMessage,
     quoteState,
     actionLoading,
-    verifyingCaptcha,
     orderResult,
     showPolicyBanner,
     shouldDisableAgency,

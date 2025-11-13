@@ -58,14 +58,6 @@ const getMetaConfig = () => {
     }
   }
 
-  const recaptchaMeta = document.querySelector('meta[name="recaptcha-site-key"]');
-  if (recaptchaMeta && typeof recaptchaMeta.getAttribute === 'function') {
-    const recaptchaValue = recaptchaMeta.getAttribute('content');
-    if (recaptchaValue) {
-      config.recaptchaSiteKey = recaptchaValue;
-    }
-  }
-
   return config;
 };
 
@@ -85,17 +77,6 @@ const getBuildTimeConfig = () => {
     import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
   ) {
     config.stripePublicKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-  }
-
-  if (
-    typeof import.meta !== 'undefined' &&
-    import.meta.env &&
-    (import.meta.env.VITE_RECAPTCHA_SITE_KEY ||
-      import.meta.env.VITE_RECAPTCHA_SECRET_KEY)
-  ) {
-    config.recaptchaSiteKey =
-      import.meta.env.VITE_RECAPTCHA_SITE_KEY ||
-      import.meta.env.VITE_RECAPTCHA_SECRET_KEY;
   }
 
   return config;
@@ -136,25 +117,6 @@ export const getStripePublicKey = () => {
   const metaConfig = getMetaConfig();
   if (metaConfig.stripePublicKey) {
     return metaConfig.stripePublicKey;
-  }
-
-  return '';
-};
-
-export const getRecaptchaSiteKey = () => {
-  const runtimeConfig = getRuntimeConfig();
-  if (runtimeConfig.recaptchaSiteKey) {
-    return runtimeConfig.recaptchaSiteKey;
-  }
-
-  const buildConfig = getBuildTimeConfig();
-  if (buildConfig.recaptchaSiteKey) {
-    return buildConfig.recaptchaSiteKey;
-  }
-
-  const metaConfig = getMetaConfig();
-  if (metaConfig.recaptchaSiteKey) {
-    return metaConfig.recaptchaSiteKey;
   }
 
   return '';

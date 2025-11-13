@@ -204,9 +204,6 @@ const PreferencesStep = ({
         />
       </div>
 
-      <div className="status-message">
-        Verificaremos reCAPTCHA v3 (acción “funnel”) antes de continuar.
-      </div>
     </div>
   );
 };

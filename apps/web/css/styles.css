@@ -391,24 +391,6 @@ body {
 	grid-column: auto / span 3;
 }
 
-.recaptcha-box {
-	margin-top: 1rem;
-	padding: 1rem;
-	border-radius: 1rem;
-	border: 1px dashed rgba(15, 118, 110, 0.35);
-	background: rgba(255, 255, 255, 0.86);
-}
-
-.recaptcha-box__hint {
-	margin: 0.5rem 0 0;
-	font-size: 0.85rem;
-	color: var(--color-muted);
-}
-
-.recaptcha-box > div[data-recaptcha] {
-	display: inline-block;
-}
-
 
 .funnel__summary {
   margin-top: 1rem;

@@ -11,15 +11,6 @@ const handleResponse = async (response) => {
   return payload;
 };
 
-export const verifyRecaptchaToken = async (token) => {
-  const response = await fetch('/api/security/recaptcha-verify', {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({ token }),
-  });
-  return handleResponse(response);
-};
-
 export const requestQuote = async (payload) => {
   const response = await fetch('/api/quote', {
     method: 'POST',

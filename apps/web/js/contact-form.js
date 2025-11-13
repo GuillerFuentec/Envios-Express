@@ -1,6 +1,5 @@
 import './polyfills/public-key.js';
 import { sendForm } from '@/src/lib/sendForm.js';
-import { loadRecaptcha } from '@/src/lib/recaptcha.js';
 import { validateContactFields } from './components/validators.js';
 import { normalizePhoneNumber } from './components/phone.js';
 
@@ -19,10 +18,6 @@ const initContactForm = () => {
   const contactSmsConsent = document.getElementById('contactSmsConsent');
   const contactStatus = document.getElementById('contactStatus');
   const contactSubmit = contactForm.querySelector('button[type="submit"]');
-
-  loadRecaptcha().catch((error) => {
-    console.warn('[recaptcha] No se pudo precargar el script', error);
-  });
 
   contactForm.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -83,8 +78,7 @@ const initContactForm = () => {
     try {
       const response = await sendForm(
         CONTACTS_ENDPOINT,
-        { data: { contact_info: payload } },
-        { action: 'contact_form' }
+        { data: { contact_info: payload } }
       );
 
       if (!response.ok) {
@@ -99,13 +93,9 @@ const initContactForm = () => {
       contactForm.reset();
     } catch (error) {
       console.error('Error al enviar el contacto', error);
-      const isRecaptchaError =
-        typeof error?.message === 'string' &&
-        error.message.toLowerCase().includes('recaptcha');
       if (contactStatus) {
-        contactStatus.textContent = isRecaptchaError
-          ? 'No pudimos verificar que eres humano. Intenta nuevamente.'
-          : 'No pudimos enviar tu mensaje. Intentalo nuevamente.';
+        contactStatus.textContent =
+          'No pudimos enviar tu mensaje. Intentalo nuevamente.';
         contactStatus.classList.add('is-error');
       }
     } finally {
@@ -118,6 +108,3 @@ const initContactForm = () => {
 };
 
 document.addEventListener('DOMContentLoaded', initContactForm);
-    if (normalizedPhone) {
-      contactPhone.value = normalizedPhone;
-    }

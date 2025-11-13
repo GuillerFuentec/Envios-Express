@@ -1,5 +1,5 @@
-import Head from 'next/head';
-import Link from 'next/link';
+import Head from "next/head";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -16,9 +16,9 @@ export default function Home() {
           <p className="funnel-eyebrow">Envios a Cuba</p>
           <h1>Planifica tu envío con un funnel guiado de 4 pasos</h1>
           <p>
-            Consulta la tarifa oficial de la agencia, valida tu información con reCAPTCHA v3,
-            calcula el costo real (peso, recogida, tarifas y procesamiento) y define si pagarás
-            online o en agencia.
+            Consulta la tarifa oficial de la agencia, valida tu información en un
+            flujo guiado, calcula el costo real (peso, recogida, tarifas y
+            procesamiento) y define si pagarás online o en agencia.
           </p>
           <Link href="/funnel" className="cta">
             Ir al funnel
@@ -28,15 +28,20 @@ export default function Home() {
         <section className="funnel-card">
           <h2 style={{ marginTop: 0 }}>¿Qué obtendrás?</h2>
           <ul>
-            <li>Cotización validada directamente con el backend de la agencia.</li>
             <li>
-              Soporte para recolección a domicilio con Google Places Autocomplete y Distance Matrix.
+              Cotización validada directamente con el backend de la agencia.
             </li>
-            <li>Checkout con Stripe o confirmación inmediata para pago en agencia.</li>
+            <li>
+              Soporte para recolección a domicilio con Google Places Autocomplete
+              y Distance Matrix.
+            </li>
+            <li>
+              Checkout con Stripe o confirmación inmediata para pago en agencia.
+            </li>
           </ul>
-          <p style={{ marginTop: 24, color: 'var(--color-muted)' }}>
-            Todo el funnel está disponible en <strong>/funnel</strong>. Puedes regresar a esta
-            página cuando quieras.
+          <p style={{ marginTop: 24, color: "var(--color-muted)" }}>
+            Todo el funnel está disponible en <strong>/funnel</strong>. Puedes
+            regresar a esta página cuando quieras.
           </p>
         </section>
       </main>

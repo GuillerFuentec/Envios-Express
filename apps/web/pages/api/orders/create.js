@@ -1,6 +1,7 @@
 "use strict";
 
-const { calculateQuote } = require("../../lib/server/quote");
+const { calculateQuote } = require("../../../lib/server/quote");
+const { requireRecaptcha } = require("../../../lib/server/recaptcha");
 
 const buildQuotePayload = (body = {}) => {
   const shipment = body.shipment || {};
@@ -65,30 +66,32 @@ export default async function handler(req, res) {
   }
 
   try {
-    const recaptchaToken = req.body?.recaptchaToken;
-    if (!recaptchaToken) {
-      return res.status(400).json({ error: "Falta el token de reCAPTCHA." });
-    }
+    const body = req.body || {};
+    const { recaptchaToken, ...payload } = body;
+
+    await requireRecaptcha({
+      token: recaptchaToken,
+      action: "order",
+    });
 
     const quote = await calculateQuote({
-      ...buildQuotePayload(req.body || {}),
+      ...buildQuotePayload(payload),
       paymentMethod: "agency",
     });
 
-    const payload = {
+    const clientPayload = {
       data: {
         client_info: {
-          contact: req.body?.contact || {},
-          shipment: req.body?.shipment || {},
-          preferences: req.body?.preferences || {},
+          contact: body?.contact || {},
+          shipment: body?.shipment || {},
+          preferences: body?.preferences || {},
           quote,
           submittedAt: new Date().toISOString(),
         },
       },
-      recaptchaToken,
     };
 
-    const response = await postToStrapi(payload);
+    const response = await postToStrapi(clientPayload);
     const orderId = response?.data?.id || response?.id || null;
 
     return res.status(200).json({ ok: true, orderId });

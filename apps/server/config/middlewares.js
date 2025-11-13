@@ -22,7 +22,6 @@ module.exports = [
       textLimit: '3mb',
     },
   },
-  // { resolve: './src/middlewares/recaptchaBypass' },
   'strapi::session',
   'strapi::favicon',
   'strapi::public',

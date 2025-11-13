@@ -1,6 +1,7 @@
 "use strict";
 
 const { calculateQuote } = require("../../lib/server/quote");
+const { requireRecaptcha } = require("../../lib/server/recaptcha");
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -9,7 +10,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    const payload = req.body || {};
+    const body = req.body || {};
+    const { recaptchaToken, ...payload } = body;
+
+    await requireRecaptcha({
+      token: recaptchaToken,
+      action: "quote",
+    });
+
     console.log("[api/quote] Request received", {
       weight: payload.weightLbs,
       pickup: payload.pickup,
@@ -21,7 +29,7 @@ export default async function handler(req, res) {
 
     const quote = await calculateQuote(payload);
 
-    console.log("[api/quote] Quote calculated", {
+    console.debug("[api/quote] Quote calculated", {
       total: quote.total,
       breakdown: {
         weight: quote.breakdown?.weight?.amount,

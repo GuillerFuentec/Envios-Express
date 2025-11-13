@@ -5,7 +5,6 @@ const ActionsBar = ({
   onPrev,
   onNext,
   onPrimary,
-  verifyingCaptcha,
   actionLoading,
   quoteReady,
   primaryLabel,
@@ -17,13 +16,8 @@ const ActionsBar = ({
       </button>
     )}
     {currentStep < 3 && (
-      <button
-        type="button"
-        className="btn-primary"
-        onClick={onNext}
-        disabled={currentStep === 2 && verifyingCaptcha}
-      >
-        {currentStep === 2 && verifyingCaptcha ? "Verificando..." : "Continuar"}
+      <button type="button" className="btn-primary" onClick={onNext}>
+        Continuar
       </button>
     )}
     {currentStep === 3 && (

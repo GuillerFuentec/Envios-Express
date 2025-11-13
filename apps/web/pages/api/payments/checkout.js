@@ -1,7 +1,8 @@
 "use strict";
 
-const { calculateQuote } = require("../../lib/server/quote");
-const { getStripeClient } = require("../../lib/server/stripe");
+const { calculateQuote } = require("../../../lib/server/quote");
+const { getStripeClient } = require("../../../lib/server/stripe");
+const { requireRecaptcha } = require("../../../lib/server/recaptcha");
 
 const toMinorUnit = (value) => {
   const amount = Number(value);
@@ -107,8 +108,16 @@ export default async function handler(req, res) {
 
   try {
     const stripe = getStripeClient();
-    const contact = req.body?.contact || {};
-    const quotePayload = buildQuotePayload(req.body || {});
+    const body = req.body || {};
+    const { recaptchaToken, ...payload } = body;
+
+    await requireRecaptcha({
+      token: recaptchaToken,
+      action: "checkout",
+    });
+
+    const contact = payload?.contact || {};
+    const quotePayload = buildQuotePayload(payload);
     const quote = await calculateQuote(quotePayload);
 
     const lineItems = buildLineItems(quote);

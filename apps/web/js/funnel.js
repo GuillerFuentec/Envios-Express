@@ -1,6 +1,5 @@
 import './polyfills/public-key.js';
 import { sendForm } from '@/src/lib/sendForm.js';
-import { loadRecaptcha } from '@/src/lib/recaptcha.js';
 import { validateContactFields } from './components/validators.js';
 import { normalizePhoneNumber } from './components/phone.js';
 
@@ -335,12 +334,7 @@ const initFunnel = () => {
       }
     } catch (error) {
       console.error('Error al enviar el funnel', error);
-      const message =
-        typeof error?.message === 'string' &&
-        error.message.toLowerCase().includes('recaptcha')
-          ? 'No pudimos verificar que eres humano. Intenta nuevamente.'
-          : 'No se pudo enviar la informacion. Intentalo de nuevo mas tarde.';
-      setStatus(message, 'error');
+      setStatus('No se pudo enviar la informacion. Intentalo de nuevo mas tarde.', 'error');
     } finally {
       if (checkoutWindow && (!submissionSuccessful || actionUsed !== 'online')) {
         checkoutWindow.close();
@@ -363,9 +357,6 @@ const initFunnel = () => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  loadRecaptcha().catch((error) => {
-    console.warn('[recaptcha] No se pudo precargar el script', error);
-  });
   initFunnel();
 });
 

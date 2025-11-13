@@ -19,7 +19,6 @@ const FunnelView = () => {
     statusMessage,
     quoteState,
     actionLoading,
-    verifyingCaptcha,
     orderResult,
     showPolicyBanner,
     shouldDisableAgency,
@@ -114,7 +113,6 @@ const FunnelView = () => {
         onPrev={handlePrev}
         onNext={handleNext}
         onPrimary={handlePrimaryAction}
-        verifyingCaptcha={verifyingCaptcha}
         actionLoading={actionLoading}
         quoteReady={Boolean(quoteState.data) && !quoteState.loading && !quoteState.error}
         primaryLabel={primaryLabel}

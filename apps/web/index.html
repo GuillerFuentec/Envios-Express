@@ -14,8 +14,6 @@
     <link rel="stylesheet" href="./css/styles.css">
     <link rel="stylesheet" href="./css/navbar.css">
     <link rel="stylesheet" href="./css/footer.css">
-    <script
-        src="https://www.google.com/recaptcha/enterprise.js?render=6LfmXwUsAAAAAFlgy0evN_peaOpsSjltKXk1I5C9"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
@@ -200,12 +198,6 @@
                                 <textarea class="funnel__input funnel__textarea" data-field="preferences.notes" rows="4"
                                     placeholder="Cuentanos detalles importantes"></textarea>
                             </label>
-                            <p class="text-gray-500 text-sm mt-4">
-                                Este formulario esta protegido por reCAPTCHA v3. <a
-                                    href="https://policies.google.com/privacy" target="_blank" rel="noopener"
-                                    class="underline">Privacidad</a> y <a href="https://policies.google.com/terms"
-                                    target="_blank" rel="noopener" class="underline">Terminos</a> aplican.
-                            </p>
                         </div>
                     </div>
                     <div class="funnel__step" data-funnel-step="3">
@@ -465,12 +457,6 @@
                             <label for="contactSmsConsent" class="text-gray-700 text-sm leading-relaxed">Acepto recibir
                                 mensajes de texto para confirmar mi solicitud y coordinar detalles del envio.</label>
                         </div>
-                        <p class="text-gray-500 text-xs">
-                            Sitio protegido por reCAPTCHA v3. <a href="https://policies.google.com/privacy"
-                                target="_blank" rel="noopener" class="underline">Privacidad</a> y <a
-                                href="https://policies.google.com/terms" target="_blank" rel="noopener"
-                                class="underline">Terminos</a> de Google aplican.
-                        </p>
                         <button type="submit"
                             class="bg-teal-700 hover:bg-teal-800 text-white font-bold py-2 px-6 rounded-lg transition">Enviar
                             mensaje</button>
@@ -525,14 +511,6 @@
     <script type="module" src="./js/nav.js"></script>
     <script type="module" src="./js/funnel.js"></script>
     <script type="module" src="./js/contact-form.js"></script>
-    <script>
-        function onClick(e) {
-            e.preventDefault();
-            grecaptcha.enterprise.ready(async () => {
-                const token = await grecaptcha.enterprise.execute('6LfmXwUsAAAAAFlgy0evN_peaOpsSjltKXk1I5C9', { action: 'LOGIN' });
-            });
-        }
-    </script>
 </body>
 
 </html>
