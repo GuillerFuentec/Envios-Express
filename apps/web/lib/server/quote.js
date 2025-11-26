@@ -138,10 +138,8 @@ const calculateQuote = async (payload = {}) => {
   const cashFee = isCash ? roundCurrency(baseAmount * cashRate) : 0;
 
   const subtotal = baseAmount + pickupAmount + cashFee;
-  const platformFee =
-    paymentMethod === "online"
-      ? roundCurrency(subtotal * PLATFORM_FEE_RATE)
-      : 0;
+  const platformFeeAmount =
+    paymentMethod === "online" ? subtotal * PLATFORM_FEE_RATE : 0;
 
   const stripePercent =
     typeof agencyProfile.stripe_processing_percent === "number"
@@ -152,12 +150,15 @@ const calculateQuote = async (payload = {}) => {
       ? agencyProfile.stripe_processing_fixed
       : Number(process.env.STRIPE_PROCESSING_FIXED || 0.3);
 
+  const stripeFeeAmount =
+    paymentMethod === "online" ? subtotal * stripePercent + stripeFixed : 0;
+
   const processingFee =
     paymentMethod === "online"
-      ? roundCurrency(subtotal * stripePercent + stripeFixed)
+      ? roundCurrency(platformFeeAmount + stripeFeeAmount)
       : 0;
 
-  const total = roundCurrency(subtotal + platformFee + processingFee);
+  const total = roundCurrency(subtotal + processingFee);
   const mustPayOnlineForCash = isCash && pickupEnabled;
 
   const response = {
@@ -180,6 +181,9 @@ const calculateQuote = async (payload = {}) => {
       pickup: pickupEnabled
         ? {
             amount: pickupAmount,
+            label: `Pick-up ($${PICKUP_BASE_FEE} + $${PICKUP_PER_MILE}/mi * ${
+              pickupDetails?.distanceMiles ?? 0
+            }mi)`,
             ...pickupDetails,
           }
         : {
@@ -188,12 +192,11 @@ const calculateQuote = async (payload = {}) => {
           },
       cashFee: {
         amount: cashFee,
-      },
-      platformFee: {
-        amount: platformFee,
+        label: "Fee (Dinero en efectivo)",
       },
       processingFee: {
         amount: processingFee,
+        label: "Tarifa de procesamiento",
       },
     },
     policy: {

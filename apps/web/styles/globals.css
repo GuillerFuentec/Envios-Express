@@ -342,6 +342,35 @@ a {
   margin-top: 12px;
 }
 
+.summary-selections {
+  border-top: 1px dashed var(--color-border);
+  padding-top: 12px;
+  margin-top: 4px;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+}
+
+.summary-selections__title {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.summary-selections ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.summary-selections li strong {
+  color: var(--color-text);
+  margin-right: 4px;
+}
+
 .skeleton {
   background: linear-gradient(90deg, #e5e7eb, #f3f4f6, #e5e7eb);
   background-size: 200% 100%;

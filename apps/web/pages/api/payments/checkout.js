@@ -72,14 +72,7 @@ const buildLineItems = (quote) => {
   }
 
   if (quote.breakdown?.cashFee?.amount) {
-    pushItem("Fee Dinero en efectivo", quote.breakdown.cashFee.amount);
-  }
-
-  if (quote.breakdown?.platformFee?.amount) {
-    pushItem(
-      "Tarifa de plataforma (2.3%)",
-      quote.breakdown.platformFee.amount
-    );
+    pushItem("Fee (Dinero en efectivo)", quote.breakdown.cashFee.amount);
   }
 
   if (quote.breakdown?.processingFee?.amount) {
