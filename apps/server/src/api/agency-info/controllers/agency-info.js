@@ -34,8 +34,41 @@ const DEFAULT_CONFIG = {
   stripe_processing_fixed: 0.3,
 };
 
+// Cache in-memory durante el ciclo de vida del proceso
+let cachedEnvPlaceId = undefined; // se chequea solo una vez
+let resolvingPlaceIdPromise = null; // lock/memo para evitar avalanchas
+
+const DEFAULT_ADDRESS = process.env.AGENCY_ADDRESS || DEFAULT_CONFIG.address;
+
+const readEnvPlaceIdOnce = () => {
+  if (cachedEnvPlaceId !== undefined) {
+    return cachedEnvPlaceId;
+  }
+  cachedEnvPlaceId = process.env.AGENCY_PLACE_ID || null;
+  return cachedEnvPlaceId;
+};
+
+const getOrCreateAgencyInfo = async () => {
+  const existing = await strapi.entityService.findMany(
+    "api::agency-info.agency-info",
+    { limit: 1 }
+  );
+  if (existing?.length) return existing[0];
+  return strapi.entityService.create("api::agency-info.agency-info", {
+    data: { address: DEFAULT_ADDRESS },
+  });
+};
+
+const savePlaceIdIfMissing = async (id, placeId, address) => {
+  if (id && placeId) {
+    await strapi.entityService.update("api::agency-info.agency-info", id, {
+      data: { place_id: placeId, address },
+    });
+  }
+};
+
 const getLegacyPlaceId = async (address) => {
-  const placeAddress = DEFAULT_CONFIG.address || address;
+  const placeAddress = address || DEFAULT_CONFIG.address;
   const url = "https://places.googleapis.com/v1/places:searchText";
 
   try {
@@ -58,7 +91,6 @@ const getLegacyPlaceId = async (address) => {
     }
 
     const data = await response.json();
-
     const place = data.places?.[0];
 
     if (!place) {
@@ -68,15 +100,62 @@ const getLegacyPlaceId = async (address) => {
       return null;
     }
 
-    strapi.log.info("Place ID: ", place.id);
-    strapi.log.info("Nombre: ", place.displayName?.text || "");
-    strapi.log.info("Direccion: ", place.formattedAddress);
-
     return place.id;
   } catch (error) {
     strapi.log.error("Error consultando Google Places", error);
     return null;
   }
+};
+
+const resolveAndCachePlaceId = async (agencyAddress, agencyRecordId) => {
+  if (resolvingPlaceIdPromise) return resolvingPlaceIdPromise;
+  resolvingPlaceIdPromise = (async () => {
+    const legacyPlaceId = await getLegacyPlaceId(agencyAddress);
+    if (legacyPlaceId && agencyRecordId) {
+      await savePlaceIdIfMissing(agencyRecordId, legacyPlaceId, agencyAddress);
+      strapi.log.info(
+        `[agency-info] place_id obtenido y persistido desde Google Places: ${legacyPlaceId}`
+      );
+    }
+    return legacyPlaceId || null;
+  })();
+  try {
+    return await resolvingPlaceIdPromise;
+  } finally {
+    resolvingPlaceIdPromise = null;
+  }
+};
+
+const getFinalPlaceId = async (agencyAddress) => {
+  const agencyRecord = await getOrCreateAgencyInfo();
+
+  if (agencyRecord.place_id) {
+    strapi.log.info("[agency-info] place_id obtenido desde DB.");
+    return agencyRecord.place_id;
+  }
+
+  const envPlaceId = readEnvPlaceIdOnce();
+  if (envPlaceId) {
+    strapi.log.info("[agency-info] place_id obtenido desde env (cacheada una sola vez).");
+    await savePlaceIdIfMissing(agencyRecord.id, envPlaceId, agencyAddress);
+    return envPlaceId;
+  }
+
+  strapi.log.info(
+    "[agency-info] place_id no encontrado en DB ni env. Consultando Google Places..."
+  );
+  const placeIdFromGoogle = await resolveAndCachePlaceId(
+    agencyAddress,
+    agencyRecord.id
+  );
+  if (placeIdFromGoogle) {
+    return placeIdFromGoogle;
+  }
+
+  strapi.log.warn(
+    "[agency-info] No se pudo resolver place_id. Usando DEFAULT_CONFIG.place_id o null."
+  );
+  return DEFAULT_CONFIG.place_id || null;
 };
 
 const parseList = (value, fallback) => {
@@ -104,53 +183,23 @@ const buildResumePayload = async () => {
   const percentFromEnv = process.env.STRIPE_PROCESSING_PERCENT;
   const fixedFromEnv = process.env.STRIPE_PROCESSING_FIXED;
   const agencyAddress = process.env.AGENCY_ADDRESS || DEFAULT_CONFIG.address;
-  const placeIdFromEnv = process.env.AGENCY_PLACE_ID;
 
-  let legacyPlaceId = null;
+  strapi.log.info(`[agency-info] Usando direccion de agencia: "${agencyAddress}"`);
 
-  // Loggeamos qué dirección estamos usando para el cálculo
-  strapi.log.info(
-    `[agency-info] Usando dirección de agencia: "${agencyAddress}"`
-  );
-
-  // Solo llamamos a Google si no hay AGENCY_PLACE_ID
-  if (!placeIdFromEnv) {
-    strapi.log.info(
-      "[agency-info] No se encontró AGENCY_PLACE_ID en env. Intentando obtener place_id desde Google Places..."
-    );
-    legacyPlaceId = await getLegacyPlaceId(agencyAddress);
-  } else {
-    strapi.log.info(
-      `[agency-info] Usando AGENCY_PLACE_ID desde env: ${placeIdFromEnv}`
-    );
-  }
-
-  const finalPlaceId =
-    placeIdFromEnv || legacyPlaceId || DEFAULT_CONFIG.place_id || null;
-
-  if (!placeIdFromEnv && !legacyPlaceId) {
-    strapi.log.warn(
-      `[agency-info] No se pudo obtener place_id desde Google Places para la dirección "${agencyAddress}".` +
-        " Usando DEFAULT_CONFIG.place_id o null."
-    );
-  } else if (legacyPlaceId && !placeIdFromEnv) {
-    strapi.log.info(
-      `[agency-info] place_id obtenido desde Google Places: ${legacyPlaceId}`
-    );
-  }
+  const finalPlaceId = await getFinalPlaceId(agencyAddress);
 
   if (!finalPlaceId) {
     strapi.log.warn(
-      "[agency-info] El campo final place_id es null/ vacío. Revisa configuración o dirección si esperas un valor."
+      "[agency-info] El campo final place_id es null/vacio. Revisa configuracion o direccion si esperas un valor."
     );
   } else {
     strapi.log.info(
-      `[agency-info] place_id final que se devolverá en /resume: ${finalPlaceId}`
+      `[agency-info] place_id final que se devolvera en /resume: ${finalPlaceId}`
     );
   }
 
   return {
-    address: process.env.AGENCY_ADDRESS || DEFAULT_CONFIG.address,
+    address: agencyAddress,
     place_id: finalPlaceId,
     Price_lb: Number(
       process.env.PRICE_LB ||
@@ -183,3 +232,7 @@ module.exports = createCoreController("api::agency-info.agency-info", () => ({
     ctx.body = payload;
   },
 }));
+
+// Exportamos helpers para reutilizar en bootstrap/precalentado
+module.exports.getFinalPlaceId = getFinalPlaceId;
+module.exports.DEFAULT_AGENCY_ADDRESS = DEFAULT_ADDRESS;

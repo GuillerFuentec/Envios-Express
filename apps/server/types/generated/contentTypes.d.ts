@@ -442,6 +442,7 @@ export interface ApiAgencyInfoAgencyInfo extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    address: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -451,6 +452,7 @@ export interface ApiAgencyInfoAgencyInfo extends Struct.CollectionTypeSchema {
       'api::agency-info.agency-info'
     > &
       Schema.Attribute.Private;
+    place_id: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &

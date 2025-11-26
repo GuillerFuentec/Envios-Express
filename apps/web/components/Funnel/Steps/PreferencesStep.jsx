@@ -9,6 +9,7 @@ const PreferencesStep = ({
   errors,
   onFieldChange,
   shouldDisableAgency,
+  isCash = false,
 }) => {
   const addressValue = useMemo(
     () => data?.addressCapture || createEmptyAddress(),
@@ -124,12 +125,13 @@ const PreferencesStep = ({
         <input
           id="pickupToggle"
           type="checkbox"
-          checked={Boolean(data?.pickup)}
+          checked={Boolean(data?.pickup) && !isCash}
           onChange={handlePickupToggle}
+          disabled={isCash}
         />
       </label>
 
-      {data?.pickup && (
+      {data?.pickup && !isCash && (
         <div className="field">
           <AddressCaptureInput
             value={addressValue}
@@ -160,14 +162,19 @@ const PreferencesStep = ({
                 data?.paymentMethod === method ? "active" : ""
               }`}
               style={{
-                opacity: method === "agency" && shouldDisableAgency ? 0.5 : 1,
+                opacity:
+                  method === "agency" && (shouldDisableAgency || isCash)
+                    ? 0.5
+                    : 1,
               }}
             >
               <input
                 type="radio"
                 name="paymentMethod"
                 value={method}
-                disabled={method === "agency" && shouldDisableAgency}
+                disabled={
+                  method === "agency" && (shouldDisableAgency || isCash)
+                }
                 checked={data?.paymentMethod === method}
                 onChange={handlePaymentChange}
               />
@@ -177,10 +184,10 @@ const PreferencesStep = ({
             </label>
           ))}
         </div>
-        {shouldDisableAgency && (
+        {(shouldDisableAgency || isCash) && (
           <p className="field-error">
-            Si envías dinero en efectivo y solicitas recogida, debes pagar
-            online.
+            Para dinero en efectivo debes pagar online. La recogida está
+            desactivada.
           </p>
         )}
         {errors?.paymentMethod && (
@@ -203,7 +210,6 @@ const PreferencesStep = ({
           placeholder="Agrega instrucciones, referencias o detalles relevantes."
         />
       </div>
-
     </div>
   );
 };

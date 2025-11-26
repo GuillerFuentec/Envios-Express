@@ -1,4 +1,3 @@
-
 {
   "kind": "collectionType",
   "collectionName": "agency-infos",
@@ -10,5 +9,12 @@
   "options": {
     "comment": ""
   },
-  "attributes": {}
+  "attributes": {
+    "address": {
+      "type": "string"
+    },
+    "place_id": {
+      "type": "string"
+    }
+  }
 }

@@ -13,19 +13,20 @@ export default async function handler(req, res) {
     const body = req.body || {};
     const { recaptchaToken, ...payload } = body;
 
-    await requireRecaptcha({
-      token: recaptchaToken,
-      action: "quote",
-    });
+  await requireRecaptcha({
+    token: recaptchaToken,
+    action: "quote",
+  });
 
-    console.log("[api/quote] Request received", {
-      weight: payload.weightLbs,
-      pickup: payload.pickup,
-      hasPlaceId: Boolean(payload.pickupAddressPlaceId),
-      hasAddress: Boolean(payload.pickupAddress),
-      paymentMethod: payload.paymentMethod,
-      deliveryDate: payload.deliveryDate,
-    });
+  console.log("[api/quote] Request received", {
+    weight: payload.weightLbs,
+    cashAmount: payload.cashAmount,
+    pickup: payload.pickup,
+    hasPlaceId: Boolean(payload.pickupAddressPlaceId),
+    hasAddress: Boolean(payload.pickupAddress),
+    paymentMethod: payload.paymentMethod,
+    deliveryDate: payload.deliveryDate,
+  });
 
     const quote = await calculateQuote(payload);
 

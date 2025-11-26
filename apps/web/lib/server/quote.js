@@ -49,10 +49,23 @@ const calculateQuote = async (payload = {}) => {
     paymentMethod,
     deliveryDate,
     cityCuba,
+    cashAmount,
   } = payload;
 
+  const isCash =
+    typeof contentType === "string" &&
+    contentType.toLowerCase() === "dinero en efectivo";
+
   const normalizedWeight = Number(weightLbs);
-  if (!Number.isFinite(normalizedWeight) || normalizedWeight <= 0) {
+  const normalizedCash = Number(cashAmount);
+
+  if (isCash) {
+    if (!Number.isFinite(normalizedCash) || normalizedCash < 20) {
+      const error = new Error("El monto en efectivo debe ser mayor o igual a $20.");
+      error.status = 400;
+      throw error;
+    }
+  } else if (!Number.isFinite(normalizedWeight) || normalizedWeight <= 0) {
     const error = new Error("El peso debe ser mayor a 0.");
     error.status = 400;
     throw error;
@@ -66,6 +79,7 @@ const calculateQuote = async (payload = {}) => {
 
   logContext("Incoming payload", {
     weightLbs,
+    cashAmount,
     pickup,
     hasPickupPlaceId: Boolean(pickupAddressPlaceId),
     hasPickupAddress: Boolean(pickupAddress),
@@ -86,11 +100,19 @@ const calculateQuote = async (payload = {}) => {
     error.status = 400;
     throw error;
   }
+  if (isCash && paymentMethod !== "online") {
+    const error = new Error("Para dinero en efectivo solo se permite pago online.");
+    error.status = 400;
+    throw error;
+  }
 
-  const pickupEnabled = parseBoolean(pickup);
+  const normalizedPaymentMethod = isCash ? "online" : paymentMethod;
+  const pickupEnabled = isCash ? false : parseBoolean(pickup);
   if (pickupEnabled) {
     const hasPlaceId = Boolean(pickupAddressPlaceId);
-    const hasAddress = Boolean(pickupAddress && String(pickupAddress).trim().length > 5);
+    const hasAddress = Boolean(
+      pickupAddress && String(pickupAddress).trim().length > 5
+    );
     if (!hasPlaceId && !hasAddress) {
       const error = new Error("La dirección de recogida es obligatoria.");
       error.status = 400;
@@ -103,7 +125,9 @@ const calculateQuote = async (payload = {}) => {
     Number(agencyProfile.Price_lb) ||
     Number(process.env.DEFAULT_PRICE_PER_LB || 0);
 
-  const baseAmount = roundCurrency(normalizedWeight * pricePerLb);
+  const baseAmount = isCash
+    ? roundCurrency(normalizedCash)
+    : roundCurrency(normalizedWeight * pricePerLb);
 
   let pickupAmount = 0;
   let pickupDetails = null;
@@ -130,16 +154,13 @@ const calculateQuote = async (payload = {}) => {
     pickupDetails = distance;
   }
 
-  const isCash =
-    typeof contentType === "string" &&
-    contentType.toLowerCase() === "dinero en efectivo";
   const cashRate =
-    paymentMethod === "agency" ? CASH_FEE_AGENCY : CASH_FEE_ONLINE;
+    normalizedPaymentMethod === "agency" ? CASH_FEE_AGENCY : CASH_FEE_ONLINE;
   const cashFee = isCash ? roundCurrency(baseAmount * cashRate) : 0;
 
   const subtotal = baseAmount + pickupAmount + cashFee;
   const platformFeeAmount =
-    paymentMethod === "online" ? subtotal * PLATFORM_FEE_RATE : 0;
+    normalizedPaymentMethod === "online" ? subtotal * PLATFORM_FEE_RATE : 0;
 
   const stripePercent =
     typeof agencyProfile.stripe_processing_percent === "number"
@@ -151,15 +172,17 @@ const calculateQuote = async (payload = {}) => {
       : Number(process.env.STRIPE_PROCESSING_FIXED || 0.3);
 
   const stripeFeeAmount =
-    paymentMethod === "online" ? subtotal * stripePercent + stripeFixed : 0;
+    normalizedPaymentMethod === "online"
+      ? subtotal * stripePercent + stripeFixed
+      : 0;
 
   const processingFee =
-    paymentMethod === "online"
+    normalizedPaymentMethod === "online"
       ? roundCurrency(platformFeeAmount + stripeFeeAmount)
       : 0;
 
   const total = roundCurrency(subtotal + processingFee);
-  const mustPayOnlineForCash = isCash && pickupEnabled;
+  const mustPayOnlineForCash = isCash ? true : false;
 
   const response = {
     ok: true,
@@ -167,16 +190,19 @@ const calculateQuote = async (payload = {}) => {
     pricePerLb,
     inputs: {
       weightLbs: normalizedWeight,
+      cashAmount: isCash ? normalizedCash : undefined,
       pickup: pickupEnabled,
       cityCuba,
       contentType,
-      paymentMethod,
+      paymentMethod: normalizedPaymentMethod,
       deliveryDate,
     },
     breakdown: {
       weight: {
         amount: baseAmount,
-        label: `Peso (${normalizedWeight} lb x ${pricePerLb.toFixed(2)})`,
+        label: isCash
+          ? `Monto en efectivo ($${baseAmount.toFixed(2)})`
+          : `Peso (${normalizedWeight} lb x ${pricePerLb.toFixed(2)})`,
       },
       pickup: pickupEnabled
         ? {

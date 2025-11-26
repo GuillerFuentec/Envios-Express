@@ -58,7 +58,7 @@ const buildLineItems = (quote) => {
   };
 
   pushItem(
-    "Peso",
+    quote.breakdown?.weight?.label || "Peso",
     quote.breakdown?.weight?.amount,
     quote.breakdown?.weight?.label
   );
@@ -142,6 +142,7 @@ export default async function handler(req, res) {
         contact_phone: contact.phone || "",
         city_cuba: quotePayload.cityCuba || "",
         content_type: quotePayload.contentType || "",
+        cash_amount: quotePayload.cashAmount || "",
         pickup: quotePayload.pickup ? "true" : "false",
         delivery_date: quotePayload.deliveryDate || "",
       },

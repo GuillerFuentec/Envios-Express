@@ -18,7 +18,13 @@ const SummaryRow = ({ label, amount }) => (
   </div>
 );
 
-const SummaryStep = ({ quoteState, paymentMethod, onRetry, orderResult }) => {
+const SummaryStep = ({
+  quoteState,
+  paymentMethod,
+  contactInfo,
+  onRetry,
+  orderResult,
+}) => {
   if (quoteState.loading) {
     return <SummarySkeleton />;
   }
@@ -58,6 +64,12 @@ const SummaryStep = ({ quoteState, paymentMethod, onRetry, orderResult }) => {
     inputs?.contentType
       ? { label: "Tipo de contenido", value: inputs.contentType }
       : null,
+    inputs?.cashAmount
+      ? {
+          label: "Monto en efectivo",
+          value: formatCurrency(inputs.cashAmount),
+        }
+      : null,
     inputs?.paymentMethod
       ? {
           label: "Método de pago",
@@ -82,6 +94,22 @@ const SummaryStep = ({ quoteState, paymentMethod, onRetry, orderResult }) => {
 
   return (
     <div className="summary-card">
+      {contactInfo && (
+        <div className="summary-selections">
+          <p className="summary-selections__title">Datos de contacto</p>
+          <ul>
+            <li>
+              <strong>Nombre:</strong> {contactInfo.name || "-"}
+            </li>
+            <li>
+              <strong>Correo:</strong> {contactInfo.email || "-"}
+            </li>
+            <li>
+              <strong>Teléfono:</strong> {contactInfo.phone || "-"}
+            </li>
+          </ul>
+        </div>
+      )}
       {breakdown?.weight?.amount > 0 && (
         <SummaryRow label={weightLabel} amount={breakdown.weight.amount} />
       )}

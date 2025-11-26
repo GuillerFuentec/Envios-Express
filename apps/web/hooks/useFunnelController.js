@@ -11,18 +11,28 @@ import {
 import { validateContact, validatePreferences, validateShipment } from "../utils/validators";
 import { INITIAL_FORM_STATE, GLOBAL_ERROR_MESSAGE } from "../constants/funnel";
 
-const buildQuotePayload = (formData) => ({
-  weightLbs: Number(formData.shipment.weightLbs) || 0,
-  pickup: Boolean(formData.preferences.pickup),
-  pickupAddressPlaceId: formData.preferences.pickup
-    ? formData.preferences.pickupAddressPlaceId || ""
-    : "",
-  pickupAddress: formData.preferences.pickup ? formData.preferences.pickupAddress || "" : "",
-  contentType: formData.shipment.contentType,
-  paymentMethod: formData.preferences.paymentMethod,
-  deliveryDate: formData.shipment.deliveryDate,
-  cityCuba: formData.shipment.cityCuba,
-});
+const buildQuotePayload = (formData) => {
+  const isCash = formData.shipment.contentType === "Dinero en efectivo";
+  return {
+    weightLbs: isCash ? 0 : Number(formData.shipment.weightLbs) || 0,
+    cashAmount: isCash ? Number(formData.shipment.cashAmount) || 0 : undefined,
+    pickup: isCash ? false : Boolean(formData.preferences.pickup),
+    pickupAddressPlaceId: isCash
+      ? ""
+      : formData.preferences.pickup
+      ? formData.preferences.pickupAddressPlaceId || ""
+      : "",
+    pickupAddress: isCash
+      ? ""
+      : formData.preferences.pickup
+      ? formData.preferences.pickupAddress || ""
+      : "",
+    contentType: formData.shipment.contentType,
+    paymentMethod: isCash ? "online" : formData.preferences.paymentMethod,
+    deliveryDate: formData.shipment.deliveryDate,
+    cityCuba: formData.shipment.cityCuba,
+  };
+};
 
 export const useFunnelController = () => {
   const { data: agencyConfig, loading: configLoading, error: configError } = useAgencyConfig();
@@ -82,6 +92,22 @@ export const useFunnelController = () => {
     (section, field, value) => {
       setFormData((prev) => {
         const nextSection = { ...prev[section], [field]: value };
+        if (section === "shipment" && field === "contentType") {
+          const isCash = value === "Dinero en efectivo";
+          nextSection.weightLbs = isCash ? "" : nextSection.weightLbs;
+          nextSection.cashAmount = isCash ? nextSection.cashAmount : "";
+          return {
+            ...prev,
+            shipment: nextSection,
+            preferences: {
+              ...prev.preferences,
+              pickup: isCash ? false : prev.preferences.pickup,
+              pickupAddress: isCash ? "" : prev.preferences.pickupAddress,
+              pickupAddressPlaceId: isCash ? "" : prev.preferences.pickupAddressPlaceId,
+              paymentMethod: isCash ? "online" : prev.preferences.paymentMethod,
+            },
+          };
+        }
         if (section === "preferences" && field === "pickup" && value === false) {
           nextSection.pickupAddress = "";
           nextSection.pickupAddressPlaceId = "";
@@ -121,10 +147,11 @@ export const useFunnelController = () => {
       pickupAddressPlaceId: formData.preferences.pickupAddressPlaceId,
       pickupAddress: formData.preferences.pickupAddress,
       paymentMethod: formData.preferences.paymentMethod,
+      contentType: formData.shipment.contentType,
     });
     setPreferenceErrors(errors);
     return Object.keys(errors).length === 0;
-  }, [formData.preferences]);
+  }, [formData.preferences, formData.shipment.contentType]);
 
   useEffect(() => {
     if (!agencyConfig) {
@@ -141,17 +168,21 @@ export const useFunnelController = () => {
   }, [agencyConfig]);
 
   useEffect(() => {
-    if (
-      formData.shipment.contentType === "Dinero en efectivo" &&
-      formData.preferences.pickup &&
-      formData.preferences.paymentMethod !== "online"
-    ) {
-      setFormData((prev) => ({
-        ...prev,
-        preferences: { ...prev.preferences, paymentMethod: "online" },
-      }));
+    if (formData.shipment.contentType !== "Dinero en efectivo") {
+      return;
     }
-  }, [formData.preferences.pickup, formData.preferences.paymentMethod, formData.shipment.contentType]);
+    setFormData((prev) => ({
+      ...prev,
+      preferences: {
+        ...prev.preferences,
+        pickup: false,
+        pickupAddress: "",
+        pickupAddressPlaceId: "",
+        pickupLocation: null,
+        paymentMethod: "online",
+      },
+    }));
+  }, [formData.shipment.contentType]);
 
   useEffect(() => {
     if (currentStep !== 3) {
@@ -282,6 +313,7 @@ export const useFunnelController = () => {
 
   const showPolicyBanner = formData.shipment.contentType === "Dinero en efectivo";
   const shouldDisableAgency =
+    formData.shipment.contentType === "Dinero en efectivo" ||
     (showPolicyBanner && formData.preferences.pickup) ||
     quoteState.data?.policy?.mustPayOnlineForCash;
 

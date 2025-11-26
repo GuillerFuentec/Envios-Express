@@ -66,6 +66,7 @@ const FunnelView = () => {
           data={formData.preferences}
           errors={preferenceErrors}
           shouldDisableAgency={shouldDisableAgency}
+          isCash={formData.shipment.contentType === "Dinero en efectivo"}
           onFieldChange={updateField}
         />
       ),
@@ -77,6 +78,7 @@ const FunnelView = () => {
         <Funnel.Steps.Summary
           quoteState={quoteState}
           paymentMethod={formData.preferences.paymentMethod}
+          contactInfo={formData.contact}
           onRetry={handleQuoteRetry}
           orderResult={orderResult}
         />

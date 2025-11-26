@@ -23,6 +23,7 @@ const ShipmentStep = ({
   }
 
   console.log(`Esto es la configuracion de la agencia: \n`, agencyConfig.Price_lb);
+  const isCash = data.contentType === "Dinero en efectivo";
 
   return (
     <div className="fields-grid">
@@ -37,6 +38,7 @@ const ShipmentStep = ({
           min="0"
           step="0.1"
           value={data.weightLbs}
+          disabled={isCash}
           onChange={(event) =>
             onChange("shipment", "weightLbs", event.target.value)
           }
@@ -45,6 +47,25 @@ const ShipmentStep = ({
           <span className="field-error">{errors.weightLbs}</span>
         )}
       </div>
+      {isCash && (
+        <div className="field">
+          <label htmlFor="cashAmount">Cantidad de dinero en efectivo (USD)</label>
+          <input
+            id="cashAmount"
+            type="number"
+            min="20"
+            step="1"
+            value={data.cashAmount}
+            onChange={(event) =>
+              onChange("shipment", "cashAmount", event.target.value)
+            }
+            placeholder="Ej. 100"
+          />
+          {errors.cashAmount && (
+            <span className="field-error">{errors.cashAmount}</span>
+          )}
+        </div>
+      )}
       <div className="field">
         <label htmlFor="cityCuba">Ciudad de destino en Cuba</label>
         <select
