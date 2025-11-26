@@ -4,6 +4,8 @@ import Head from "next/head";
 import Funnel from "../../components/Funnel";
 import { FunnelProvider, useFunnel } from "../../contexts/FunnelContext";
 import { getTomorrowIso } from "../../utils/dates";
+import SiteNavbar from "../../components/layout/SiteNavbar";
+import SiteFooter from "../../components/layout/SiteFooter";
 
 const FunnelView = () => {
   const {
@@ -131,13 +133,15 @@ export default function FunnelPage() {
   return (
     <>
       <Head>
-        <title>Funnel · Envíos a Cuba</title>
+        <title>Funnel – Envíos a Cuba</title>
       </Head>
+      <SiteNavbar />
       <main className="page-shell">
         <FunnelProvider>
           <FunnelView />
         </FunnelProvider>
       </main>
+      <SiteFooter />
     </>
   );
 }

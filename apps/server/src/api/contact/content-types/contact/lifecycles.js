@@ -13,12 +13,29 @@ const escapeHtml = (value = '') =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
-const formatPayload = (payload) => {
-  try {
-    return JSON.stringify(payload, null, 2);
-  } catch (error) {
-    return String(payload);
+const htmlList = (title, rows = []) => {
+  if (!rows.length) {
+    return '';
   }
+  const items = rows
+    .filter(Boolean)
+    .map(
+      ({ label, value }) =>
+        `<li><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value ?? '-')}</li>`
+    )
+    .join('');
+  return `<h2 style="margin:16px 0 8px;">${escapeHtml(title)}</h2><ul style="padding-left:18px;">${items}</ul>`;
+};
+
+const textList = (title, rows = []) => {
+  if (!rows.length) {
+    return '';
+  }
+  const items = rows
+    .filter(Boolean)
+    .map(({ label, value }) => `- ${label}: ${value ?? '-'}`)
+    .join('\n');
+  return `${title}\n${items}`;
 };
 
 const buildSignatureHash = (subject, text) =>
@@ -44,17 +61,36 @@ module.exports = {
     }
 
     const payload = result?.contact_info ?? {};
-    const formatted = formatPayload(payload);
     const id = result?.id ?? 'desconocido';
 
     const subject = `Nuevo mensaje de contacto (#${id})`;
-    const text = `Se recibio un nuevo mensaje de contacto (ID: ${id}).\n\nDatos:\n${formatted}`;
     const html = `
-      <h1>Nuevo mensaje de contacto</h1>
-      <p>Se registro un nuevo mensaje desde el formulario del sitio.</p>
+      <h1 style="margin:0 0 12px;">Nuevo mensaje de contacto</h1>
+      <p>Se registró un nuevo mensaje desde el formulario del sitio.</p>
       <p><strong>ID:</strong> ${escapeHtml(String(id))}</p>
-      <pre style="padding:16px;background:#f6f8fa;border-radius:8px;white-space:pre-wrap;font-family:monospace;">${escapeHtml(formatted)}</pre>
+      ${htmlList('Datos de contacto', [
+        { label: 'Nombre', value: payload.name },
+        { label: 'Correo', value: payload.email },
+        { label: 'Teléfono', value: payload.phone },
+        { label: 'SMS consentido', value: payload.smsConsent ? 'Sí' : 'No' },
+      ])}
+      ${htmlList('Mensaje', [
+        { label: 'Contenido', value: payload.message },
+      ])}
     `;
+
+    const textSections = [
+      textList('Datos de contacto', [
+        { label: 'Nombre', value: payload.name },
+        { label: 'Correo', value: payload.email },
+        { label: 'Teléfono', value: payload.phone },
+        { label: 'SMS consentido', value: payload.smsConsent ? 'Sí' : 'No' },
+      ]),
+      textList('Mensaje', [{ label: 'Contenido', value: payload.message }]),
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+    const text = `Se recibió un nuevo mensaje de contacto (ID: ${id}).\n\n${textSections}`;
 
     const signature = buildSignatureHash(subject, text);
     strapi.log.debug('[contact-lifecycle] Enviando correo de contacto.', {

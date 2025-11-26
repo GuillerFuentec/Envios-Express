@@ -157,11 +157,6 @@ const SummaryStep = ({
           Este envío requiere pago online por la política de efectivo.
         </p>
       )}
-      {orderResult?.ok && (
-        <div className="status-message success">
-          Orden #{orderResult.orderId} confirmada. Te esperamos en la agencia.
-        </div>
-      )}
       <div className="summary-info">
         <p className="summary-selections__title">¿Qué incluye cada cargo?</p>
         <ul>

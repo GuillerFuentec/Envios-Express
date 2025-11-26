@@ -95,13 +95,15 @@ const getPlatformFeeAmount = (total) => {
   return Math.max(0, Math.round(amount * rate * 100));
 };
 
-const buildSuccessUrl = (base) => {
-  if (!base) {
-    return "http://localhost:3000/funnel?status=success&session_id={CHECKOUT_SESSION_ID}";
-  }
+const buildSuccessUrl = (origin) => {
+  const base =
+    process.env.STRIPE_SUCCESS_URL || `${origin}/funnel/status/success`;
   const separator = base.includes("?") ? "&" : "?";
   return `${base}${separator}session_id={CHECKOUT_SESSION_ID}`;
 };
+
+const buildCancelUrl = (origin) =>
+  process.env.STRIPE_CANCEL_URL || `${origin}/funnel/status/cancel`;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -141,12 +143,6 @@ export default async function handler(req, res) {
       process.env.PUBLIC_SITE_URL ||
       "http://localhost:3000";
 
-    const successUrl =
-      process.env.STRIPE_SUCCESS_URL ||
-      `${origin}/funnel?status=success`;
-    const cancelUrl =
-      process.env.STRIPE_CANCEL_URL || `${origin}/funnel?status=cancel`;
-
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
@@ -161,19 +157,32 @@ export default async function handler(req, res) {
         metadata: {
           platform_fee_amount: applicationFeeAmount,
           destination_account: destinationAccount,
+          contact_name: contact.name || "",
+          contact_phone: contact.phone || "",
+          contact_email: contact.email || "",
+          sms_consent: contact.smsConsent ? "true" : "false",
+          city_cuba: quotePayload.cityCuba || "",
+          content_type: quotePayload.contentType || "",
+          cash_amount: quotePayload.cashAmount || "",
+          pickup: quotePayload.pickup ? "true" : "false",
+          delivery_date: quotePayload.deliveryDate || "",
+          weight_lbs: quotePayload.weightLbs || "",
         },
       },
-      success_url: buildSuccessUrl(successUrl),
-      cancel_url: cancelUrl,
+      success_url: buildSuccessUrl(origin),
+      cancel_url: buildCancelUrl(origin),
       metadata: {
         payment_origin: "web-funnel",
         contact_name: contact.name || "",
         contact_phone: contact.phone || "",
+        contact_email: contact.email || "",
+        sms_consent: contact.smsConsent ? "true" : "false",
         city_cuba: quotePayload.cityCuba || "",
         content_type: quotePayload.contentType || "",
         cash_amount: quotePayload.cashAmount || "",
         pickup: quotePayload.pickup ? "true" : "false",
         delivery_date: quotePayload.deliveryDate || "",
+        weight_lbs: quotePayload.weightLbs || "",
         platform_fee_amount: applicationFeeAmount,
         destination_account: destinationAccount,
       },

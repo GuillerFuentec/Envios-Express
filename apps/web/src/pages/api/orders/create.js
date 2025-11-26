@@ -27,8 +27,16 @@ const buildQuotePayload = (body = {}) => {
   };
 };
 
+const normalizeBaseUrl = (value = "") => {
+  const trimmed = value.replace(/\/+$/, "");
+  if (trimmed.endsWith("/api")) {
+    return trimmed.slice(0, -4);
+  }
+  return trimmed;
+};
+
 const postToStrapi = async (payload) => {
-  const baseUrl = process.env.STRAPI_API_URL;
+  const baseUrl = normalizeBaseUrl(process.env.STRAPI_API_URL);
   if (!baseUrl) {
     throw new Error("Falta STRAPI_API_URL para crear la orden.");
   }

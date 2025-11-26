@@ -23,8 +23,17 @@ const Nav = () => {
     <nav className="site-navbar">
       <div className="site-navbar__container">
         <div className="site-navbar__brand-group">
-          <img src="/logo.png" alt="Logo Paqueteria Caribeña Express" className="site-navbar__brand-logo" loading="lazy" />
-          <Link href="#inicio" className="site-navbar__brand" aria-label="Inicio Paqueteria Caribeña" />
+          <img
+            src="/logo.png"
+            alt="Logo Paqueteria Caribeña Express"
+            className="site-navbar__brand-logo"
+            loading="lazy"
+          />
+          <Link
+            href="#inicio"
+            className="site-navbar__brand"
+            aria-label="Inicio Paqueteria Caribeña"
+          />
           <button
             type="button"
             className="site-navbar__toggle"
@@ -33,11 +42,33 @@ const Nav = () => {
             onClick={() => setOpen((v) => !v)}
           >
             <span className="sr-only">Abrir menu principal</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="site-navbar__icon site-navbar__icon--menu" aria-hidden="true">
-              <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" strokeLinecap="round" strokeLinejoin="round" />
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              className="site-navbar__icon site-navbar__icon--menu"
+              aria-hidden="true"
+            >
+              <path
+                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="site-navbar__icon site-navbar__icon--close" aria-hidden="true">
-              <path d="M6 18 18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              className="site-navbar__icon site-navbar__icon--close"
+              aria-hidden="true"
+            >
+              <path
+                d="M6 18 18 6M6 6l12 12"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </button>
         </div>
@@ -147,14 +178,20 @@ const Hero = () => (
           Paga solo por libras y entrega en 48-72 horas
         </h1>
         <p className="text-xl text-slate mt-6">
-          Te ayudamos a enviar paquetes a Cuba con tarifas claras, soporte cercano y opciones flexibles de recogida o
-          entrega en agencia.
+          Te ayudamos a enviar paquetes a Cuba con tarifas claras, soporte
+          cercano y opciones flexibles de recogida o entrega en agencia.
         </p>
         <div className="flex flex-wrap gap-4 mt-8 hero__actions">
-          <Link href="/funnel" className="bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 px-6 rounded-lg transition !text-white">
+          <Link
+            href="/funnel"
+            className="bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 px-6 rounded-lg transition !text-white"
+          >
             Planificar envio
           </Link>
-          <Link href="#contacto" className="bg-white hover:bg-gray-100 text-accent font-bold py-3 px-6 rounded-lg transition">
+          <Link
+            href="#contacto"
+            className="bg-white hover:bg-gray-100 text-accent font-bold py-3 px-6 rounded-lg transition"
+          >
             Hablar con un asesor
           </Link>
         </div>
@@ -165,7 +202,11 @@ const Hero = () => (
         </div>
       </div>
       <div className="hero__media">
-        <img src="/hero.webp" alt="Equipo preparando envios para Cuba" loading="lazy" />
+        <img
+          src="/hero.webp"
+          alt="Equipo preparando envios para Cuba"
+          loading="lazy"
+        />
       </div>
     </div>
   </section>
@@ -174,23 +215,35 @@ const Hero = () => (
 const Highlights = () => (
   <section id="beneficios" className="py-16 px-4">
     <div className="max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold text-slate mb-12 text-center">Por que elegirnos</h2>
+      <h2 className="text-3xl font-bold text-slate mb-12 text-center">
+        Por que elegirnos
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 highlights__grid">
         <div className="grid-card transition">
           <h3 className="text-xl font-bold text-slate mb-2">Precio claro</h3>
-          <p className="text-gray-600">Paga 3.50 USD por libra sin costos ocultos ni sorpresas.</p>
+          <p className="text-gray-600">
+            Paga 3.50 USD por libra sin costos ocultos ni sorpresas.
+          </p>
         </div>
         <div className="grid-card transition">
           <h3 className="text-xl font-bold text-slate mb-2">Entrega rápida</h3>
-          <p className="text-gray-600">Rutas optimizadas que garantizan entrega en 48 a 72 horas.</p>
+          <p className="text-gray-600">
+            Rutas optimizadas que garantizan entrega en 48 a 72 horas.
+          </p>
         </div>
         <div className="grid-card transition">
-          <h3 className="text-xl font-bold text-slate mb-2">Recogida opcional</h3>
-          <p className="text-gray-600">Vamos a tu puerta o recibimos el paquete en nuestra agencia.</p>
+          <h3 className="text-xl font-bold text-slate mb-2">
+            Recogida opcional
+          </h3>
+          <p className="text-gray-600">
+            Vamos a tu puerta o recibimos el paquete en nuestra agencia.
+          </p>
         </div>
         <div className="grid-card transition">
           <h3 className="text-xl font-bold text-slate mb-2">Soporte cercano</h3>
-          <p className="text-gray-600">Asesores reales que responden tus dudas en cada etapa.</p>
+          <p className="text-gray-600">
+            Asesores reales que responden tus dudas en cada etapa.
+          </p>
         </div>
       </div>
     </div>
@@ -200,27 +253,34 @@ const Highlights = () => (
 const Process = () => (
   <section id="proceso" className="py-16 px-4 bg-white">
     <div className="max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold text-slate mb-12 text-center">Como funciona</h2>
+      <h2 className="text-3xl font-bold text-slate mb-12 text-center">
+        Como funciona
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 process__grid">
-        {["Compra libras", "Prepara tu paquete", "Entrega o recogida"].map((title, idx) => (
-          <div key={title} className="text-center">
-            <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-accent text-2xl font-bold">{idx + 1}</span>
+        {["Compra libras", "Prepara tu paquete", "Entrega o recogida"].map(
+          (title, idx) => (
+            <div key={title} className="text-center">
+              <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-accent text-2xl font-bold">
+                  {idx + 1}
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-slate mb-2">{title}</h3>
+              <p className="text-gray-600">
+                {idx === 0
+                  ? "Reserva las libras necesarias y recibe tu guia de empaque."
+                  : idx === 1
+                  ? "Empaca con seguridad y etiqueta cada bulto para agilizar."
+                  : "Trae el paquete o agenda una visita. El resto queda en nuestras manos."}
+              </p>
             </div>
-            <h3 className="text-xl font-bold text-slate mb-2">{title}</h3>
-            <p className="text-gray-600">
-              {idx === 0
-                ? "Reserva las libras necesarias y recibe tu guia de empaque."
-                : idx === 1
-                ? "Empaca con seguridad y etiqueta cada bulto para agilizar."
-                : "Trae el paquete o agenda una visita. El resto queda en nuestras manos."}
-            </p>
-          </div>
-        ))}
+          )
+        )}
       </div>
       <div className="surface-card surface-card--subtle max-w-2xl mx-auto text-center mt-12">
         <p className="text-slate">
-          Recuerda: cada libra cuesta 3.50 USD y la recogida tiene un costo base de 10 USD mas 0.99 USD por milla.
+          Recuerda: cada libra cuesta 3.50 USD y la recogida tiene un costo base
+          de 10 USD mas 0.99 USD por milla.
         </p>
       </div>
     </div>
@@ -230,12 +290,15 @@ const Process = () => (
 const About = () => (
   <section id="quienes" className="py-16 px-4">
     <div className="max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold text-slate mb-8 text-center">Quienes somos</h2>
+      <h2 className="text-3xl font-bold text-slate mb-8 text-center">
+        Quienes somos
+      </h2>
       <div className="surface-card surface-card--subtle max-w-3xl mx-auto">
         <p className="text-gray-700 text-lg leading-relaxed">
-          En Paqueteria Caribena Express nos dedicamos a crear una experiencia de envios simple y confiable. Somos un
-          equipo de especialistas que vive entre Miami y Cuba, con rutas optimizadas y procesos transparentes para que
-          tus paquetes lleguen a tiempo.
+          En Paqueteria Caribena Express nos dedicamos a crear una experiencia
+          de envios simple y confiable. Somos un equipo de especialistas que
+          vive entre Miami y Cuba, con rutas optimizadas y procesos
+          transparentes para que tus paquetes lleguen a tiempo.
         </p>
       </div>
     </div>
@@ -245,7 +308,9 @@ const About = () => (
 const Location = () => (
   <section id="ubicacion" className="py-16 px-4 bg-white">
     <div className="max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold text-slate mb-8 text-center">Ubicacion</h2>
+      <h2 className="text-3xl font-bold text-slate mb-8 text-center">
+        Ubicacion
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center location__grid">
         <div>
           <div className="h-64 md:h-96 bg-gray-200 rounded-lg overflow-hidden">
@@ -262,7 +327,9 @@ const Location = () => (
         </div>
         <div>
           <div className="surface-card surface-card--subtle">
-            <h3 className="text-xl font-bold text-slate mb-4">Nuestra direccion</h3>
+            <h3 className="text-xl font-bold text-slate mb-4">
+              Nuestra direccion
+            </h3>
             <p className="text-gray-700 mb-4 flex items-center gap-2">
               <span>123 Calle Principal, Suite 101, Miami, FL 33101</span>
             </p>
@@ -290,19 +357,36 @@ const Location = () => (
 const FAQ = () => (
   <section id="faq" className="py-16 px-4">
     <div className="max-w-3xl mx-auto">
-      <h2 className="text-3xl font-bold text-slate mb-8 text-center">Preguntas frecuentes</h2>
+      <h2 className="text-3xl font-bold text-slate mb-8 text-center">
+        Preguntas frecuentes
+      </h2>
       <div className="space-y-4">
         <div className="surface-card surface-card--subtle">
-          <h3 className="text-xl font-bold text-slate mb-2">Cuanto tarda en llegar el paquete?</h3>
-          <p className="text-gray-600">El tiempo promedio es de 48 a 72 horas desde que recibimos el paquete en Miami.</p>
+          <h3 className="text-xl font-bold text-slate mb-2">
+            Cuanto tarda en llegar el paquete?
+          </h3>
+          <p className="text-gray-600">
+            El tiempo promedio es de 48 a 72 horas desde que recibimos el
+            paquete en Miami.
+          </p>
         </div>
         <div className="surface-card surface-card--subtle">
-          <h3 className="text-xl font-bold text-slate mb-2">Puedo solicitar reembolso?</h3>
-          <p className="text-gray-600">Solo procesamos reembolsos en caso de perdida total. Nuestro equipo te mantiene informado.</p>
+          <h3 className="text-xl font-bold text-slate mb-2">
+            Puedo solicitar reembolso?
+          </h3>
+          <p className="text-gray-600">
+            Solo procesamos reembolsos en caso de perdida total. Nuestro equipo
+            te mantiene informado.
+          </p>
         </div>
         <div className="surface-card surface-card--subtle">
-          <h3 className="text-xl font-bold text-slate mb-2">Que pasa si mi paquete llega danado?</h3>
-          <p className="text-gray-600">Abrimos un reporte y evaluamos compensaciones segun el caso. Documenta el contenido y aseguralo.</p>
+          <h3 className="text-xl font-bold text-slate mb-2">
+            Que pasa si mi paquete llega danado?
+          </h3>
+          <p className="text-gray-600">
+            Abrimos un reporte y evaluamos compensaciones segun el caso.
+            Documenta el contenido y aseguralo.
+          </p>
         </div>
       </div>
     </div>
@@ -312,10 +396,14 @@ const FAQ = () => (
 const Contact = () => (
   <section id="contacto" className="py-16 px-4 bg-white">
     <div className="max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold text-slate mb-8 text-center">Contacto</h2>
+      <h2 className="text-3xl font-bold text-slate mb-8 text-center">
+        Contacto
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 contact__grid">
         <div>
-          <p className="text-gray-700 text-lg mb-6">Tienes preguntas? Nuestro equipo esta listo para ayudarte.</p>
+          <p className="text-gray-700 text-lg mb-6">
+            Tienes preguntas? Nuestro equipo esta listo para ayudarte.
+          </p>
           <div className="space-y-4">
             <div className="flex items-center gap-4 contact__info-item">
               <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
@@ -323,7 +411,10 @@ const Contact = () => (
               </div>
               <div>
                 <p className="text-gray-500 text-sm">Email</p>
-                <a href="mailto:contact@raccoonstudiosllc.com" className="text-slate hover:text-accent">
+                <a
+                  href="mailto:contact@raccoonstudiosllc.com"
+                  className="text-slate hover:text-accent"
+                >
                   contact@raccoonstudiosllc.com
                 </a>
               </div>
@@ -334,7 +425,10 @@ const Contact = () => (
               </div>
               <div>
                 <p className="text-gray-500 text-sm">Telefono</p>
-                <a href="tel:+14322321612" className="text-slate hover:text-accent">
+                <a
+                  href="tel:+14322321612"
+                  className="text-slate hover:text-accent"
+                >
                   +1 432 232 1612
                 </a>
               </div>
@@ -345,7 +439,9 @@ const Contact = () => (
               </div>
               <div>
                 <p className="text-gray-500 text-sm">Direccion</p>
-                <p className="text-slate">123 Calle Principal, Suite 101, Miami, FL 33101</p>
+                <p className="text-slate">
+                  123 Calle Principal, Suite 101, Miami, FL 33101
+                </p>
               </div>
             </div>
           </div>
@@ -365,7 +461,10 @@ const Contact = () => (
               />
             </div>
             <div className="mb-4">
-              <label htmlFor="contactEmail" className="block text-gray-700 mb-2">
+              <label
+                htmlFor="contactEmail"
+                className="block text-gray-700 mb-2"
+              >
                 Email
               </label>
               <input
@@ -377,7 +476,10 @@ const Contact = () => (
               />
             </div>
             <div className="mb-4">
-              <label htmlFor="contactPhone" className="block text-gray-700 mb-2">
+              <label
+                htmlFor="contactPhone"
+                className="block text-gray-700 mb-2"
+              >
                 Telefono
               </label>
               <input
@@ -390,7 +492,10 @@ const Contact = () => (
               />
             </div>
             <div className="my-4">
-              <label htmlFor="contactMessage" className="block text-gray-700 mb-2">
+              <label
+                htmlFor="contactMessage"
+                className="block text-gray-700 mb-2"
+              >
                 Mensaje
               </label>
               <textarea
@@ -402,9 +507,18 @@ const Contact = () => (
               />
             </div>
             <div className="my-4 flex items-start gap-3">
-              <input type="checkbox" id="contactSmsConsent" required className="mt-1 w-4 h-4 border-gray-300 text-accent focus:ring-accent" />
-              <label htmlFor="contactSmsConsent" className="text-gray-700 text-sm leading-relaxed">
-                Acepto recibir mensajes de texto para confirmar mi solicitud y coordinar detalles del envio.
+              <input
+                type="checkbox"
+                id="contactSmsConsent"
+                required
+                className="mt-1 w-4 h-4 border-gray-300 text-accent focus:ring-accent"
+              />
+              <label
+                htmlFor="contactSmsConsent"
+                className="text-gray-700 text-sm leading-relaxed"
+              >
+                Acepto recibir mensajes de texto para confirmar mi solicitud y
+                coordinar detalles del envio.
               </label>
             </div>
             <button
@@ -437,7 +551,9 @@ const Footer = () => (
           Yt
         </a>
       </div>
-      <p className="site-footer__copy">&copy; 2024 Paqueteria Caribena Express. Todos los derechos reservados.</p>
+      <p className="site-footer__copy">
+        &copy; 2024 Paqueteria Caribena Express. Todos los derechos reservados.
+      </p>
     </div>
   </footer>
 );
@@ -452,7 +568,11 @@ export default function HomePage() {
           content="Envios a Cuba fácil: paga por libra, recogida opcional, entrega en 48-72h."
         />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
         <link
           href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
@@ -460,26 +580,6 @@ export default function HomePage() {
       </Head>
       <Nav />
       <Hero />
-      <section id="funnel" className="py-20 px-4">
-        <div className="max-w-5xl mx-auto surface-card funnel__shell">
-          <div className="funnel__header">
-            <div className="eyebrow">Paso 1 de 4</div>
-            <h2 className="text-3xl font-bold text-slate mt-4">Planifica tu envio en minutos</h2>
-            <p className="muted-copy">
-              Completa esta guia rapida para que podamos darte una propuesta personalizada.
-            </p>
-            <div className="funnel__progress">
-              <div className="funnel__progress-bar" />
-            </div>
-          </div>
-          <div className="funnel__form">
-            <p>Completa el funnel para ver tu resumen y pagar de forma segura.</p>
-            <Link href="/funnel" className="btn-primary" style={{ marginTop: 12 }}>
-              Ir al funnel
-            </Link>
-          </div>
-        </div>
-      </section>
       <Highlights />
       <Process />
       <About />

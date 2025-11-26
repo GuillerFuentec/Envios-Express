@@ -264,9 +264,9 @@ export const useFunnelController = () => {
     setShowGlobalError(false);
   }, []);
 
-  const handlePrimaryAction = useCallback(async () => {
+    const handlePrimaryAction = useCallback(async () => {
     if (!quoteState.data) {
-      setStatusMessage({ text: "Aún no tenemos el desglose listo.", variant: "error" });
+      setStatusMessage({ text: "A�n no tenemos el desglose listo.", variant: "error" });
       return;
     }
     setActionLoading(true);
@@ -298,15 +298,15 @@ export const useFunnelController = () => {
         recaptchaToken,
       });
       setOrderResult({ ok: true, orderId: data.orderId });
-      setStatusMessage({
-        text: "Orden confirmada. Te esperamos en la agencia.",
-        variant: "success",
-      });
+      window.location.assign(
+        `/funnel/status/success?mode=agency${data.orderId ? `&orderId=${encodeURIComponent(data.orderId)}` : ""}`
+      );
     } catch (error) {
       setStatusMessage({
-        text: error.message || "No pudimos completar la acción.",
+        text: error.message || "No pudimos completar la accion.",
         variant: "error",
       });
+      window.location.assign("/funnel/status/error");
     } finally {
       setActionLoading(false);
     }
@@ -353,3 +353,11 @@ export const useFunnelController = () => {
     handleQuoteRetry,
   };
 };
+
+
+
+
+
+
+
+
