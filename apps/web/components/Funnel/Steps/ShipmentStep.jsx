@@ -13,7 +13,7 @@ const ShipmentStep = ({
   minDate,
 }) => {
   if (loading) {
-    return <p>Cargando configuración de la agencia...</p>;
+    return <p>Cargando configuracion de la agencia...</p>;
   }
   if (error) {
     return <p className="status-message error">{error}</p>;
@@ -22,7 +22,6 @@ const ShipmentStep = ({
     return null;
   }
 
-  console.log(`Esto es la configuracion de la agencia: \n`, agencyConfig.Price_lb);
   const isCash = data.contentType === "Dinero en efectivo";
 
   return (
@@ -30,6 +29,7 @@ const ShipmentStep = ({
       <p style={{ margin: 0, color: "var(--color-muted)" }}>
         Precio por libra: {formatCurrency(agencyConfig.Price_lb || 0)}
       </p>
+
       <div className="field">
         <label htmlFor="weightLbs">Peso estimado (lb)</label>
         <input
@@ -47,25 +47,7 @@ const ShipmentStep = ({
           <span className="field-error">{errors.weightLbs}</span>
         )}
       </div>
-      {isCash && (
-        <div className="field">
-          <label htmlFor="cashAmount">Cantidad de dinero en efectivo (USD)</label>
-          <input
-            id="cashAmount"
-            type="number"
-            min="20"
-            step="1"
-            value={data.cashAmount}
-            onChange={(event) =>
-              onChange("shipment", "cashAmount", event.target.value)
-            }
-            placeholder="Ej. 100"
-          />
-          {errors.cashAmount && (
-            <span className="field-error">{errors.cashAmount}</span>
-          )}
-        </div>
-      )}
+
       <div className="field">
         <label htmlFor="cityCuba">Ciudad de destino en Cuba</label>
         <select
@@ -85,6 +67,7 @@ const ShipmentStep = ({
           <span className="field-error">{errors.cityCuba}</span>
         )}
       </div>
+
       <div className="field">
         <label htmlFor="contentType">Contenido principal</label>
         <select
@@ -104,16 +87,37 @@ const ShipmentStep = ({
           <span className="field-error">{errors.contentType}</span>
         )}
       </div>
+
+      {isCash && (
+        <div className="field">
+          <label htmlFor="cashAmount">Cantidad de dinero en efectivo (USD)</label>
+          <input
+            id="cashAmount"
+            type="number"
+            min="20"
+            step="1"
+            value={data.cashAmount}
+            onChange={(event) =>
+              onChange("shipment", "cashAmount", event.target.value)
+            }
+            placeholder="Ej. 100"
+          />
+          {errors.cashAmount && (
+            <span className="field-error">{errors.cashAmount}</span>
+          )}
+        </div>
+      )}
+
       {showPolicyBanner && (
         <div className="policy-banner">
-          Si envías dinero en efectivo se aplican tarifas adicionales:
+          Si envias dinero en efectivo se aplican tarifas:
           <ul>
             <li>Pago online: fee de $0.89 por cada $10 USD (8.9%).</li>
             <li>Pago en agencia: fee de $1.00 por cada $10 USD (10%).</li>
           </ul>
-          Si también solicitas recogida, solo podrás pagar online.
         </div>
       )}
+
       <div className="field">
         <label htmlFor="deliveryDate">Fecha estimada de entrega</label>
         <input

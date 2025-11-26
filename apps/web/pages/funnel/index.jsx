@@ -67,6 +67,7 @@ const FunnelView = () => {
           errors={preferenceErrors}
           shouldDisableAgency={shouldDisableAgency}
           isCash={formData.shipment.contentType === "Dinero en efectivo"}
+          agencyAddress={agencyConfig?.address}
           onFieldChange={updateField}
         />
       ),

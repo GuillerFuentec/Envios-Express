@@ -13,8 +13,9 @@ const SummarySkeleton = () => (
 
 const SummaryRow = ({ label, amount }) => (
   <div className="summary-row">
-    <span>{label}</span>
-    <strong>{formatCurrency(amount)}</strong>
+    <span className="summary-row__label">{label}</span>
+    <span className="summary-row__dots" aria-hidden="true" />
+    <strong className="summary-row__amount">{formatCurrency(amount)}</strong>
   </div>
 );
 
@@ -33,7 +34,12 @@ const SummaryStep = ({
     return (
       <div className="status-message error">
         {quoteState.error}{" "}
-        <button type="button" className="btn-secondary" onClick={onRetry} style={{ marginLeft: 8 }}>
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={onRetry}
+          style={{ marginLeft: 8 }}
+        >
           Reintentar
         </button>
       </div>
@@ -44,7 +50,8 @@ const SummaryStep = ({
     return null;
   }
 
-  const { breakdown, total, policy, pricePerLb, inputs } = quoteState.data;
+  const { breakdown, total, policy, pricePerLb, inputs, pricingInfo } =
+    quoteState.data;
   const weightLabel =
     breakdown?.weight?.label ||
     `${inputs?.weightLbs || ""} lb * ${formatCurrency(pricePerLb || 0)}`;
@@ -54,6 +61,7 @@ const SummaryStep = ({
   const cashLabel = breakdown?.cashFee?.label || "Fee (Dinero en efectivo)";
   const processingLabel =
     breakdown?.processingFee?.label || "Tarifa de procesamiento";
+
   const selectionDetails = [
     inputs?.weightLbs
       ? { label: "Peso declarado", value: `${inputs.weightLbs} lb` }
@@ -87,6 +95,9 @@ const SummaryStep = ({
           value: inputs.pickup ? "Sí" : "No",
         }
       : null,
+    inputs?.pickupAddress
+      ? { label: "Dirección de recogida", value: inputs.pickupAddress }
+      : null,
     inputs?.deliveryDate
       ? { label: "Fecha de entrega", value: inputs.deliveryDate }
       : null,
@@ -110,19 +121,7 @@ const SummaryStep = ({
           </ul>
         </div>
       )}
-      {breakdown?.weight?.amount > 0 && (
-        <SummaryRow label={weightLabel} amount={breakdown.weight.amount} />
-      )}
-      {breakdown?.pickup?.amount > 0 && (
-        <SummaryRow label={pickupLabel} amount={breakdown.pickup.amount} />
-      )}
-      {breakdown?.cashFee?.amount > 0 && (
-        <SummaryRow label={cashLabel} amount={breakdown.cashFee.amount} />
-      )}
-      {breakdown?.processingFee?.amount > 0 && (
-        <SummaryRow label={processingLabel} amount={breakdown.processingFee.amount} />
-      )}
-      <div className="summary-total">Total = {formatCurrency(total)}</div>
+
       {selectionDetails.length > 0 && (
         <div className="summary-selections">
           <p className="summary-selections__title">Datos seleccionados</p>
@@ -135,14 +134,52 @@ const SummaryStep = ({
           </ul>
         </div>
       )}
+
+      {breakdown?.weight?.amount > 0 && (
+        <SummaryRow label={weightLabel} amount={breakdown.weight.amount} />
+      )}
+      {breakdown?.pickup?.amount > 0 && (
+        <SummaryRow label={pickupLabel} amount={breakdown.pickup.amount} />
+      )}
+      {breakdown?.cashFee?.amount > 0 && (
+        <SummaryRow label={cashLabel} amount={breakdown.cashFee.amount} />
+      )}
+      {breakdown?.processingFee?.amount > 0 && (
+        <SummaryRow
+          label={processingLabel}
+          amount={breakdown.processingFee.amount}
+        />
+      )}
+      <div className="summary-total">Total = {formatCurrency(total)}</div>
+
       {policy?.mustPayOnlineForCash && paymentMethod !== "online" && (
-        <p className="field-error">Este envío requiere pago online por la política de efectivo.</p>
+        <p className="field-error">
+          Este envío requiere pago online por la política de efectivo.
+        </p>
       )}
       {orderResult?.ok && (
         <div className="status-message success">
           Orden #{orderResult.orderId} confirmada. Te esperamos en la agencia.
         </div>
       )}
+      <div className="summary-info">
+        <p className="summary-selections__title">¿Qué incluye cada cargo?</p>
+        <ul>
+          <li>
+            <strong>Peso:</strong>{" "}
+            {formatCurrency(pricingInfo?.pricePerLb || pricePerLb || 0)} por lb.
+          </li>
+          <li>
+            <strong>Pick-up:</strong> base ${pricingInfo?.pickupBase || 10} + $
+            {pricingInfo?.pickupPerMile || 0.99}/mi.
+          </li>
+          <li>
+            <strong>Procesamiento:</strong>{" "}
+            {(pricingInfo?.processingPercent || 2.9).toFixed(2)}% + $
+            {(pricingInfo?.processingFixed || 0.3).toFixed(2)}.
+          </li>
+        </ul>
+      </div>
     </div>
   );
 };

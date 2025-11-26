@@ -10,6 +10,7 @@ const PreferencesStep = ({
   onFieldChange,
   shouldDisableAgency,
   isCash = false,
+  agencyAddress = "",
 }) => {
   const addressValue = useMemo(
     () => data?.addressCapture || createEmptyAddress(),
@@ -113,9 +114,14 @@ const PreferencesStep = ({
 
   const handlePaymentChange = useCallback(
     (event) => {
-      onFieldChange("preferences", "paymentMethod", event.target.value);
+      const method = event.target.value;
+      onFieldChange("preferences", "paymentMethod", method);
+      if (method === "agency") {
+        onFieldChange("preferences", "pickup", false);
+        resetPickupFields();
+      }
     },
-    [onFieldChange]
+    [onFieldChange, resetPickupFields]
   );
 
   return (
@@ -125,9 +131,11 @@ const PreferencesStep = ({
         <input
           id="pickupToggle"
           type="checkbox"
-          checked={Boolean(data?.pickup) && !isCash}
+          checked={
+            Boolean(data?.pickup) && !isCash && data?.paymentMethod !== "agency"
+          }
           onChange={handlePickupToggle}
-          disabled={isCash}
+          disabled={isCash || data?.paymentMethod === "agency"}
         />
       </label>
 
@@ -194,6 +202,21 @@ const PreferencesStep = ({
           <span className="field-error">{errors.paymentMethod}</span>
         )}
       </div>
+
+      {data?.paymentMethod === "agency" && agencyAddress ? (
+        <p style={{ marginTop: 8, color: "blue", textDecoration: "underline" }}>
+          Dirección de agencia:{" "}
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+              agencyAddress
+            )}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {agencyAddress}
+          </a>
+        </p>
+      ) : null}
 
       <div className="field">
         <label htmlFor="additionalComments">Comentarios adicionales</label>

@@ -325,13 +325,27 @@ a {
 }
 
 .summary-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
+  gap: 8px;
 }
 
 .summary-row strong {
   font-size: 1rem;
+}
+
+.summary-row__label {
+  white-space: nowrap;
+}
+
+.summary-row__dots {
+  border-bottom: 1px dotted var(--color-border);
+  height: 1px;
+}
+
+.summary-row__amount {
+  white-space: nowrap;
 }
 
 .summary-total {
@@ -369,6 +383,21 @@ a {
 .summary-selections li strong {
   color: var(--color-text);
   margin-right: 4px;
+}
+
+.summary-info {
+  border: 1px dashed var(--color-border);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: #f8fafc;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+}
+
+.summary-info ul {
+  margin: 6px 0 0;
+  padding-left: 16px;
+  line-height: 1.5;
 }
 
 .skeleton {

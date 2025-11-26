@@ -29,10 +29,11 @@ const buildQuotePayload = (formData) => {
       : "",
     contentType: formData.shipment.contentType,
     paymentMethod: isCash ? "online" : formData.preferences.paymentMethod,
-    deliveryDate: formData.shipment.deliveryDate,
-    cityCuba: formData.shipment.cityCuba,
+      deliveryDate: formData.shipment.deliveryDate,
+      cityCuba: formData.shipment.cityCuba,
+      pickupAddress: formData.preferences.pickupAddress || undefined,
+    };
   };
-};
 
 export const useFunnelController = () => {
   const { data: agencyConfig, loading: configLoading, error: configError } = useAgencyConfig();
@@ -112,11 +113,11 @@ export const useFunnelController = () => {
           nextSection.pickupAddress = "";
           nextSection.pickupAddressPlaceId = "";
         }
-        return {
-          ...prev,
-          [section]: nextSection,
-        };
-      });
+    return {
+      ...prev,
+      [section]: nextSection,
+    };
+  });
       setShowGlobalError(false);
       clearFieldError(section, field);
     },

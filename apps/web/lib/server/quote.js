@@ -4,6 +4,9 @@ const { getAgencyProfile } = require("./agency");
 const { getDistanceMatrix } = require("./distance");
 
 const PLATFORM_FEE_RATE = 0.023;
+const PLATFORM_FEE_MIN =
+  Number(process.env.PLATFORM_FEE_MIN || process.env.PLATFORM_FEE_MIN_USD) ||
+  1.1;
 const PICKUP_BASE_FEE = 10;
 const PICKUP_PER_MILE = 0.99;
 const CASH_FEE_ONLINE = 0.089;
@@ -160,7 +163,9 @@ const calculateQuote = async (payload = {}) => {
 
   const subtotal = baseAmount + pickupAmount + cashFee;
   const platformFeeAmount =
-    normalizedPaymentMethod === "online" ? subtotal * PLATFORM_FEE_RATE : 0;
+    normalizedPaymentMethod === "online"
+      ? Math.max(subtotal * PLATFORM_FEE_RATE, PLATFORM_FEE_MIN)
+      : 0;
 
   const stripePercent =
     typeof agencyProfile.stripe_processing_percent === "number"
@@ -171,23 +176,33 @@ const calculateQuote = async (payload = {}) => {
       ? agencyProfile.stripe_processing_fixed
       : Number(process.env.STRIPE_PROCESSING_FIXED || 0.3);
 
-  const stripeFeeAmount =
-    normalizedPaymentMethod === "online"
-      ? subtotal * stripePercent + stripeFixed
-      : 0;
+  const netBeforeProcessing = subtotal + platformFeeAmount;
+  let processingFee = 0;
+  if (normalizedPaymentMethod === "online") {
+    const percent = Number(stripePercent) || 0;
+    const fixed = Number(stripeFixed) || 0;
+    const divisor = 1 - percent;
+    const totalGross =
+      divisor > 0 ? (netBeforeProcessing + fixed) / divisor : netBeforeProcessing;
+    processingFee = roundCurrency(totalGross - netBeforeProcessing);
+  }
 
-  const processingFee =
-    normalizedPaymentMethod === "online"
-      ? roundCurrency(platformFeeAmount + stripeFeeAmount)
-      : 0;
-
-  const total = roundCurrency(subtotal + processingFee);
+  const total = roundCurrency(netBeforeProcessing + processingFee);
   const mustPayOnlineForCash = isCash ? true : false;
 
   const response = {
     ok: true,
     currency: "USD",
     pricePerLb,
+    pricingInfo: {
+      pricePerLb,
+      pickupBase: PICKUP_BASE_FEE,
+      pickupPerMile: PICKUP_PER_MILE,
+      platformFeePercent: PLATFORM_FEE_RATE * 100,
+      platformFeeMin: PLATFORM_FEE_MIN,
+      processingPercent: stripePercent * 100,
+      processingFixed: stripeFixed,
+    },
     inputs: {
       weightLbs: normalizedWeight,
       cashAmount: isCash ? normalizedCash : undefined,
