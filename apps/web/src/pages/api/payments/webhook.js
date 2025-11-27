@@ -1,6 +1,5 @@
 "use strict";
 
-import { buffer } from "micro";
 import Stripe from "stripe";
 import { writeJson, readJson } from "../../../lib/server/storage";
 
@@ -224,6 +223,14 @@ const notifyClient = async (email, phone, message) => {
   console.info("[notifyClient]", { email, phone, message });
 };
 
+const readRawBody = async (req) => {
+  const chunks = [];
+  for await (const chunk of req) {
+    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+  }
+  return Buffer.concat(chunks);
+};
+
 const getStripe = () => {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   if (!secretKey) {
@@ -344,7 +351,7 @@ export default async function handler(req, res) {
   let event;
 
   try {
-    const buf = await buffer(req);
+    const buf = await readRawBody(req);
     event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
   } catch (err) {
     console.error("[webhook] Signature verification failed.", err.message);
