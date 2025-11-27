@@ -10,6 +10,8 @@ const scriptProps = {
 
 export function ReCaptchaProvider({ children }) {
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
+  const useRecaptchaNet =
+    (process.env.NEXT_PUBLIC_RECAPTCHA_USE_NET || "").toLowerCase() === "true";
 
   if (!siteKey) {
     if (process.env.NODE_ENV !== "production") {
@@ -24,7 +26,7 @@ export function ReCaptchaProvider({ children }) {
     <GoogleReCaptchaProvider
       reCaptchaKey={siteKey}
       scriptProps={scriptProps}
-      useRecaptchaNet
+      useRecaptchaNet={useRecaptchaNet}
     >
       {children}
     </GoogleReCaptchaProvider>
