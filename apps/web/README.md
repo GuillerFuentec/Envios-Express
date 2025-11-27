@@ -1,27 +1,32 @@
-# Despliegue en Cloudflare Pages
+# Despliegue en Vercel
 
-Guia rapida para publicar la aplicacion web en Cloudflare Pages sin errores con pnpm.
+Guia rapida para publicar la aplicacion Next.js en Vercel dentro de este monorepo.
+
+## Configuracion del proyecto en Vercel
+
+- Root directory: `apps/web`
+- Framework: Next.js (autodetectado)
+- Install command: `pnpm install --filter web... --frozen-lockfile`
+- Build command: `pnpm --filter web build`
+- Node: `20` (usa la version LTS)
+- Opcional: `NEXT_TELEMETRY_DISABLED=1`
+
+> Nota: en la raiz del repo hay un `vercel.json` que ya apunta al builder de Next para `apps/web/next.config.js` y reutiliza los comandos anteriores.
 
 ## Variables de entorno
 
-Define en Cloudflare Pages (Settings > Environment variables) los valores siguientes:
+Define en Vercel (Project Settings > Environment Variables):
 
-- `NODE_VERSION`: `20`
-- `PNPM_VERSION`: `10.14.0`
-- `VITE_API_BASE_URL`: URL publica del backend en Railway, por ejemplo `https://tu-api.up.railway.app`
-- `VITE_STRIPE_PUBLISHABLE_KEY`: clave publica de Stripe que se usa en el Payment Element
-Opcionalmente puedes agregar:
-
-- `VITE_ENVIRONMENT`: etiqueta para mostrar en los registros del frontend. No es obligatoria.
-
-## Comandos de compilacion
-
-- Directorio del proyecto: `apps/web`
-- Comando de instalacion: `pnpm install --filter web...`
-- Comando de build: `pnpm build`
-- Directorio de salida: `apps/web/dist`
-
-Cloudflare detecta el archivo `pnpm-workspace.yaml` y ejecutara los comandos en el monorepo. Con el archivo `.npmrc` que agregamos, pnpm evitara el modo `frozen-lockfile` en los entornos de CI y la instalacion no se bloqueara si actualizas el lockfile.
+- `STRIPE_PUBLISHABLE_KEY`
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `STRAPI_WEB_API_URL` (o `STRAPI_API_URL`)
+- `STRAPI_API_TOKEN` (si aplica)
+- `GOOGLE_MAPS_API_KEY`
+- `NEXT_PUBLIC_RECAPTCHA_SITE_KEY`
+- `RECAPTCHA_SECRET_KEY`
+- `PLATFORM_FEE_PERCENT` (opcional, fallback 2.3)
+- `STRIPE_PROCESSING_PERCENT`, `STRIPE_PROCESSING_FIXED` (opcionales)
 
 ## Desarrollo local
 
@@ -29,11 +34,4 @@ Cloudflare detecta el archivo `pnpm-workspace.yaml` y ejecutara los comandos en 
 pnpm --filter web dev
 ```
 
-El servidor local queda expuesto en `http://localhost:5173` y usa por defecto la API en `http://localhost:1337`. Para probar contra Railway puedes exportar `VITE_API_BASE_URL` antes de ejecutar `pnpm dev`.
-
-## Pagina de checkout
-
-- Las rutas `src/pages/checkout.html`, `checkout-success.html` y `checkout-failed.html` se construyen automaticamente gracias a la configuracion multipagina de `vite.config.js`.
-- El Payment Element consulta `POST /api/payments/create-intent`, por lo que el backend debe exponer ese endpoint y devolver `clientSecret`.
-- El checkout se ejecuta en modo prueba: usa `4242 4242 4242 4242`, cualquier fecha futura y CVC `424`. Apple Pay / Google Pay se habilitan automaticamente cuando Stripe/Google detectan compatibilidad.
-- La pagina de exito/fracaso reutiliza `css/checkout.css`; recuerda publicar todos los archivos generados desde `dist/src/pages/*`.
+El servidor local corre en `http://localhost:3000` y usa las variables de `.env.local` dentro de `apps/web`.
