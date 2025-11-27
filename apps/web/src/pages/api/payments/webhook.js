@@ -76,6 +76,17 @@ const computeStripeFeeCents = (amountCents) => {
   return Math.max(0, Math.round(amountCents * percent + fixed * 100));
 };
 
+const computePlatformFeeCents = (amountCents, stripeFeeCents) => {
+  if (typeof amountCents !== "number" || Number.isNaN(amountCents)) {
+    return 0;
+  }
+  const rate =
+    Number(process.env.PLATFORM_FEE_PERCENT || process.env.PLATFORM_FEE_RATE) /
+      100 || 0.023; // 2.3% default
+  const base = amountCents - (stripeFeeCents || 0);
+  return Math.max(110, Math.round(base * rate)); // mínimo $1.10
+};
+
 const buildClientInfoFromSession = (session) => {
   const md = session.metadata || {};
   const contact = session.customer_details || {};
@@ -112,10 +123,14 @@ const buildClientInfoFromSession = (session) => {
       total: session.amount_total ? session.amount_total / 100 : undefined,
       currency: session.currency ? session.currency.toUpperCase() : undefined,
     },
+    sessionId: session.id,
     billing: {
       amountTotalCents,
       currency: session.currency ? session.currency.toUpperCase() : undefined,
-      platformFeeCents: platformFeeCents,
+      platformFeeCents:
+        platformFeeCents !== undefined
+          ? platformFeeCents
+          : computePlatformFeeCents(amountTotalCents, stripeFeeCents),
       destinationAccount: md.destination_account || "",
       stripeFeeCents,
       destinationAmountCents,
@@ -131,6 +146,7 @@ const buildClientInfoFromSession = (session) => {
 const buildClientInfoFromIntent = (intent) => {
   const md = intent.metadata || {};
   const email = intent.receipt_email || md.contact_email || "";
+  const sessionId = md.checkout_session_id || intent.id;
   const platformFeeCents = md.platform_fee_amount ? Number(md.platform_fee_amount) : undefined;
   const amountTotalCents =
     typeof intent.amount_received === "number" ? intent.amount_received : undefined;
@@ -162,16 +178,20 @@ const buildClientInfoFromIntent = (intent) => {
       total: intent.amount_received ? intent.amount_received / 100 : undefined,
       currency: intent.currency ? intent.currency.toUpperCase() : undefined,
     },
+    sessionId,
     billing: {
       amountTotalCents,
       currency: intent.currency ? intent.currency.toUpperCase() : undefined,
-      platformFeeCents: platformFeeCents,
+      platformFeeCents:
+        platformFeeCents !== undefined
+          ? platformFeeCents
+          : computePlatformFeeCents(amountTotalCents, stripeFeeCents),
       destinationAccount: md.destination_account || "",
       stripeFeeCents,
       destinationAmountCents,
     },
     stripe: {
-      sessionId: md.checkout_session_id || "",
+      sessionId: sessionId,
       paymentIntentId: intent.id,
     },
     submittedAt: new Date().toISOString(),

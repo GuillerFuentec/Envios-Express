@@ -1,6 +1,7 @@
 "use strict";
 
 const { calculateQuote } = require("../../../lib/server/quote");
+const { getStripeClient } = require("../../../lib/server/stripe");
 
 const normalizeBaseUrl = (value = "") => {
   const trimmed = value.replace(/\/+$/, "");
@@ -8,6 +9,31 @@ const normalizeBaseUrl = (value = "") => {
     return trimmed.slice(0, -4);
   }
   return trimmed;
+};
+
+const getProcessingConfig = () => {
+  const percent = Number(process.env.STRIPE_PROCESSING_PERCENT || 0.029);
+  const fixed = Number(process.env.STRIPE_PROCESSING_FIXED || 0.3);
+  return { percent, fixed };
+};
+
+const computeStripeFeeCents = (amountCents) => {
+  if (typeof amountCents !== "number" || Number.isNaN(amountCents)) {
+    return 0;
+  }
+  const { percent, fixed } = getProcessingConfig();
+  return Math.max(0, Math.round(amountCents * percent + fixed * 100));
+};
+
+const computePlatformFeeCents = (amountCents, stripeFeeCents) => {
+  if (typeof amountCents !== "number" || Number.isNaN(amountCents)) {
+    return 0;
+  }
+  const rate =
+    Number(process.env.PLATFORM_FEE_PERCENT || process.env.PLATFORM_FEE_RATE) /
+      100 || 0.023; // 2.3% por defecto
+  const base = amountCents - (stripeFeeCents || 0);
+  return Math.max(110, Math.round(base * rate)); // mínimo $1.10
 };
 
 const postToStrapi = async (payload) => {
@@ -52,6 +78,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    const stripe = getStripeClient();
     const { sessionId, payload } = req.body || {};
     if (!sessionId) {
       return res.status(400).json({ error: "Falta sessionId." });
@@ -71,6 +98,40 @@ export default async function handler(req, res) {
           })
         : null);
 
+    // Recuperar la Checkout Session para derivar billing y datos de transferencia
+    let stripeSession;
+    try {
+      stripeSession = await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ["payment_intent"],
+      });
+    } catch (err) {
+      console.error("[api/orders/confirm] No se pudo recuperar la session de Stripe", err);
+      const status = err?.statusCode || 502;
+      return res
+        .status(status)
+        .json({ error: "No se pudo validar el pago en Stripe." });
+    }
+
+    const md = stripeSession?.metadata || {};
+    const paymentIntent = stripeSession?.payment_intent;
+    const amountTotalCents =
+      typeof stripeSession?.amount_total === "number"
+        ? stripeSession.amount_total
+        : undefined;
+    const platformFeeCents = md.platform_fee_amount
+      ? Number(md.platform_fee_amount)
+      : computePlatformFeeCents(amountTotalCents, stripeFeeCents);
+    const stripeFeeCents = computeStripeFeeCents(amountTotalCents || 0);
+    const destinationAccount =
+      md.destination_account ||
+      paymentIntent?.transfer_data?.destination ||
+      process.env.STRIPE_CONNECT_ACCOUNT_ID ||
+      "";
+    const destinationAmountCents =
+      typeof amountTotalCents === "number"
+        ? amountTotalCents - (platformFeeCents || 0) - stripeFeeCents
+        : undefined;
+
     const clientPayload = {
       data: {
         name: contact.name || "",
@@ -82,14 +143,67 @@ export default async function handler(req, res) {
           preferences,
           quote,
           sessionId,
+          billing: {
+            amountTotalCents,
+            currency: stripeSession?.currency
+              ? stripeSession.currency.toUpperCase()
+              : undefined,
+            platformFeeCents,
+            stripeFeeCents,
+            destinationAccount,
+            destinationAmountCents,
+          },
+          stripe: {
+            sessionId: stripeSession?.id || sessionId,
+            paymentIntentId:
+              stripeSession?.payment_intent?.id ||
+              stripeSession?.payment_intent ||
+              "",
+          },
           submittedAt: new Date().toISOString(),
           status: "paid_online",
         },
       },
     };
 
+    // Log resumido del payload que se envía a Strapi para facilitar depuración
+    console.log("[api/orders/confirm] clientPayload resumen", {
+      sessionId,
+      destinationAccount,
+      destinationAmountCents,
+      amountTotalCents,
+      platformFeeCents,
+      stripeFeeCents,
+      hasQuote: Boolean(quote),
+    });
+
     const response = await postToStrapi(clientPayload);
     const orderId = response?.data?.id || response?.id || null;
+
+    // Procesar transferencia automática si está configurado
+    try {
+      const transferResponse = await fetch(`${normalizeBaseUrl(process.env.STRAPI_WEB_API_URL || process.env.STRAPI_API_URL)}/api/payments/process-transfer`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(process.env.STRAPI_API_TOKEN
+            ? { Authorization: `Bearer ${process.env.STRAPI_API_TOKEN}` }
+            : {}),
+        },
+        body: JSON.stringify({ sessionId, clientId: orderId }),
+      });
+
+      if (transferResponse.ok) {
+        console.log(`[api/orders/confirm] Transferencia procesada para orden ${orderId}`);
+      } else {
+        // No es crítico si falla - se puede reintentar manualmente
+        console.warn(`[api/orders/confirm] Falló transferencia automática para orden ${orderId}:`, 
+          await transferResponse.text().catch(() => 'unknown error'));
+      }
+    } catch (transferError) {
+      // Log pero no fallar la confirmación de orden
+      console.warn(`[api/orders/confirm] Error procesando transferencia automática:`, transferError.message);
+    }
 
     return res.status(200).json({ ok: true, orderId });
   } catch (error) {

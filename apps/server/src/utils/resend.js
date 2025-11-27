@@ -129,13 +129,7 @@ const sendNotificationEmail = async ({ subject, html, text }) => {
   });
 
   try {
-    await client.emails.send({
-      from,
-      to: recipients,
-      subject,
-      html,
-      text,
-    });
+    await client.emails.send({ from, to: recipients, subject, html, text });
     logger.info('[notifications] Resend email dispatched successfully.', {
       pid,
       signature: signatureHash,
@@ -145,6 +139,43 @@ const sendNotificationEmail = async ({ subject, html, text }) => {
   }
 };
 
+const sendReceiptEmail = async ({ to, subject, html, text }) => {
+  const logger = getLogger();
+  const client = getResendClient();
+  const from = process.env.RESEND_FROM_EMAIL;
+  const pid = process.pid;
+
+  if (!client || !from) {
+    logger.warn('[receipt] Resend no configurado (faltan RESEND_API_KEY o RESEND_FROM_EMAIL).');
+    return;
+  }
+
+  const recipients = Array.isArray(to)
+    ? to.filter(Boolean)
+    : String(to || '')
+        .split(',')
+        .map((e) => e.trim())
+        .filter(Boolean);
+
+  if (!recipients.length) {
+    logger.warn('[receipt] Lista de destinatarios vacia; abortando.');
+    return;
+  }
+
+  const signature = `${subject}|${text}`;
+  const signatureHash = buildSignatureHash(signature);
+
+  logger.debug('[receipt] Enviando recibo via Resend.', { pid, recipients, signature: signatureHash });
+
+  try {
+    await client.emails.send({ from, to: recipients, subject, html, text });
+    logger.info('[receipt] Recibo enviado.', { pid, signature: signatureHash });
+  } catch (error) {
+    logger.error('[receipt] Error al enviar recibo:', error);
+  }
+};
+
 module.exports = {
   sendNotificationEmail,
+  sendReceiptEmail,
 };

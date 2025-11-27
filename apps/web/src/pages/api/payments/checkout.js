@@ -96,18 +96,6 @@ const buildSuccessUrl = (origin) => {
 const buildCancelUrl = (origin) =>
   process.env.STRIPE_CANCEL_URL || `${origin}/funnel/status/cancel`;
 
-const getPlatformFeeCents = (quote) => {
-  const platformFeeAmount = quote?.breakdown?.processingFee?.platformFee;
-  if (typeof platformFeeAmount === "number" && platformFeeAmount > 0) {
-    return Math.round(platformFeeAmount * 100);
-  }
-  const percent =
-    Number(process.env.PLATFORM_FEE_PERCENT || process.env.PLATFORM_FEE_RATE) || 2.3;
-  const rate = percent / 100;
-  const amount = Number(quote?.total || 0) || 0;
-  return Math.max(0, Math.round(amount * rate * 100));
-};
-
 const pickReceiptEmail = (contact = {}, payload = {}) => {
   const candidates = [
     contact.email,
@@ -162,14 +150,33 @@ export default async function handler(req, res) {
       process.env.STRIPE_CONNECT_DESTINATION ||
       process.env.STRIPE_CONNECT_ACCOUNT_ID ||
       "";
-    const applicationFeeAmount = destinationAccount
-      ? getPlatformFeeCents(quote)
-      : undefined;
 
     const origin =
       req.headers.origin ||
       process.env.PUBLIC_SITE_URL ||
       "http://localhost:3000";
+
+    // Fee calculations
+    const amountTotalCents = Math.round((quote?.total || 0) * 100);
+    const stripeFeePercent = Number(process.env.STRIPE_PROC_PERCENT || 2.9) / 100;
+    const stripeFeeFixed = Math.round(
+      Number(process.env.STRIPE_PROC_FIXED || 0.3) * 100
+    );
+    const stripeFeeCents = Math.max(
+      0,
+      Math.round(amountTotalCents * stripeFeePercent + stripeFeeFixed)
+    );
+    const platformRate =
+      Number(process.env.PLATFORM_FEE_PERCENT || process.env.PLATFORM_FEE_RATE || 2.3) /
+      100;
+    const platformFeeCents = Math.max(
+      110, // mínimo $1.10
+      Math.round((amountTotalCents - stripeFeeCents) * platformRate)
+    );
+    const destinationAmountCents = Math.max(
+      0,
+      amountTotalCents - stripeFeeCents - platformFeeCents
+    );
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -178,12 +185,12 @@ export default async function handler(req, res) {
       customer_email: receiptEmail,
       payment_intent_data: {
         receipt_email: receiptEmail,
-        application_fee_amount: applicationFeeAmount,
-        transfer_data: destinationAccount
-          ? { destination: destinationAccount }
-          : undefined,
+        // No usamos transfer_data para que el cobro quede en la cuenta de plataforma
+        // y luego se transfiera manualmente al conectado.
+        application_fee_amount: undefined,
+        transfer_data: undefined,
         metadata: {
-          platform_fee_amount: applicationFeeAmount,
+          platform_fee_amount: platformFeeCents,
           destination_account: destinationAccount,
           contact_name: normalizedContact.name || "",
           contact_phone: normalizedContact.phone || "",
@@ -212,12 +219,21 @@ export default async function handler(req, res) {
         pickup: quotePayload.pickup ? "true" : "false",
         delivery_date: quotePayload.deliveryDate || "",
         weight_lbs: quotePayload.weightLbs || "",
-        platform_fee_amount: applicationFeeAmount,
+        platform_fee_amount: platformFeeCents,
         destination_account: destinationAccount,
       },
     });
 
-    return res.status(200).json({ url: session.url, sessionId: session.id });
+    return res.status(200).json({
+      url: session.url,
+      sessionId: session.id,
+      debugFees: {
+        amountTotalCents,
+        stripeFeeCents,
+        platformFeeCents,
+        destinationAmountCents,
+      },
+    });
   } catch (error) {
     console.error("[api/payments/checkout]", error);
     if (error?.raw) {
