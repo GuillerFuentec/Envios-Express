@@ -22,6 +22,24 @@ const sanitizeMetadata = (metadata = {}) => {
   }, {});
 };
 
+const pickReceiptEmail = (payload = {}) => {
+  const candidates = [
+    payload.receipt_email,
+    payload.receiptEmail,
+    payload.email,
+    payload.contact?.email,
+  ];
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string') {
+      const trimmed = candidate.trim();
+      if (trimmed) {
+        return trimmed.toLowerCase();
+      }
+    }
+  }
+  return '';
+};
+
 module.exports = {
   async createIntent(ctx) {
     const stripe = getStripeClient();
@@ -29,13 +47,18 @@ module.exports = {
       ctx.throw(503, 'Stripe no esta configurado.');
     }
 
+    const body = ctx.request.body || {};
     const {
       amount = 9.99,
       currency = process.env.STRIPE_DEFAULT_CURRENCY || 'usd',
-      email,
       metadata = {},
       description,
-    } = ctx.request.body || {};
+    } = body;
+
+    const receiptEmail = pickReceiptEmail(body);
+    if (!receiptEmail) {
+      return ctx.badRequest('Necesitamos un correo valido para enviar el recibo.');
+    }
 
     const amountInMinorUnit = toMinorUnit(amount);
     if (!amountInMinorUnit) {
@@ -46,11 +69,12 @@ module.exports = {
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amountInMinorUnit,
         currency: String(currency || 'usd').toLowerCase(),
-        receipt_email: email || undefined,
+        receipt_email: receiptEmail,
         description:
           description || process.env.STRIPE_PAYMENT_DESCRIPTION || 'Pago Paqueteria',
         metadata: {
           origin: 'web-funnel',
+          contact_email: receiptEmail,
           ...sanitizeMetadata(metadata),
         },
         automatic_payment_methods: { enabled: true },

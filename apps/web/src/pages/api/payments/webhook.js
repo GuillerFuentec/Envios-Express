@@ -32,9 +32,11 @@ const normalizeBaseUrl = (value = "") => {
 };
 
 const postClientToStrapi = async (clientInfo) => {
-  const baseUrl = normalizeBaseUrl(process.env.STRAPI_API_URL);
+  const baseUrl = normalizeBaseUrl(
+    process.env.STRAPI_WEB_API_URL || process.env.STRAPI_API_URL
+  );
   if (!baseUrl) {
-    console.warn("[webhook] STRAPI_API_URL not set; skipping Strapi client creation.");
+    console.warn("[webhook] STRAPI_WEB_API_URL not set; skipping Strapi client creation.");
     return;
   }
 
@@ -43,6 +45,9 @@ const postClientToStrapi = async (clientInfo) => {
     headers: getStrapiHeaders(),
     body: JSON.stringify({
       data: {
+        name: clientInfo?.contact?.name || "",
+        email: clientInfo?.contact?.email || "",
+        phone: clientInfo?.contact?.phone || "",
         client_info: clientInfo,
       },
     }),
@@ -57,12 +62,33 @@ const postClientToStrapi = async (clientInfo) => {
   return data;
 };
 
+const getProcessingConfig = () => {
+  const percent = Number(process.env.STRIPE_PROCESSING_PERCENT || 0.029);
+  const fixed = Number(process.env.STRIPE_PROCESSING_FIXED || 0.3);
+  return { percent, fixed };
+};
+
+const computeStripeFeeCents = (amountCents) => {
+  if (typeof amountCents !== "number" || Number.isNaN(amountCents)) {
+    return 0;
+  }
+  const { percent, fixed } = getProcessingConfig();
+  return Math.max(0, Math.round(amountCents * percent + fixed * 100));
+};
+
 const buildClientInfoFromSession = (session) => {
   const md = session.metadata || {};
   const contact = session.customer_details || {};
   const phone = contact.phone || md.contact_phone || "";
   const email = contact.email || md.contact_email || session.customer_email || "";
   const platformFeeCents = md.platform_fee_amount ? Number(md.platform_fee_amount) : undefined;
+  const amountTotalCents =
+    typeof session.amount_total === "number" ? session.amount_total : undefined;
+  const stripeFeeCents = computeStripeFeeCents(amountTotalCents || 0);
+  const destinationAmountCents =
+    typeof amountTotalCents === "number"
+      ? amountTotalCents - (platformFeeCents || 0) - stripeFeeCents
+      : undefined;
 
   return {
     contact: {
@@ -87,10 +113,12 @@ const buildClientInfoFromSession = (session) => {
       currency: session.currency ? session.currency.toUpperCase() : undefined,
     },
     billing: {
-      amountTotalCents: typeof session.amount_total === "number" ? session.amount_total : undefined,
+      amountTotalCents,
       currency: session.currency ? session.currency.toUpperCase() : undefined,
       platformFeeCents: platformFeeCents,
       destinationAccount: md.destination_account || "",
+      stripeFeeCents,
+      destinationAmountCents,
     },
     stripe: {
       sessionId: session.id,
@@ -104,6 +132,13 @@ const buildClientInfoFromIntent = (intent) => {
   const md = intent.metadata || {};
   const email = intent.receipt_email || md.contact_email || "";
   const platformFeeCents = md.platform_fee_amount ? Number(md.platform_fee_amount) : undefined;
+  const amountTotalCents =
+    typeof intent.amount_received === "number" ? intent.amount_received : undefined;
+  const stripeFeeCents = computeStripeFeeCents(amountTotalCents || 0);
+  const destinationAmountCents =
+    typeof amountTotalCents === "number"
+      ? amountTotalCents - (platformFeeCents || 0) - stripeFeeCents
+      : undefined;
 
   return {
     contact: {
@@ -128,10 +163,12 @@ const buildClientInfoFromIntent = (intent) => {
       currency: intent.currency ? intent.currency.toUpperCase() : undefined,
     },
     billing: {
-      amountTotalCents: typeof intent.amount_received === "number" ? intent.amount_received : undefined,
+      amountTotalCents,
       currency: intent.currency ? intent.currency.toUpperCase() : undefined,
       platformFeeCents: platformFeeCents,
       destinationAccount: md.destination_account || "",
+      stripeFeeCents,
+      destinationAmountCents,
     },
     stripe: {
       sessionId: md.checkout_session_id || "",

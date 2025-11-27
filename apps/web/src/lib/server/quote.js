@@ -164,7 +164,7 @@ const calculateQuote = async (payload = {}) => {
   const subtotal = baseAmount + pickupAmount + cashFee;
   const platformFeeAmount =
     normalizedPaymentMethod === "online"
-      ? Math.max(subtotal * PLATFORM_FEE_RATE, PLATFORM_FEE_MIN)
+      ? roundCurrency(Math.max(subtotal * PLATFORM_FEE_RATE, PLATFORM_FEE_MIN))
       : 0;
 
   const stripePercent =
@@ -176,18 +176,20 @@ const calculateQuote = async (payload = {}) => {
       ? agencyProfile.stripe_processing_fixed
       : Number(process.env.STRIPE_PROCESSING_FIXED || 0.3);
 
-  const netBeforeProcessing = subtotal + platformFeeAmount;
   let processingFee = 0;
+  let stripeFee = 0;
+  let total = subtotal;
   if (normalizedPaymentMethod === "online") {
     const percent = Number(stripePercent) || 0;
     const fixed = Number(stripeFixed) || 0;
     const divisor = 1 - percent;
+    const baseForStripe = subtotal + platformFeeAmount;
     const totalGross =
-      divisor > 0 ? (netBeforeProcessing + fixed) / divisor : netBeforeProcessing;
-    processingFee = roundCurrency(totalGross - netBeforeProcessing);
+      divisor > 0 ? (baseForStripe + fixed) / divisor : baseForStripe + fixed;
+    total = roundCurrency(totalGross);
+    processingFee = roundCurrency(totalGross - subtotal);
+    stripeFee = Math.max(0, roundCurrency(processingFee - platformFeeAmount));
   }
-
-  const total = roundCurrency(netBeforeProcessing + processingFee);
   const mustPayOnlineForCash = isCash ? true : false;
 
   const response = {
@@ -237,7 +239,9 @@ const calculateQuote = async (payload = {}) => {
       },
       processingFee: {
         amount: processingFee,
-        label: "Tarifa de procesamiento",
+        label: "Tarifa de procesamiento (plataforma + Stripe)",
+        platformFee: platformFeeAmount,
+        stripeFee,
       },
     },
     policy: {

@@ -13,6 +13,18 @@
   "attributes": {
     "contact_info": {
       "type": "json"
+    },
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "phone": {
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "type": "string",
+      "required": true
     }
   }
 }

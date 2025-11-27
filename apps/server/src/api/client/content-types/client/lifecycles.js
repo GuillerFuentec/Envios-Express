@@ -86,6 +86,15 @@ module.exports = {
     const quote = payload.quote || {};
     const billing = payload.billing || {};
     const billingCurrency = billing.currency || quote.currency || 'USD';
+    const destinationAmount = billing.destinationAmountCents
+      ? formatCents(billing.destinationAmountCents, billingCurrency)
+      : 'N/D';
+    const stripeFee = billing.stripeFeeCents
+      ? formatCents(billing.stripeFeeCents, billingCurrency)
+      : 'N/D';
+    const platformFee = billing.platformFeeCents
+      ? formatCents(billing.platformFeeCents, billingCurrency)
+      : 'N/D';
 
     const subject = `Nuevo encargo creado (#${id})`;
 
@@ -110,8 +119,10 @@ module.exports = {
         { label: 'Dirección de recogida', value: preferences.pickupAddress },
       ])}
       ${htmlList('Cobro / billing', [
-        { label: 'Total cotizado', value: formatCurrency(quote.total, quote.currency || 'USD') },
-        { label: 'Comisión plataforma', value: formatCents(billing.platformFeeCents, billingCurrency) || 'N/D' },
+        { label: 'Total pagado', value: formatCurrency(quote.total, quote.currency || 'USD') },
+        { label: 'Comisión plataforma', value: platformFee },
+        { label: 'Fee Stripe (aprox)', value: stripeFee },
+        { label: 'Monto para agencia', value: destinationAmount },
         { label: 'Cuenta destino', value: billing.destinationAccount || 'N/D' },
       ])}
     `;
@@ -134,11 +145,10 @@ module.exports = {
         { label: 'Dirección de recogida', value: preferences.pickupAddress },
       ]),
       textList('Cobro / billing', [
-        { label: 'Total cotizado', value: formatCurrency(quote.total, quote.currency || 'USD') },
-        {
-          label: 'Comisión plataforma',
-          value: formatCents(billing.platformFeeCents, billingCurrency) || 'N/D',
-        },
+        { label: 'Total pagado', value: formatCurrency(quote.total, quote.currency || 'USD') },
+        { label: 'Comisión plataforma', value: platformFee },
+        { label: 'Fee Stripe (aprox)', value: stripeFee },
+        { label: 'Monto para agencia', value: destinationAmount },
         { label: 'Cuenta destino', value: billing.destinationAccount || 'N/D' },
       ]),
     ]

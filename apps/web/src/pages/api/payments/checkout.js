@@ -86,15 +86,6 @@ const buildLineItems = (quote) => {
   return items;
 };
 
-const getPlatformFeeAmount = (total) => {
-  const percent =
-    Number(process.env.PLATFORM_FEE_PERCENT || process.env.PLATFORM_FEE_RATE) ||
-    2.3;
-  const rate = percent / 100;
-  const amount = Number(total) || 0;
-  return Math.max(0, Math.round(amount * rate * 100));
-};
-
 const buildSuccessUrl = (origin) => {
   const base =
     process.env.STRIPE_SUCCESS_URL || `${origin}/funnel/status/success`;
@@ -104,6 +95,36 @@ const buildSuccessUrl = (origin) => {
 
 const buildCancelUrl = (origin) =>
   process.env.STRIPE_CANCEL_URL || `${origin}/funnel/status/cancel`;
+
+const getPlatformFeeCents = (quote) => {
+  const platformFeeAmount = quote?.breakdown?.processingFee?.platformFee;
+  if (typeof platformFeeAmount === "number" && platformFeeAmount > 0) {
+    return Math.round(platformFeeAmount * 100);
+  }
+  const percent =
+    Number(process.env.PLATFORM_FEE_PERCENT || process.env.PLATFORM_FEE_RATE) || 2.3;
+  const rate = percent / 100;
+  const amount = Number(quote?.total || 0) || 0;
+  return Math.max(0, Math.round(amount * rate * 100));
+};
+
+const pickReceiptEmail = (contact = {}, payload = {}) => {
+  const candidates = [
+    contact.email,
+    payload.receipt_email,
+    payload.receiptEmail,
+    payload.email,
+  ];
+  for (const candidate of candidates) {
+    if (typeof candidate === "string") {
+      const trimmed = candidate.trim();
+      if (trimmed) {
+        return trimmed.toLowerCase();
+      }
+    }
+  }
+  return "";
+};
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -122,6 +143,13 @@ export default async function handler(req, res) {
     });
 
     const contact = payload?.contact || {};
+    const receiptEmail = pickReceiptEmail(contact, payload);
+    if (!receiptEmail) {
+      const error = new Error("Necesitamos un correo valido para enviar el recibo.");
+      error.status = 400;
+      throw error;
+    }
+    const normalizedContact = { ...contact, email: receiptEmail };
     const quotePayload = buildQuotePayload(payload);
     const quote = await calculateQuote(quotePayload);
 
@@ -135,7 +163,7 @@ export default async function handler(req, res) {
       process.env.STRIPE_CONNECT_ACCOUNT_ID ||
       "";
     const applicationFeeAmount = destinationAccount
-      ? getPlatformFeeAmount(quote.total)
+      ? getPlatformFeeCents(quote)
       : undefined;
 
     const origin =
@@ -147,9 +175,9 @@ export default async function handler(req, res) {
       mode: "payment",
       payment_method_types: ["card"],
       line_items: lineItems,
-      customer_email: contact.email || undefined,
+      customer_email: receiptEmail,
       payment_intent_data: {
-        receipt_email: contact.email || undefined,
+        receipt_email: receiptEmail,
         application_fee_amount: applicationFeeAmount,
         transfer_data: destinationAccount
           ? { destination: destinationAccount }
@@ -157,9 +185,9 @@ export default async function handler(req, res) {
         metadata: {
           platform_fee_amount: applicationFeeAmount,
           destination_account: destinationAccount,
-          contact_name: contact.name || "",
-          contact_phone: contact.phone || "",
-          contact_email: contact.email || "",
+          contact_name: normalizedContact.name || "",
+          contact_phone: normalizedContact.phone || "",
+          contact_email: receiptEmail,
           sms_consent: contact.smsConsent ? "true" : "false",
           city_cuba: quotePayload.cityCuba || "",
           content_type: quotePayload.contentType || "",
@@ -167,15 +195,16 @@ export default async function handler(req, res) {
           pickup: quotePayload.pickup ? "true" : "false",
           delivery_date: quotePayload.deliveryDate || "",
           weight_lbs: quotePayload.weightLbs || "",
+          // el ID de sesión se inyecta en el webhook desde el evento de checkout.session.completed
         },
       },
       success_url: buildSuccessUrl(origin),
       cancel_url: buildCancelUrl(origin),
       metadata: {
         payment_origin: "web-funnel",
-        contact_name: contact.name || "",
-        contact_phone: contact.phone || "",
-        contact_email: contact.email || "",
+        contact_name: normalizedContact.name || "",
+        contact_phone: normalizedContact.phone || "",
+        contact_email: receiptEmail,
         sms_consent: contact.smsConsent ? "true" : "false",
         city_cuba: quotePayload.cityCuba || "",
         content_type: quotePayload.contentType || "",
@@ -188,7 +217,7 @@ export default async function handler(req, res) {
       },
     });
 
-    return res.status(200).json({ url: session.url });
+    return res.status(200).json({ url: session.url, sessionId: session.id });
   } catch (error) {
     console.error("[api/payments/checkout]", error);
     if (error?.raw) {

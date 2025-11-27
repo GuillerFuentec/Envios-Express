@@ -1,6 +1,6 @@
 "use strict";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { useAgencyConfig } from "./useAgencyConfig";
 import {
@@ -29,11 +29,37 @@ const buildQuotePayload = (formData) => {
       : "",
     contentType: formData.shipment.contentType,
     paymentMethod: isCash ? "online" : formData.preferences.paymentMethod,
-      deliveryDate: formData.shipment.deliveryDate,
-      cityCuba: formData.shipment.cityCuba,
-      pickupAddress: formData.preferences.pickupAddress || undefined,
-    };
+    deliveryDate: formData.shipment.deliveryDate,
+    cityCuba: formData.shipment.cityCuba,
+    pickupAddress: formData.preferences.pickupAddress || undefined,
   };
+};
+
+const storeCheckoutPayload = (sessionId, payload) => {
+  if (!sessionId) return;
+  try {
+    localStorage.setItem(
+      `checkout:${sessionId}`,
+      JSON.stringify({ sessionId, payload, savedAt: Date.now() })
+    );
+  } catch (error) {
+    console.warn("[checkout] No se pudo persistir payload localmente.", error);
+  }
+};
+
+const consumeCheckoutPayload = (sessionId) => {
+  if (!sessionId) return null;
+  try {
+    const raw = localStorage.getItem(`checkout:${sessionId}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    localStorage.removeItem(`checkout:${sessionId}`);
+    return parsed;
+  } catch (error) {
+    console.warn("[checkout] No se pudo leer payload persistido.", error);
+    return null;
+  }
+};
 
 export const useFunnelController = () => {
   const { data: agencyConfig, loading: configLoading, error: configError } = useAgencyConfig();
@@ -49,6 +75,8 @@ export const useFunnelController = () => {
   const [quoteRefreshIndex, setQuoteRefreshIndex] = useState(0);
   const [actionLoading, setActionLoading] = useState(false);
   const [orderResult, setOrderResult] = useState(null);
+  const [pendingSessionId, setPendingSessionId] = useState("");
+  const checkoutChannelRef = useRef(null);
 
   const quotePayload = useMemo(() => buildQuotePayload(formData), [formData]);
   const quotePayloadKey = useMemo(() => JSON.stringify(quotePayload), [quotePayload]);
@@ -113,11 +141,11 @@ export const useFunnelController = () => {
           nextSection.pickupAddress = "";
           nextSection.pickupAddressPlaceId = "";
         }
-    return {
-      ...prev,
-      [section]: nextSection,
-    };
-  });
+        return {
+          ...prev,
+          [section]: nextSection,
+        };
+      });
       setShowGlobalError(false);
       clearFieldError(section, field);
     },
@@ -233,6 +261,26 @@ export const useFunnelController = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, quotePayloadKey, quoteRefreshIndex, executeRecaptcha, getRecaptchaToken]);
 
+  useEffect(() => {
+    const channel = new BroadcastChannel("checkout-status");
+    checkoutChannelRef.current = channel;
+
+    const handleMessage = (event) => {
+      const { sessionId, status } = event.data || {};
+      if (!sessionId || sessionId !== pendingSessionId) {
+        return;
+      }
+      const target = status === "success" ? "success" : status === "cancel" ? "cancel" : "error";
+      window.location.assign(`/funnel/status/${target}?session_id=${encodeURIComponent(sessionId)}`);
+    };
+
+    channel.addEventListener("message", handleMessage);
+    return () => {
+      channel.removeEventListener("message", handleMessage);
+      channel.close();
+    };
+  }, [pendingSessionId]);
+
   const handleNext = useCallback(async () => {
     setOrderResult(null);
     if (currentStep === 0 && !runContactValidation()) {
@@ -251,12 +299,7 @@ export const useFunnelController = () => {
     }
     setShowGlobalError(false);
     setCurrentStep((prev) => Math.min(prev + 1, 3));
-  }, [
-    currentStep,
-    runContactValidation,
-    runShipmentValidation,
-    runPreferenceValidation,
-  ]);
+  }, [currentStep, runContactValidation, runShipmentValidation, runPreferenceValidation]);
 
   const handlePrev = useCallback(() => {
     setOrderResult(null);
@@ -264,9 +307,9 @@ export const useFunnelController = () => {
     setShowGlobalError(false);
   }, []);
 
-    const handlePrimaryAction = useCallback(async () => {
+  const handlePrimaryAction = useCallback(async () => {
     if (!quoteState.data) {
-      setStatusMessage({ text: "A�n no tenemos el desglose listo.", variant: "error" });
+      setStatusMessage({ text: "Aún no tenemos el desglose listo.", variant: "error" });
       return;
     }
     setActionLoading(true);
@@ -278,6 +321,7 @@ export const useFunnelController = () => {
       shipment: formData.shipment,
       preferences: formData.preferences,
       quoteRequest: quotePayload,
+      quote: quoteState.data,
     };
 
     const prefersOnline = formData.preferences.paymentMethod === "online";
@@ -290,7 +334,14 @@ export const useFunnelController = () => {
           ...payload,
           recaptchaToken,
         });
-        window.location.assign(data.url);
+        const sessionId = data.sessionId || "";
+        setPendingSessionId(sessionId);
+        storeCheckoutPayload(sessionId, payload);
+        window.open(data.url, "_blank", "noopener");
+        setStatusMessage({
+          text: "Te llevamos a Stripe en una nueva pestaña. Esperamos la confirmación del pago...",
+          variant: "info",
+        });
         return;
       }
       const data = await createAgencyOrder({
@@ -303,7 +354,7 @@ export const useFunnelController = () => {
       );
     } catch (error) {
       setStatusMessage({
-        text: error.message || "No pudimos completar la accion.",
+        text: error.message || "No pudimos completar la acción.",
         variant: "error",
       });
       window.location.assign("/funnel/status/error");
@@ -351,13 +402,6 @@ export const useFunnelController = () => {
     handlePrev,
     handlePrimaryAction,
     handleQuoteRetry,
+    consumeCheckoutPayload,
   };
 };
-
-
-
-
-
-
-
-

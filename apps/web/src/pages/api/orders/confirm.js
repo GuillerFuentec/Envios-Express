@@ -1,31 +1,6 @@
 "use strict";
 
 const { calculateQuote } = require("../../../lib/server/quote");
-const { requireRecaptcha } = require("../../../lib/server/recaptcha");
-
-const buildQuotePayload = (body = {}) => {
-  const shipment = body.shipment || {};
-  const preferences = body.preferences || {};
-  const fallback = body.quoteRequest || {};
-
-  const pickupFlag =
-    fallback.pickup ??
-    preferences.pickup ??
-    shipment.pickup ??
-    false;
-
-  return {
-    weightLbs: fallback.weightLbs ?? shipment.weightLbs,
-    pickup: pickupFlag,
-    pickupAddressPlaceId:
-      fallback.pickupAddressPlaceId ??
-      preferences.pickupAddressPlaceId,
-    contentType: fallback.contentType ?? shipment.contentType,
-    paymentMethod: "agency",
-    deliveryDate: fallback.deliveryDate ?? shipment.deliveryDate,
-    cityCuba: fallback.cityCuba ?? shipment.cityCuba,
-  };
-};
 
 const normalizeBaseUrl = (value = "") => {
   const trimmed = value.replace(/\/+$/, "");
@@ -40,7 +15,7 @@ const postToStrapi = async (payload) => {
     process.env.STRAPI_WEB_API_URL || process.env.STRAPI_API_URL
   );
   if (!baseUrl) {
-    throw new Error("Falta STRAPI_WEB_API_URL para crear la orden.");
+    throw new Error("Falta STRAPI_WEB_API_URL para confirmar la orden.");
   }
 
   const response = await fetch(`${baseUrl}/api/clients`, {
@@ -63,6 +38,7 @@ const postToStrapi = async (payload) => {
       "No se pudo registrar la orden.";
     const error = new Error(message);
     error.status = response.status;
+    error.response = data;
     throw error;
   }
 
@@ -76,20 +52,25 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = req.body || {};
-    const { recaptchaToken, ...payload } = body;
+    const { sessionId, payload } = req.body || {};
+    if (!sessionId) {
+      return res.status(400).json({ error: "Falta sessionId." });
+    }
+    const contact = payload?.contact || {};
+    const shipment = payload?.shipment || {};
+    const preferences = payload?.preferences || {};
+    const quoteInput = payload?.quote;
+    const quoteRequest = payload?.quoteRequest;
 
-    await requireRecaptcha({
-      token: recaptchaToken,
-      action: "order",
-    });
+    const quote =
+      quoteInput ||
+      (quoteRequest
+        ? await calculateQuote({
+            ...quoteRequest,
+            paymentMethod: "online",
+          })
+        : null);
 
-    const quote = await calculateQuote({
-      ...buildQuotePayload(payload),
-      paymentMethod: "agency",
-    });
-
-    const contact = body?.contact || {};
     const clientPayload = {
       data: {
         name: contact.name || "",
@@ -97,10 +78,12 @@ export default async function handler(req, res) {
         phone: contact.phone || "",
         client_info: {
           contact,
-          shipment: body?.shipment || {},
-          preferences: body?.preferences || {},
+          shipment,
+          preferences,
           quote,
+          sessionId,
           submittedAt: new Date().toISOString(),
+          status: "paid_online",
         },
       },
     };
@@ -110,9 +93,9 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ ok: true, orderId });
   } catch (error) {
-    console.error("[api/orders/create]", error);
+    console.error("[api/orders/confirm]", error);
     return res
       .status(error.status || 500)
-      .json({ error: error.message || "No se pudo crear la orden." });
+      .json({ error: error.message || "No se pudo confirmar la orden." });
   }
 }

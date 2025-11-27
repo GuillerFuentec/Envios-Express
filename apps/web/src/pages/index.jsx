@@ -396,143 +396,180 @@ const FAQ = () => (
 const Contact = () => (
   <section id="contacto" className="py-16 px-4 bg-white">
     <div className="max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold text-slate mb-8 text-center">
-        Contacto
-      </h2>
+      <h2 className="text-3xl font-bold text-slate mb-8 text-center">Contacto</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 contact__grid">
-        <div>
-          <p className="text-gray-700 text-lg mb-6">
-            Tienes preguntas? Nuestro equipo esta listo para ayudarte.
-          </p>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 contact__info-item">
-              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-accent w-5 h-5">@</span>
-              </div>
-              <div>
-                <p className="text-gray-500 text-sm">Email</p>
-                <a
-                  href="mailto:contact@raccoonstudiosllc.com"
-                  className="text-slate hover:text-accent"
-                >
-                  contact@raccoonstudiosllc.com
-                </a>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 contact__info-item">
-              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-accent w-5 h-5">☎</span>
-              </div>
-              <div>
-                <p className="text-gray-500 text-sm">Telefono</p>
-                <a
-                  href="tel:+14322321612"
-                  className="text-slate hover:text-accent"
-                >
-                  +1 432 232 1612
-                </a>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 contact__info-item">
-              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-accent w-5 h-5">📍</span>
-              </div>
-              <div>
-                <p className="text-gray-500 text-sm">Direccion</p>
-                <p className="text-slate">
-                  123 Calle Principal, Suite 101, Miami, FL 33101
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div>
-          <form className="surface-card surface-card--subtle">
-            <div className="mb-4">
-              <label htmlFor="contactName" className="block text-gray-700 mb-2">
-                Nombre completo
-              </label>
-              <input
-                type="text"
-                id="contactName"
-                name="name"
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-              />
-            </div>
-            <div className="mb-4">
-              <label
-                htmlFor="contactEmail"
-                className="block text-gray-700 mb-2"
-              >
-                Email
-              </label>
-              <input
-                type="email"
-                id="contactEmail"
-                name="email"
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-              />
-            </div>
-            <div className="mb-4">
-              <label
-                htmlFor="contactPhone"
-                className="block text-gray-700 mb-2"
-              >
-                Telefono
-              </label>
-              <input
-                type="tel"
-                id="contactPhone"
-                name="phone"
-                placeholder="+1 555 000 0000"
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-              />
-            </div>
-            <div className="my-4">
-              <label
-                htmlFor="contactMessage"
-                className="block text-gray-700 mb-2"
-              >
-                Mensaje
-              </label>
-              <textarea
-                id="contactMessage"
-                name="message"
-                rows="4"
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-              />
-            </div>
-            <div className="my-4 flex items-start gap-3">
-              <input
-                type="checkbox"
-                id="contactSmsConsent"
-                required
-                className="mt-1 w-4 h-4 border-gray-300 text-accent focus:ring-accent"
-              />
-              <label
-                htmlFor="contactSmsConsent"
-                className="text-gray-700 text-sm leading-relaxed"
-              >
-                Acepto recibir mensajes de texto para confirmar mi solicitud y
-                coordinar detalles del envio.
-              </label>
-            </div>
-            <button
-              type="submit"
-              className="bg-teal-700 hover:bg-teal-800 text-white font-bold py-2 px-6 rounded-lg transition"
-            >
-              Enviar mensaje
-            </button>
-          </form>
-        </div>
+        <ContactInfo />
+        <ContactForm />
       </div>
     </div>
   </section>
 );
+
+const ContactInfo = () => (
+  <div>
+    <p className="text-gray-700 text-lg mb-6">Tienes preguntas? Nuestro equipo esta listo para ayudarte.</p>
+    <div className="space-y-4">
+      <div className="flex items-center gap-4 contact__info-item">
+        <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+          <span className="text-accent w-5 h-5">@</span>
+        </div>
+        <div>
+          <p className="text-gray-500 text-sm">Email</p>
+          <a href="mailto:contact@raccoonstudiosllc.com" className="text-slate hover:text-accent">
+            contact@raccoonstudiosllc.com
+          </a>
+        </div>
+      </div>
+      <div className="flex items-center gap-4 contact__info-item">
+        <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+          <span className="text-accent w-5 h-5">?</span>
+        </div>
+        <div>
+          <p className="text-gray-500 text-sm">Telefono</p>
+          <a href="tel:+14322321612" className="text-slate hover:text-accent">
+            +1 432 232 1612
+          </a>
+        </div>
+      </div>
+      <div className="flex items-center gap-4 contact__info-item">
+        <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+          <span className="text-accent w-5 h-5">??</span>
+        </div>
+        <div>
+          <p className="text-gray-500 text-sm">Direccion</p>
+          <p className="text-slate">123 Calle Principal, Suite 101, Miami, FL 33101</p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const ContactForm = () => {
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    message: "",
+    smsConsent: false,
+  });
+  const [status, setStatus] = useState({ text: "", variant: "" });
+  const [sending, setSending] = useState(false);
+
+  const handleChange = (field) => (event) => {
+    const value = field === "smsConsent" ? event.target.checked : event.target.value;
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setStatus({ text: "", variant: "" });
+    setSending(true);
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || "No pudimos enviar tu mensaje.");
+      }
+      setStatus({ text: "Mensaje enviado. Te contactaremos pronto.", variant: "success" });
+      setForm({ name: "", email: "", phone: "", message: "", smsConsent: false });
+    } catch (error) {
+      setStatus({ text: error.message || "No pudimos enviar tu mensaje.", variant: "error" });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <form className="surface-card surface-card--subtle" onSubmit={handleSubmit}>
+      <div className="mb-4">
+        <label htmlFor="contactName" className="block text-gray-700 mb-2">
+          Nombre completo
+        </label>
+        <input
+          type="text"
+          id="contactName"
+          name="name"
+          required
+          value={form.name}
+          onChange={handleChange("name")}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+        />
+      </div>
+      <div className="mb-4">
+        <label htmlFor="contactEmail" className="block text-gray-700 mb-2">
+          Email
+        </label>
+        <input
+          type="email"
+          id="contactEmail"
+          name="email"
+          required
+          value={form.email}
+          onChange={handleChange("email")}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+        />
+      </div>
+      <div className="mb-4">
+        <label htmlFor="contactPhone" className="block text-gray-700 mb-2">
+          Telefono
+        </label>
+        <input
+          type="tel"
+          id="contactPhone"
+          name="phone"
+          placeholder="+1 555 000 0000"
+          required
+          value={form.phone}
+          onChange={handleChange("phone")}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+        />
+      </div>
+      <div className="my-4">
+        <label htmlFor="contactMessage" className="block text-gray-700 mb-2">
+          Mensaje
+        </label>
+        <textarea
+          id="contactMessage"
+          name="message"
+          rows="4"
+          required
+          value={form.message}
+          onChange={handleChange("message")}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+        />
+      </div>
+      <div className="my-4 flex items-start gap-3">
+        <input
+          type="checkbox"
+          id="contactSmsConsent"
+          required
+          checked={form.smsConsent}
+          onChange={handleChange("smsConsent")}
+          className="mt-1 w-4 h-4 border-gray-300 text-accent focus:ring-accent"
+        />
+        <label htmlFor="contactSmsConsent" className="text-gray-700 text-sm leading-relaxed">
+          Acepto recibir mensajes de texto para confirmar mi solicitud y coordinar detalles del envio.
+        </label>
+      </div>
+      <button
+        type="submit"
+        disabled={sending}
+        className="bg-teal-700 hover:bg-teal-800 text-white font-bold py-2 px-6 rounded-lg transition disabled:opacity-70"
+      >
+        {sending ? "Enviando..." : "Enviar mensaje"}
+      </button>
+      {status.text ? (
+        <p className={`mt-3 ${status.variant === "error" ? "text-red-600" : "text-green-700"}`}>
+          {status.text}
+        </p>
+      ) : null}
+    </form>
+  );
+};
 
 const Footer = () => (
   <footer className="site-footer">
@@ -590,3 +627,4 @@ export default function HomePage() {
     </>
   );
 }
+

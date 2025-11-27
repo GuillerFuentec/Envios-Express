@@ -2,11 +2,29 @@
 
 import Head from "next/head";
 import Link from "next/link";
+import { useEffect } from "react";
 import { useRouter } from "next/router";
 
 const CancelPage = () => {
   const { query } = useRouter();
   const sessionId = query.session_id || query.sessionId || "";
+
+  useEffect(() => {
+    if (!sessionId) {
+      return;
+    }
+    const channel = new BroadcastChannel("checkout-status");
+    channel.postMessage({ status: "cancel", sessionId });
+    localStorage.setItem(
+      "checkout-status",
+      JSON.stringify({ status: "cancel", sessionId, ts: Date.now() })
+    );
+    setTimeout(() => channel.close(), 500);
+    if (window.opener && typeof window.close === "function") {
+      window.close();
+    }
+    localStorage.removeItem(`checkout:${sessionId}`);
+  }, [sessionId]);
 
   return (
     <>
