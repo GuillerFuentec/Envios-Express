@@ -322,6 +322,23 @@ a {
   gap: 16px;
 }
 
+.summary-shell,
+.summary-header,
+.summary-grid,
+.summary-card,
+.summary-pill,
+.summary-total-bar,
+.summary-block,
+.summary-list,
+.summary-info {
+  min-width: 0;
+}
+
+.summary-grid,
+.summary-card {
+  width: 100%;
+}
+
 .summary-header {
   display: flex;
   flex-wrap: wrap;
@@ -366,10 +383,19 @@ a {
   color: #e6fffb;
   font-weight: 700;
   box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
 }
 
 .summary-pill strong {
   color: #fff;
+}
+
+.summary-pill__email {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .summary-pill--muted {
@@ -585,7 +611,12 @@ a {
 
   .summary-pill {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .summary-pill__email {
+    max-width: 100%;
   }
 }
 
@@ -766,5 +797,45 @@ a {
 
   .status-action {
     width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .summary-card {
+    padding: 16px;
+  }
+
+  .summary-header {
+    align-items: stretch;
+  }
+
+  .summary-pill {
+    padding: 12px;
+  }
+
+  .summary-pill__email {
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .summary-row {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "label amount"
+      "dots dots";
+    gap: 6px;
+    align-items: start;
+  }
+
+  .summary-row__label {
+    grid-area: label;
+  }
+
+  .summary-row__dots {
+    grid-area: dots;
+  }
+
+  .summary-row__amount {
+    grid-area: amount;
   }
 }
