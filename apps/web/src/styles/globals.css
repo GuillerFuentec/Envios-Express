@@ -391,7 +391,7 @@ a {
 }
 
 .summary-pill__email {
-  display: block;
+  display: inline-flex;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;

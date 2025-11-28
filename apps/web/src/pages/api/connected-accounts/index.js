@@ -19,7 +19,8 @@ const stripe = () => {
 const ensureAuth = (req) => {
   // TODO: reemplazar por auth real (API key/admin session)
   const token = req.headers["x-admin-token"];
-  const expected = process.env.ADMIN_API_TOKEN;
+  const expected =
+    process.env.AGENCY_TOKEN
   if (!expected || token !== expected) {
     const err = new Error("No autorizado");
     err.status = 401;

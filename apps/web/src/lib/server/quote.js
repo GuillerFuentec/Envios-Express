@@ -239,7 +239,7 @@ const calculateQuote = async (payload = {}) => {
       },
       processingFee: {
         amount: processingFee,
-        label: "Tarifa de procesamiento (plataforma + Stripe)",
+        label: "Tarifa de procesamiento",
         platformFee: platformFeeAmount,
         stripeFee,
       },

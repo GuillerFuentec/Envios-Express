@@ -4,6 +4,38 @@ const { calculateQuote } = require("../../../lib/server/quote");
 const { getStripeClient } = require("../../../lib/server/stripe");
 const { requireRecaptcha } = require("../../../lib/server/recaptcha");
 
+const RATE_LIMIT_WINDOW_MS = Number(
+  process.env.CHECKOUT_RATE_LIMIT_WINDOW_MS || 60_000
+);
+const RATE_LIMIT_MAX = Number(process.env.CHECKOUT_RATE_LIMIT_MAX || 10);
+const clientHits = new Map();
+
+const getClientKey = (req) => {
+  const xfwd = req.headers["x-forwarded-for"];
+  if (typeof xfwd === "string" && xfwd) {
+    return xfwd.split(",")[0].trim();
+  }
+  return req.socket?.remoteAddress || "unknown";
+};
+
+const enforceRateLimit = (req) => {
+  if (!RATE_LIMIT_MAX || RATE_LIMIT_MAX <= 0) {
+    return;
+  }
+  const key = getClientKey(req);
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW_MS;
+  const history = clientHits.get(key) || [];
+  const recent = history.filter((ts) => ts > windowStart);
+  recent.push(now);
+  clientHits.set(key, recent);
+  if (recent.length > RATE_LIMIT_MAX) {
+    const err = new Error("Demasiadas solicitudes. Intenta mas tarde.");
+    err.status = 429;
+    throw err;
+  }
+};
+
 const toMinorUnit = (value) => {
   const amount = Number(value);
   if (!Number.isFinite(amount) || amount <= 0) {
@@ -121,6 +153,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    enforceRateLimit(req);
     const stripe = getStripeClient();
     const body = req.body || {};
     const { recaptchaToken, ...payload } = body;

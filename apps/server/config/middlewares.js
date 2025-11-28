@@ -5,7 +5,13 @@ module.exports = [
   {
     name: 'strapi::cors',
     config: {
-      origin: ['http://miapp.local:5173', 'http://localhost:5173'],
+      origin: [
+        'http://miapp.local:3000',
+        'http://localhost:3000',
+        ...(process.env.CORS_ORIGIN
+          ? process.env.CORS_ORIGIN.split(',').map((v) => v.trim()).filter(Boolean)
+          : []),
+      ],
       headers: ['Content-Type', 'Authorization'],
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
       credentials: true,

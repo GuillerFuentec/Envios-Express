@@ -3,6 +3,17 @@
 const { calculateQuote } = require("../../../lib/server/quote");
 const { getStripeClient } = require("../../../lib/server/stripe");
 
+const ensureInternalAuth = (req) => {
+  const token =
+    req.headers["x-internal-token"] || req.headers["x-admin-token"];
+  const expected = process.env.AGENCY_TOKEN;
+  if (!expected || token !== expected) {
+    const err = new Error("No autorizado.");
+    err.status = 401;
+    throw err;
+  }
+};
+
 const normalizeBaseUrl = (value = "") => {
   const trimmed = value.replace(/\/+$/, "");
   if (trimmed.endsWith("/api")) {
@@ -78,6 +89,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    ensureInternalAuth(req);
     const stripe = getStripeClient();
     const { sessionId, payload } = req.body || {};
     if (!sessionId) {

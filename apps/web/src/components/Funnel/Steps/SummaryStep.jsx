@@ -220,19 +220,21 @@ const SummaryStep = ({
           <div className="summary-info summary-info--inline">
             <p className="summary-block__title">Que incluye cada cargo?</p>
             <ul>
-              <li>
+              <li className="pb-4">
                 <strong>Peso:</strong>{" "}
                 {formatCurrency(pricingInfo?.pricePerLb || pricePerLb || 0)} por
-                lb.
+                cada libra.
               </li>
-              <li>
-                <strong>Recogida a domicilio:</strong> base $
+              <hr/>
+              <li className="py-2">
+                <strong>Recogida a domicilio:</strong> El precio base es $
                 {pricingInfo?.pickupBase || 10} + $
                 {pricingInfo?.pickupPerMile || 0.99}
-                /mi.
+                 <span className="pl-[5px]">por cada milla.</span>
               </li>
-              <li>
-                <strong>Procesamiento:</strong> Cobros por la gestion
+              <hr/>
+              <li className="py-2">
+                <strong>Procesamiento:</strong> Cobro por la gestion.
               </li>
             </ul>
           </div>

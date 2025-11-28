@@ -36,7 +36,7 @@ const ContactStep = ({ data, errors, onChange }) => (
       {errors.phone && <span className="field-error">{errors.phone}</span>}
     </div>
     <label className="toggle-row" htmlFor="smsConsent">
-      <span>Acepto recibir actualizaciones vía SMS</span>
+      <span>Acepto recibir actualizaciones vía SMS y correo electrónico</span>
       <input
         id="smsConsent"
         type="checkbox"
