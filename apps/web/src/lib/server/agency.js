@@ -31,6 +31,8 @@ const resolvePricePerLb = (payload) => {
 
 const normalizeAgencyPayload = (raw) => {
   const fallbackPrice = toNumber(process.env.DEFAULT_PRICE_PER_LB || 0);
+  const priceFromEnv =
+    toNumber(process.env.PRICE_LB_FALLBACK, null) ?? fallbackPrice;
   const agencySection = raw?.agency || raw?.data?.agency || {};
   const stripeSection = raw?.stripe || raw?.data?.stripe || {};
 
@@ -45,7 +47,7 @@ const normalizeAgencyPayload = (raw) => {
     Price_lb:
       resolvePricePerLb(raw) ||
       resolvePricePerLb(agencySection) ||
-      fallbackPrice,
+      priceFromEnv,
     ciudades_de_destino_cuba:
       raw?.ciudades_de_destino_cuba || raw?.cities || [],
     contenido_principal: raw?.contenido_principal || raw?.main_contents || [],
@@ -63,12 +65,25 @@ const normalizeAgencyPayload = (raw) => {
   return normalized;
 };
 
+const buildEnvFallback = () =>
+  normalizeAgencyPayload({
+    name: process.env.AGENCY_NAME || '',
+    address: process.env.AGENCY_ADDRESS || '',
+    place_id: process.env.AGENCY_PLACE_ID || '',
+    Price_lb:
+      process.env.PRICE_LB_FALLBACK ||
+      process.env.DEFAULT_PRICE_PER_LB ||
+      null,
+    stripe_processing_percent: process.env.STRIPE_PROCESSING_PERCENT,
+    stripe_processing_fixed: process.env.STRIPE_PROCESSING_FIXED,
+    ciudades_de_destino_cuba: [],
+    contenido_principal: [],
+  });
+
 const fetchAgencyProfile = async () => {
   const endpoint = process.env.AGENCY_INFO_URL;
-  console.log(endpoint);
-  
   if (!endpoint) {
-    throw new Error('Falta la variable AGENCY_INFO_URL.');
+    return buildEnvFallback();
   }
 
   const headers = {
@@ -86,9 +101,10 @@ const fetchAgencyProfile = async () => {
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(
-      `No se pudo obtener la configuración de la agencia (${response.status}). ${text}`
+    console.error(
+      `[agency] No se pudo obtener config (${response.status}). ${text}`
     );
+    return buildEnvFallback();
   }
 
   const payload = await response.json();
