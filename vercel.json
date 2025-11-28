@@ -6,7 +6,7 @@
       "use": "@vercel/next"
     }
   ],
-  "installCommand": "pnpm install --filter web... --frozen-lockfile",
-  "buildCommand": "pnpm --filter web build",
+  "installCommand": "pnpm install --dir apps/web --filter web... --frozen-lockfile",
+  "buildCommand": "pnpm --dir apps/web --filter web build",
   "framework": "nextjs"
 }
