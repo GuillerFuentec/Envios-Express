@@ -10,11 +10,14 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Incorporado el modulo de verificacion server-side y la ruta auxiliar `/api/verify-recaptcha` para confirmar tokens desde el funnel (`apps/web/lib/server/recaptcha.js:1`, `apps/web/pages/api/verify-recaptcha.js:1`).
 - Actualizado el ejemplo de entorno con las claves requeridas por la integracion (`apps/web/.env.local.example:1`).
 - Dockerfile dedicado para desplegar `apps/web` en Railway/containers (`Dockerfile.web:1`).
+- Migracion a reCAPTCHA v2 (checkbox) con nuevo widget y cliente `react-google-recaptcha` (`apps/web/src/components/ReCaptchaCheckbox.jsx:1`, `apps/web/src/components/ReCaptchaProvider.jsx:1`).
 
 ### Changed
 - El controlador del funnel ahora ejecuta reCAPTCHA antes de cotizar, crear ordenes o iniciar el checkout, y deshabilita la accion principal hasta contar con un desglose valido (`apps/web/hooks/useFunnelController.js:1`, `apps/web/components/Funnel/ActionsBar.jsx:1`).
 - Las rutas de cotizacion, ordenes y checkout exigen un token valido previo a contactar la agencia o Stripe (`apps/web/pages/api/quote.js:3`, `apps/web/pages/api/orders/create.js:1`, `apps/web/pages/api/payments/checkout.js:1`).
 - CORS de Strapi ahora admite origenes definidos en `CORS_ORIGIN` ademas de los locales (`apps/server/config/middlewares.js:1`).
+- Recaptcha en servidores ajustado para validar tokens v2 sin score (`apps/web/src/lib/server/recaptcha.js:1`).
+- Funnel muestra y consume el checkbox de reCAPTCHA antes de cotizar/pagar (`apps/web/src/pages/funnel/index.jsx:1`, `apps/web/src/hooks/useFunnelController.js:1`).
 
 ### Fixed
 - _Sin cambios_

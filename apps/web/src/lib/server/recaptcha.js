@@ -7,18 +7,7 @@ const getSecretKey = () =>
   process.env.SECRET_RECAPTCHA_KEY ||
   "";
 
-const getMinScore = (override) => {
-  if (typeof override === "number" && Number.isFinite(override)) {
-    return override;
-  }
-  const envValue = Number(process.env.RECAPTCHA_MIN_SCORE);
-  if (Number.isFinite(envValue)) {
-    return envValue;
-  }
-  return 0.5;
-};
-
-const verifyRecaptchaToken = async (token, expectedAction, minScoreOverride) => {
+const verifyRecaptchaToken = async (token) => {
   const secretKey = getSecretKey();
   if (!secretKey) {
     const error = new Error("Falta RECAPTCHA_SECRET_KEY en el servidor.");
@@ -32,7 +21,6 @@ const verifyRecaptchaToken = async (token, expectedAction, minScoreOverride) => 
   }
 
   console.info("[recaptcha] inicio verificacion", {
-    action: expectedAction || null,
     tokenLength: token.length || 0,
   });
 
@@ -58,48 +46,34 @@ const verifyRecaptchaToken = async (token, expectedAction, minScoreOverride) => 
   try {
     payload = await response.json();
   } catch (error) {
-    const parseError = new Error("Respuesta inválida de reCAPTCHA.");
+    const parseError = new Error("Respuesta invalida de reCAPTCHA.");
     parseError.status = 502;
     parseError.cause = error;
     throw parseError;
   }
 
-  const action = typeof payload.action === "string" ? payload.action : "";
-  const normalizedAction = action.toLowerCase();
-  const expected = typeof expectedAction === "string" ? expectedAction.toLowerCase() : "";
-  const actionMatches = !expected || normalizedAction === expected;
-  const score = Number(payload.score || 0);
-  const minScore = getMinScore(minScoreOverride);
-
-  const success =
-    Boolean(payload.success) &&
-    actionMatches &&
-    score >= minScore;
+  const success = Boolean(payload.success);
 
   console.info("[recaptcha] respuesta verificada", {
     success,
-    action,
-    expectedAction: expectedAction || null,
-    score,
-    minScore,
+    action: payload?.action || null,
+    score: payload?.score ?? null,
     errorCodes: payload["error-codes"] || [],
   });
 
   return {
     success,
-    score,
-    action,
+    score: payload?.score ?? null,
+    action: payload?.action || null,
     challengeTs: payload.challenge_ts,
     hostname: payload.hostname,
     errorCodes: payload["error-codes"] || [],
     raw: payload,
-    minScore,
-    expectedAction: expectedAction || null,
   };
 };
 
-const requireRecaptcha = async ({ token, action, minScore } = {}) => {
-  const result = await verifyRecaptchaToken(token, action, minScore);
+const requireRecaptcha = async ({ token } = {}) => {
+  const result = await verifyRecaptchaToken(token);
   if (!result.success) {
     const error = new Error("No pudimos validar reCAPTCHA.");
     error.status = 400;

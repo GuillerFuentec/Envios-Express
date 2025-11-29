@@ -1,7 +1,7 @@
 "use strict";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import { useRecaptcha } from "../components/ReCaptchaProvider";
 import { useAgencyConfig } from "./useAgencyConfig";
 import {
   createAgencyOrder,
@@ -80,28 +80,17 @@ export const useFunnelController = () => {
 
   const quotePayload = useMemo(() => buildQuotePayload(formData), [formData]);
   const quotePayloadKey = useMemo(() => JSON.stringify(quotePayload), [quotePayload]);
-  const { executeRecaptcha } = useGoogleReCaptcha();
+  const { token: recaptchaToken } = useRecaptcha();
 
   const getRecaptchaToken = useCallback(
     async (action) => {
-      if (!executeRecaptcha) {
-        console.warn("[recaptcha-client] executeRecaptcha no listo", { action });
-        throw new Error("reCAPTCHA aun no esta listo. Intenta en unos segundos.");
+      if (!recaptchaToken) {
+        console.warn("[recaptcha-client] token faltante", { action });
+        throw new Error("Confirma el reCAPTCHA antes de continuar.");
       }
-      try {
-        console.info("[recaptcha-client] solicitando token", { action });
-        const token = await executeRecaptcha(action);
-        console.info("[recaptcha-client] token recibido", {
-          action,
-          tokenLength: token?.length || 0,
-        });
-        return token;
-      } catch (error) {
-        console.error("[recaptcha] executeRecaptcha error", error);
-        throw new Error("No pudimos validar tu actividad con reCAPTCHA.");
-      }
+      return recaptchaToken;
     },
-    [executeRecaptcha]
+    [recaptchaToken]
   );
 
   const clearFieldError = useCallback((section, field) => {
@@ -227,12 +216,6 @@ export const useFunnelController = () => {
     let active = true;
     setQuoteState({ loading: true, data: null, error: "" });
 
-    if (!executeRecaptcha) {
-      return () => {
-        active = false;
-      };
-    }
-
     const fetchQuote = async () => {
       try {
         const token = await getRecaptchaToken("quote");
@@ -266,7 +249,7 @@ export const useFunnelController = () => {
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStep, quotePayloadKey, quoteRefreshIndex, executeRecaptcha, getRecaptchaToken]);
+  }, [currentStep, quotePayloadKey, quoteRefreshIndex, getRecaptchaToken]);
 
   useEffect(() => {
     const channel = new BroadcastChannel("checkout-status");

@@ -6,6 +6,7 @@ import { FunnelProvider, useFunnel } from "../../contexts/FunnelContext";
 import { getTomorrowIso } from "../../utils/dates";
 import SiteNavbar from "../../components/layout/SiteNavbar";
 import SiteFooter from "../../components/layout/SiteFooter";
+import ReCaptchaCheckbox from "../../components/ReCaptchaCheckbox";
 
 const FunnelView = () => {
   const {
@@ -112,6 +113,13 @@ const FunnelView = () => {
           </div>
         ))}
       </div>
+
+      {currentStep >= 2 && (
+        <div className="mt-4 mb-6 flex flex-col gap-2">
+          <p className="text-sm text-gray-600">Confirma que no eres un robot para continuar.</p>
+          <ReCaptchaCheckbox />
+        </div>
+      )}
 
       <Funnel.ActionsBar
         currentStep={currentStep}

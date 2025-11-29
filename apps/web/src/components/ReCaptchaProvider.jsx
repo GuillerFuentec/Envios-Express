@@ -1,34 +1,38 @@
 "use client";
 
-import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
 
-const scriptProps = {
-  async: true,
-  defer: true,
-  appendTo: "head",
-};
+const RecaptchaContext = createContext({
+  token: "",
+  setToken: () => {},
+  reset: () => {},
+  refreshKey: 0,
+});
+
+export const useRecaptcha = () => useContext(RecaptchaContext);
 
 export function ReCaptchaProvider({ children }) {
-  const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
-  const useRecaptchaNet =
-    (process.env.NEXT_PUBLIC_RECAPTCHA_USE_NET || "").toLowerCase() === "true";
+  const [token, setToken] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  if (!siteKey) {
-    if (process.env.NODE_ENV !== "production") {
-      console.warn(
-        "[ReCaptchaProvider] Falta NEXT_PUBLIC_RECAPTCHA_SITE_KEY. Renderizando sin reCAPTCHA."
-      );
-    }
-    return children;
-  }
+  const handleSetToken = useCallback((value) => {
+    setToken(value || "");
+  }, []);
 
-  return (
-    <GoogleReCaptchaProvider
-      reCaptchaKey={siteKey}
-      scriptProps={scriptProps}
-      useRecaptchaNet={useRecaptchaNet}
-    >
-      {children}
-    </GoogleReCaptchaProvider>
+  const reset = useCallback(() => {
+    setToken("");
+    setRefreshKey((prev) => prev + 1);
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      token,
+      setToken: handleSetToken,
+      reset,
+      refreshKey,
+    }),
+    [token, reset, refreshKey, handleSetToken]
   );
+
+  return <RecaptchaContext.Provider value={value}>{children}</RecaptchaContext.Provider>;
 }

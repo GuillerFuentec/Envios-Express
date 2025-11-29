@@ -44,13 +44,13 @@ Repositorio con dos aplicaciones:
   - Endpoint `/api/orders/confirm` (web) recupera la session de Stripe y registra de nuevo en Strapi; se puede reforzar con token interno.
   - Endpoint `api/payments/process-transfer` (Strapi) puede ejecutar transferencias al conectado tras un pago confirmado.
 - **Cuenta conectada**: endpoint `/api/connected-accounts` acepta `x-admin-token=ADMIN_API_TOKEN` para mapear `serviceId -> accountId` en Stripe.
-- **reCAPTCHA**: componentes cliente envuelven la app con `ReCaptchaProvider` y las API routes exigen `recaptchaToken` validado con `SECRET_RECAPTCHA_KEY` o `RECAPTCHA_SECRET_KEY`.
+- **reCAPTCHA**: checkbox V2 renderizado con `ReCaptchaProvider`/`ReCaptchaCheckbox`; las API routes exigen `recaptchaToken` validado con `SECRET_RECAPTCHA_KEY` o `RECAPTCHA_SECRET_KEY`.
 
 ## Variables de entorno
 
 ### Web (`apps/web`)
 - Google: `NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY`, `GOOGLE_MAPS_API_KEY`
-- reCAPTCHA: `NEXT_PUBLIC_RECAPTCHA_SITE_KEY`, `NEXT_PUBLIC_RECAPTCHA_USE_NET` (true/false), `RECAPTCHA_SECRET_KEY` (o `SECRET_RECAPTCHA_KEY`), `RECAPTCHA_MIN_SCORE`
+- reCAPTCHA: `NEXT_PUBLIC_RECAPTCHA_SITE_KEY`, `RECAPTCHA_SECRET_KEY` (o `SECRET_RECAPTCHA_KEY`)
 - Stripe: `STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_CONNECT_DESTINATION`, `STRIPE_CONNECT_ACCOUNT_ID`, `STRIPE_PROC_PERCENT`, `STRIPE_PROC_FIXED`, `STRIPE_SUCCESS_URL`, `STRIPE_CANCEL_URL`, `PUBLIC_SITE_URL`
 - Plataforma/fees: `PLATFORM_FEE_PERCENT`, `PLATFORM_FEE_RATE`, `PLATFORM_FEE_MIN`, `PLATFORM_FEE_MIN_USD`, `DEFAULT_PRICE_PER_LB`, `PRICE_LB_FALLBACK`
 - Agencia/config: `AGENCY_INFO_URL`, `AGENCY_TOKEN`, `AGENCY_PLACE_ID`, `AGENCY_NAME`, `AGENCY_ADDRESS`
