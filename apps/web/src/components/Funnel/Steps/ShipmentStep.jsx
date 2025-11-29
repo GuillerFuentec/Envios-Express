@@ -124,7 +124,7 @@ const ShipmentStep = ({
           id="deliveryDate"
           type="date"
           min={minDate}
-          value={data.deliveryDate}
+          value={data.deliveryDate || minDate}
           onChange={(event) =>
             onChange("shipment", "deliveryDate", event.target.value)
           }
