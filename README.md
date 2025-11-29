@@ -43,7 +43,7 @@ Repositorio con dos aplicaciones:
   - Webhook Stripe (`/api/payments/webhook`) valida firma con `STRIPE_WEBHOOK_SECRET`, arma `client_info` y lo envía a Strapi (`/api/clients`). Opcionalmente usa metadata para calcular comisiones y monto destino.
   - Endpoint `/api/orders/confirm` (web) recupera la session de Stripe y registra de nuevo en Strapi; se puede reforzar con token interno.
   - Endpoint `api/payments/process-transfer` (Strapi) puede ejecutar transferencias al conectado tras un pago confirmado.
-- **Cuenta conectada**: endpoint `/api/connected-accounts` acepta `x-admin-token=ADMIN_API_TOKEN` para mapear `serviceId -> accountId` en Stripe.
+- **Cuenta conectada**: endpoint `/api/connected-accounts` acepta `x-admin-token=AGENCY_TOKEN` para mapear `serviceId -> accountId` en Stripe.
 - **reCAPTCHA**: checkbox V2 renderizado con `ReCaptchaProvider`/`ReCaptchaCheckbox`; las API routes exigen `recaptchaToken` validado con `SECRET_RECAPTCHA_KEY` o `RECAPTCHA_SECRET_KEY`.
 
 ## Variables de entorno
@@ -54,8 +54,8 @@ Repositorio con dos aplicaciones:
 - Stripe: `STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_CONNECT_DESTINATION`, `STRIPE_CONNECT_ACCOUNT_ID`, `STRIPE_PROC_PERCENT`, `STRIPE_PROC_FIXED`, `STRIPE_SUCCESS_URL`, `STRIPE_CANCEL_URL`, `PUBLIC_SITE_URL`
 - Plataforma/fees: `PLATFORM_FEE_PERCENT`, `PLATFORM_FEE_RATE`, `PLATFORM_FEE_MIN`, `PLATFORM_FEE_MIN_USD`, `DEFAULT_PRICE_PER_LB`, `PRICE_LB_FALLBACK`
 - Agencia/config: `AGENCY_INFO_URL`, `AGENCY_TOKEN`, `AGENCY_PLACE_ID`, `AGENCY_NAME`, `AGENCY_ADDRESS`
-- Strapi API: `STRAPI_WEB_API_URL` o `STRAPI_API_URL`, `STRAPI_API_TOKEN`
-- Seguridad/otros: `PAYMENT_FAIL_ALERT_THRESHOLD`, `ADMIN_API_TOKEN` / `INTERNAL_API_TOKEN` (protege `/api/orders/confirm` y `/api/connected-accounts`), `PUBLIC_URL`
+- Strapi API: `STRAPI_WEB_API_URL` o `STRAPI_API_URL` (o `AGENCY_API_URL`), usa `AGENCY_TOKEN` como bearer para `/api/clients`, `/api/contacts` y `/api/payments/process-transfer`
+- Seguridad/otros: `PAYMENT_FAIL_ALERT_THRESHOLD`, `AGENCY_TOKEN` (bearer hacia Strapi y header admin en `/api/connected-accounts`), `PUBLIC_URL`
 - Rate limit checkout (opcional): `CHECKOUT_RATE_LIMIT_MAX` (default 10), `CHECKOUT_RATE_LIMIT_WINDOW_MS` (default 60000)
 
 ### Backend (`apps/server`)
@@ -109,12 +109,22 @@ pnpm --filter server dev   # http://localhost:1337
 
 ### Conexion Web <-> Server
 - `AGENCY_INFO_URL` debe apuntar a `https://<tu-backend>/api/agency-info/resume` (opcional `AGENCY_TOKEN` si lo proteges en Strapi).
-- `STRAPI_WEB_API_URL` debe apuntar a `https://<tu-backend>/api` y opcionalmente `STRAPI_API_TOKEN` si exiges token en Strapi para `/api/clients` o `/api/payments/process-transfer`.
+- `STRAPI_WEB_API_URL` (o `AGENCY_API_URL`) debe apuntar a `https://<tu-backend>/api` y requerir `AGENCY_TOKEN` como bearer para `/api/clients`, `/api/contacts` y `/api/payments/process-transfer`.
 - Ajusta CORS en Strapi (`CORS_ORIGIN`) para permitir el dominio de Vercel.
+
+## Configurar permisos en Strapi
+Para evitar errores 403 al crear clientes/contactos desde el frontend:
+- En Strapi Admin ve a **Settings → API Tokens** y crea un token (ej. “agency-token”) de tipo **Custom** con permisos `create`/`find` sobre **Client** y `create` sobre **Contact**; añade `create` a **Payments → process-transfer** si usas transferencias automáticas.
+- Copia ese token en la variable `AGENCY_TOKEN` del frontend (`apps/web`) y del backend si lo necesitas en otros servicios.
+- Asegúrate de que la colección `Client` y `Contact` no estén publicas en el rol *Public*; el acceso debe ser vía token.
+- Verifica que `STRAPI_WEB_API_URL` (o `AGENCY_API_URL`) apunte al `/api` del backend y que el token no expire si usas token temporal.
+- Rol *Public*: deja sólo lectura de la configuración pública (ej. `GET /api/agency-info/resume`). No habilites `create`/`update` en `Client`, `Contact` ni `Payments`.
+- Llamadas protegidas desde Next a Strapi: `/api/clients`, `/api/contacts`, `/api/payments/process-transfer` se llaman siempre con `Authorization: Bearer ${AGENCY_TOKEN}` (ver rutas en `apps/web/src/pages/api/` y `apps/web/src/lib/server/agency.js`).
+- Endpoint interno `api/connected-accounts` (Next) exige header `x-admin-token: AGENCY_TOKEN`; no lo publiques sin ese header.
 
 ## Seguridad y buenas practicas
 - No uses las llaves de prueba del repo en produccion; rota todas las credenciales y webhook secrets.
-- Protege `/api/orders/confirm` y `/api/connected-accounts` con un token interno o sesion de admin; reCAPTCHA no reemplaza autorizacion.
+- Protege `/api/connected-accounts` con el header `x-admin-token: AGENCY_TOKEN`; si quieres reforzar `/api/orders/confirm` añade un header interno/CSRF (hoy confía en Stripe + reCAPTCHA).
 - Habilita rate limiting a los endpoints de pagos si usas un edge/middleware.
 - Asegura que `STRIPE_WEBHOOK_SECRET` este definido en Vercel para validar firmas.
 - No expongas `STRIPE_SECRET_KEY`, `AGENCY_TOKEN` o tokens de Strapi en el frontend.

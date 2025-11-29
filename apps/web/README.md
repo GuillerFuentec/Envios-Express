@@ -20,13 +20,18 @@ Define en Vercel (Project Settings > Environment Variables):
 - `STRIPE_PUBLISHABLE_KEY`
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
-- `STRAPI_WEB_API_URL` (o `STRAPI_API_URL`)
-- `STRAPI_API_TOKEN` (si aplica)
+- `STRAPI_WEB_API_URL` (o `AGENCY_API_URL` apuntando a `/api` de Strapi)
+- `AGENCY_TOKEN` (token de API en Strapi con permisos `create` en Client/Contact)
 - `GOOGLE_MAPS_API_KEY`
 - `NEXT_PUBLIC_RECAPTCHA_SITE_KEY`
 - `RECAPTCHA_SECRET_KEY`
 - `PLATFORM_FEE_PERCENT` (opcional, fallback 2.3)
 - `STRIPE_PROCESSING_PERCENT`, `STRIPE_PROCESSING_FIXED` (opcionales)
+
+### Permisos/seguridad
+- En Strapi, deja público solo `GET /api/agency-info/resume` (si necesitas exponer precios); todo `Client`, `Contact` y `Payments` debe ir con token.
+- `AGENCY_TOKEN` se usa como bearer en las llamadas desde Next a `/api/clients`, `/api/contacts` y `/api/payments/process-transfer`.
+- El endpoint interno `/api/connected-accounts` exige `x-admin-token: AGENCY_TOKEN`; no es público.
 
 ## Desarrollo local
 

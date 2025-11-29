@@ -129,7 +129,7 @@ const SummaryStep = ({
             contactEmail ? "" : "summary-pill--muted"
           } max-w-full`}
         >
-          <span>Se enviara un recibo de pago</span>
+          <span>Se enviara un recibo de pago al E-mail:{" "}</span>
           <strong className="summary-pill__email  no-underline text-inherit pointer-events-none">
             {contactEmail || "Falta correo valido"}
           </strong>

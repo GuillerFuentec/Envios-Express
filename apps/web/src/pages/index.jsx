@@ -20,6 +20,7 @@ export default function HomePage() {
           name="description"
           content="Envios a Cuba facil: paga por libra, recogida opcional, entrega en 48-72h."
         />
+        <meta name="format-detection" content="telephone=no,email=no,address=no"/>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

@@ -3,17 +3,6 @@
 const { calculateQuote } = require("../../../lib/server/quote");
 const { getStripeClient } = require("../../../lib/server/stripe");
 
-const ensureInternalAuth = (req) => {
-  const token =
-    req.headers["x-internal-token"] || req.headers["x-admin-token"];
-  const expected = process.env.AGENCY_TOKEN;
-  if (!expected || token !== expected) {
-    const err = new Error("No autorizado.");
-    err.status = 401;
-    throw err;
-  }
-};
-
 const normalizeBaseUrl = (value = "") => {
   const trimmed = value.replace(/\/+$/, "");
   if (trimmed.endsWith("/api")) {
@@ -49,19 +38,24 @@ const computePlatformFeeCents = (amountCents, stripeFeeCents) => {
 
 const postToStrapi = async (payload) => {
   const baseUrl = normalizeBaseUrl(
-    process.env.STRAPI_WEB_API_URL || process.env.STRAPI_API_URL
+    process.env.STRAPI_WEB_API_URL || process.env.STRAPI_API_URL || process.env.AGENCY_API_URL
   );
   if (!baseUrl) {
-    throw new Error("Falta STRAPI_WEB_API_URL para confirmar la orden.");
+    throw new Error("Falta STRAPI_WEB_API_URL/AGENCY_API_URL para confirmar la orden.");
   }
+
+  const tokenPresent = Boolean(process.env.AGENCY_TOKEN);
+  console.info("[api/orders/confirm] Enviando cliente a Strapi", {
+    baseUrl,
+    hasToken: tokenPresent,
+    contactEmail: payload?.data?.client_info?.contact?.email || "",
+  });
 
   const response = await fetch(`${baseUrl}/api/clients`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(process.env.STRAPI_API_TOKEN
-        ? { Authorization: `Bearer ${process.env.STRAPI_API_TOKEN}` }
-        : {}),
+      ...(process.env.AGENCY_TOKEN ? { Authorization: `Bearer ${process.env.AGENCY_TOKEN}` } : {}),
     },
     body: JSON.stringify(payload),
   });
@@ -69,6 +63,11 @@ const postToStrapi = async (payload) => {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
+    console.error("[api/orders/confirm] Error creando cliente en Strapi", {
+      status: response.status,
+      statusText: response.statusText,
+      data,
+    });
     const message =
       data?.error?.message ||
       data?.error ||
@@ -78,6 +77,10 @@ const postToStrapi = async (payload) => {
     error.response = data;
     throw error;
   }
+
+  console.info("[api/orders/confirm] Cliente creado en Strapi", {
+    id: data?.data?.id || data?.id || null,
+  });
 
   return data;
 };
@@ -89,7 +92,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    ensureInternalAuth(req);
     const stripe = getStripeClient();
     const { sessionId, payload } = req.body || {};
     if (!sessionId) {
@@ -194,12 +196,12 @@ export default async function handler(req, res) {
 
     // Procesar transferencia automática si está configurado
     try {
-      const transferResponse = await fetch(`${normalizeBaseUrl(process.env.STRAPI_WEB_API_URL || process.env.STRAPI_API_URL)}/api/payments/process-transfer`, {
+      const transferResponse = await fetch(`${normalizeBaseUrl(process.env.STRAPI_WEB_API_URL || process.env.STRAPI_API_URL || process.env.AGENCY_API_URL)}/api/payments/process-transfer`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(process.env.STRAPI_API_TOKEN
-            ? { Authorization: `Bearer ${process.env.STRAPI_API_TOKEN}` }
+          ...(process.env.AGENCY_TOKEN
+            ? { Authorization: `Bearer ${process.env.AGENCY_TOKEN}` }
             : {}),
         },
         body: JSON.stringify({ sessionId, clientId: orderId }),

@@ -36,7 +36,10 @@ const ErrorPage = () => {
         <div className="hero-card">
           <p className="eyebrow">Pago no procesado</p>
           <h1>No pudimos completar tu orden</h1>
-          <p>Hubo un problema procesando el pago o registrando la orden. Intenta de nuevo.</p>
+          <p>
+            Hubo un problema procesando el pago o registrando la orden. Intenta
+            de nuevo.
+          </p>
           {orderId ? (
             <p className="muted-copy">
               ID de orden: <code>{orderId}</code>
@@ -48,10 +51,44 @@ const ErrorPage = () => {
             </p>
           ) : null}
           <div className="hero__actions" style={{ marginTop: 16, gap: 12 }}>
-            <Link href="/funnel" className="btn-primary">
-              Reintentar
+            <Link
+              href="/funnel"
+              className="btn-primary status-action     inline-flex items-center justify-center
+    rounded-lg px-4 py-2
+    text-sm font-medium
+    shadow-sm
+    border
+    transition
+    duration-150
+    ease-out
+    hover:shadow-md
+    active:scale-[0.97]
+    focus-visible:outline-none
+    focus-visible:ring-2
+    focus-visible:ring-offset-2
+    disabled:opacity-60
+    disabled:cursor-not-allowed"
+            >
+              Realizar otro envio
             </Link>
-            <Link href="/" className="btn-secondary">
+            <Link
+              href="/"
+              className="btn-secondary status-action     inline-flex items-center justify-center
+    rounded-lg px-4 py-2
+    text-sm font-medium
+    shadow-sm
+    border
+    transition
+    duration-150
+    ease-out
+    hover:shadow-md
+    active:scale-[0.97]
+    focus-visible:outline-none
+    focus-visible:ring-2
+    focus-visible:ring-offset-2
+    disabled:opacity-60
+    disabled:cursor-not-allowed"
+            >
               Ir al inicio
             </Link>
           </div>

@@ -21,11 +21,17 @@ export default async function handler(req, res) {
     await requireRecaptcha({ token: body.recaptchaToken });
 
     const baseUrl = normalizeBaseUrl(
-      process.env.STRAPI_WEB_API_URL || process.env.STRAPI_API_URL
+      process.env.STRAPI_WEB_API_URL || process.env.STRAPI_API_URL || process.env.AGENCY_API_URL
     );
     if (!baseUrl) {
-      throw new Error("Falta STRAPI_WEB_API_URL para enviar el contacto.");
+      throw new Error("Falta STRAPI_WEB_API_URL/AGENCY_API_URL para enviar el contacto.");
     }
+    console.info("[api/contact] Enviando contacto a Strapi", {
+      baseUrl,
+      hasToken: Boolean(process.env.AGENCY_TOKEN),
+      email: body.email || "",
+      phone: body.phone || "",
+    });
 
     const payload = {
       data: {
@@ -46,8 +52,8 @@ export default async function handler(req, res) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(process.env.STRAPI_API_TOKEN
-          ? { Authorization: `Bearer ${process.env.STRAPI_API_TOKEN}` }
+        ...(process.env.AGENCY_TOKEN
+          ? { Authorization: `Bearer ${process.env.AGENCY_TOKEN}` }
           : {}),
       },
       body: JSON.stringify(payload),

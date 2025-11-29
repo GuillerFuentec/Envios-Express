@@ -37,19 +37,24 @@ const normalizeBaseUrl = (value = "") => {
 
 const postToStrapi = async (payload) => {
   const baseUrl = normalizeBaseUrl(
-    process.env.STRAPI_WEB_API_URL || process.env.STRAPI_API_URL
+    process.env.STRAPI_WEB_API_URL || process.env.STRAPI_API_URL || process.env.AGENCY_API_URL
   );
   if (!baseUrl) {
-    throw new Error("Falta STRAPI_WEB_API_URL para crear la orden.");
+    throw new Error("Falta STRAPI_WEB_API_URL/AGENCY_API_URL para crear la orden.");
   }
+
+  const tokenPresent = Boolean(process.env.AGENCY_TOKEN);
+  console.info("[api/orders/create] Enviando orden a Strapi", {
+    baseUrl,
+    hasToken: tokenPresent,
+    contactEmail: payload?.data?.client_info?.contact?.email || "",
+  });
 
   const response = await fetch(`${baseUrl}/api/clients`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(process.env.STRAPI_API_TOKEN
-        ? { Authorization: `Bearer ${process.env.STRAPI_API_TOKEN}` }
-        : {}),
+      ...(process.env.AGENCY_TOKEN ? { Authorization: `Bearer ${process.env.AGENCY_TOKEN}` } : {}),
     },
     body: JSON.stringify(payload),
   });
@@ -57,15 +62,20 @@ const postToStrapi = async (payload) => {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    const message =
-      data?.error?.message ||
-      data?.error ||
-      "No se pudo registrar la orden.";
+    console.error("[api/orders/create] Error creando cliente en Strapi", {
+      status: response.status,
+      statusText: response.statusText,
+      data,
+    });
+    const message = data?.error?.message || data?.error || "No se pudo registrar la orden.";
     const error = new Error(message);
     error.status = response.status;
     throw error;
   }
 
+  console.info("[api/orders/create] Cliente creado en Strapi", {
+    id: data?.data?.id || data?.id || null,
+  });
   return data;
 };
 

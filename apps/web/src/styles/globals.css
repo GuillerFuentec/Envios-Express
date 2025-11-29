@@ -40,6 +40,28 @@ body {
   overflow-x: hidden;
 }
 
+/* Controles táctiles: asegura tap confiable en iOS/Android y neutraliza highlight azul */
+button,
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-safe,
+.status-action,
+.site-navbar__toggle {
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
+}
+
+/* Evita estilos auto-inyectados por data detectors si aun aparecen */
+a[href^="tel"],
+a[href^="mailto"] {
+  text-decoration: none;
+  color: inherit;
+}
+
 a {
   color: inherit;
 }

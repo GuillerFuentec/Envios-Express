@@ -15,12 +15,13 @@ const FAIL_THRESHOLD = Number(process.env.PAYMENT_FAIL_ALERT_THRESHOLD || 5);
 
 const boolFromMetadata = (value) => value === true || value === "true" || value === "1";
 
-const getStrapiHeaders = () => ({
-  "Content-Type": "application/json",
-  ...(process.env.STRAPI_API_TOKEN
-    ? { Authorization: `Bearer ${process.env.STRAPI_API_TOKEN}` }
-    : {}),
-});
+const getStrapiHeaders = () => {
+  const token = process.env.AGENCY_TOKEN;
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+};
 
 const normalizeBaseUrl = (value = "") => {
   const trimmed = value.replace(/\/+$/, "");
@@ -32,12 +33,20 @@ const normalizeBaseUrl = (value = "") => {
 
 const postClientToStrapi = async (clientInfo) => {
   const baseUrl = normalizeBaseUrl(
-    process.env.STRAPI_WEB_API_URL || process.env.STRAPI_API_URL
+    process.env.STRAPI_WEB_API_URL || process.env.STRAPI_API_URL || process.env.AGENCY_API_URL
   );
   if (!baseUrl) {
-    console.warn("[webhook] STRAPI_WEB_API_URL not set; skipping Strapi client creation.");
+    console.warn("[webhook] STRAPI_WEB_API_URL/AGENCY_API_URL not set; skipping Strapi client creation.");
     return;
   }
+
+  const tokenPresent = Boolean(process.env.AGENCY_TOKEN);
+  console.info("[webhook] Posting client to Strapi", {
+    baseUrl,
+    hasToken: tokenPresent,
+    contactEmail: clientInfo?.contact?.email || "",
+    contactPhone: clientInfo?.contact?.phone || "",
+  });
 
   const response = await fetch(`${baseUrl}/api/clients`, {
     method: "POST",
@@ -54,10 +63,18 @@ const postClientToStrapi = async (clientInfo) => {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    console.error("[webhook] Failed to create client in Strapi", data);
+    console.error("[webhook] Failed to create client in Strapi", {
+      status: response.status,
+      statusText: response.statusText,
+      data,
+    });
     throw new Error(data?.error?.message || data?.error || "Strapi client creation failed");
   }
 
+  console.info("[webhook] Client created in Strapi", {
+    baseUrl,
+    id: data?.data?.id || data?.id || null,
+  });
   return data;
 };
 

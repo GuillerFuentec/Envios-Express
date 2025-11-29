@@ -345,9 +345,16 @@ export const useFunnelController = () => {
         recaptchaToken,
       });
       setOrderResult({ ok: true, orderId: data.orderId });
-      window.location.assign(
-        `/funnel/status/success?mode=agency${data.orderId ? `&orderId=${encodeURIComponent(data.orderId)}` : ""}`
-      );
+      const targetPath = `/funnel/status/success?mode=agency${
+        data.orderId ? `&orderId=${encodeURIComponent(data.orderId)}` : ""
+      }`;
+      const currentPath =
+        typeof window !== "undefined"
+          ? `${window.location.pathname}${window.location.search}`
+          : "";
+      if (currentPath !== targetPath) {
+        window.location.assign(targetPath);
+      }
     } catch (error) {
       setStatusMessage({
         text: error.message || "No pudimos completar la acción.",
