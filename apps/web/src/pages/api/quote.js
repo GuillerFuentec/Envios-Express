@@ -1,22 +1,16 @@
 "use strict";
 
 const { calculateQuote } = require("../../lib/server/quote");
-const { requireRecaptcha } = require("../../lib/server/recaptcha");
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({ error: "Método no permitido." });
+    return res.status(405).json({ error: "MActodo no permitido." });
   }
 
   try {
     const body = req.body || {};
     const { recaptchaToken, ...payload } = body;
-
-    await requireRecaptcha({
-      token: recaptchaToken,
-      action: "quote",
-    });
 
     console.log("[api/quote] Request received", {
       weight: payload.weightLbs,
@@ -49,6 +43,6 @@ export default async function handler(req, res) {
     });
     return res
       .status(error.status || 500)
-      .json({ error: error.message || "No se pudo calcular el envío." });
+      .json({ error: error.message || "No se pudo calcular el envA-o." });
   }
 }

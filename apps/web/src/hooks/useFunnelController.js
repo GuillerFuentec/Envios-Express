@@ -218,10 +218,8 @@ export const useFunnelController = () => {
 
     const fetchQuote = async () => {
       try {
-        const token = await getRecaptchaToken("quote");
         const data = await requestQuote({
           ...quotePayload,
-          recaptchaToken: token,
         });
         if (!active) {
           return;
@@ -249,7 +247,7 @@ export const useFunnelController = () => {
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStep, quotePayloadKey, quoteRefreshIndex, getRecaptchaToken]);
+  }, [currentStep, quotePayloadKey, quoteRefreshIndex]);
 
   useEffect(() => {
     const channel = new BroadcastChannel("checkout-status");

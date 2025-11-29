@@ -183,6 +183,8 @@ export default function FunnelPage() {
           <div className="exit-modal">
             <p className="exit-text">
               Esta seguro que desea refrescar la pagina. Si lo hace todo el progreso se perdera
+
+              Si refrescas la pagina se perdera todo el progreso.
             </p>
             <div className="exit-actions">
               <button type="button" className="btn-danger" onClick={confirmExit}>
