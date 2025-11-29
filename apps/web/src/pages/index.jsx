@@ -412,7 +412,9 @@ const FAQ = () => (
 const Contact = () => (
   <section id="contacto" className="py-16 px-4 bg-white">
     <div className="max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold text-slate mb-8 text-center">Contacto</h2>
+      <h2 className="text-3xl font-bold text-slate mb-8 text-center">
+        Contacto
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 contact__grid">
         <ContactInfo />
         <ContactForm />
@@ -423,37 +425,48 @@ const Contact = () => (
 
 const ContactInfo = () => (
   <div>
-    <p className="text-gray-700 text-lg mb-6">Tienes preguntas? Nuestro equipo esta listo para ayudarte.</p>
+    <p className="text-gray-700 text-lg mb-6">
+      Tienes preguntas? Nuestro equipo esta listo para ayudarte.
+    </p>
     <div className="space-y-4">
       <div className="flex items-center gap-4 contact__info-item">
         <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-          <span className="text-accent w-5 h-5">@</span>
+          <span className="text-accent w-10 h-10">
+            <img
+              src="/web-icons/mail.png"
+              alt="icono que representa correo electronico"
+              loading="lazy"
+            />
+          </span>
         </div>
         <div>
           <p className="text-gray-500 text-sm">Email</p>
-          <a href="mailto:contact@raccoonstudiosllc.com" className="text-slate hover:text-accent">
+          <a
+            href="mailto:contact@raccoonstudiosllc.com"
+            className="text-slate hover:text-accent"
+          >
             contact@raccoonstudiosllc.com
           </a>
         </div>
       </div>
       <div className="flex items-center gap-4 contact__info-item">
-        <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-          <span className="text-accent w-5 h-5">?</span>
-        </div>
-        <div>
-          <p className="text-gray-500 text-sm">Telefono</p>
-          <a href="tel:+14322321612" className="text-slate hover:text-accent">
-            +1 432 232 1612
-          </a>
-        </div>
+        <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center"></div>
       </div>
       <div className="flex items-center gap-4 contact__info-item">
         <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-          <span className="text-accent w-5 h-5">??</span>
+          <span className="text-accent w-10 h-10">
+            <img
+              src="/web-icons/location.png"
+              alt="icono que representa la direccion del negocio"
+              loading="lazy"
+            />
+          </span>
         </div>
         <div>
           <p className="text-gray-500 text-sm">Direccion</p>
-          <p className="text-slate">123 Calle Principal, Suite 101, Miami, FL 33101</p>
+          <p className="text-slate">
+            123 Calle Principal, Suite 101, Miami, FL 33101
+          </p>
         </div>
       </div>
     </div>
@@ -473,7 +486,8 @@ const ContactForm = () => {
   const [recaptchaToken, setRecaptchaToken] = useState("");
 
   const handleChange = (field) => (event) => {
-    const value = field === "smsConsent" ? event.target.checked : event.target.value;
+    const value =
+      field === "smsConsent" ? event.target.checked : event.target.value;
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -481,7 +495,10 @@ const ContactForm = () => {
     event.preventDefault();
     setStatus({ text: "", variant: "" });
     if (!recaptchaToken) {
-      setStatus({ text: "Confirma el reCAPTCHA antes de enviar.", variant: "error" });
+      setStatus({
+        text: "Confirma el reCAPTCHA antes de enviar.",
+        variant: "error",
+      });
       return;
     }
     setSending(true);
@@ -495,11 +512,23 @@ const ContactForm = () => {
       if (!response.ok) {
         throw new Error(payload?.error || "No pudimos enviar tu mensaje.");
       }
-      setStatus({ text: "Mensaje enviado. Te contactaremos pronto.", variant: "success" });
-      setForm({ name: "", email: "", phone: "", message: "", smsConsent: false });
+      setStatus({
+        text: "Mensaje enviado. Te contactaremos pronto.",
+        variant: "success",
+      });
+      setForm({
+        name: "",
+        email: "",
+        phone: "",
+        message: "",
+        smsConsent: false,
+      });
       setRecaptchaToken("");
     } catch (error) {
-      setStatus({ text: error.message || "No pudimos enviar tu mensaje.", variant: "error" });
+      setStatus({
+        text: error.message || "No pudimos enviar tu mensaje.",
+        variant: "error",
+      });
     } finally {
       setSending(false);
     }
@@ -573,22 +602,30 @@ const ContactForm = () => {
           onChange={handleChange("smsConsent")}
           className="mt-1 w-4 h-4 border-gray-300 text-accent focus:ring-accent"
         />
-        <label htmlFor="contactSmsConsent" className="text-gray-700 text-sm leading-relaxed">
-          Acepto recibir mensajes de texto para confirmar mi solicitud y coordinar detalles del envio.
+        <label
+          htmlFor="contactSmsConsent"
+          className="text-gray-700 text-sm leading-relaxed"
+        >
+          Acepto recibir mensajes de texto y correos electronicos por parte de
+          Raccoon Studios LLC
         </label>
       </div>
-      <div className="my-4 flex justify-end">
+      <div className="my-6">
         <ReCaptchaCheckbox onTokenChange={setRecaptchaToken} />
       </div>
       <button
         type="submit"
         disabled={sending}
-        className="bg-teal-700 hover:bg-teal-800 text-white font-bold py-2 px-6 rounded-lg transition disabled:opacity-70"
+        className="bg-teal-700 justify-end hover:bg-teal-800 text-white font-bold py-2 px-6 rounded-lg transition disabled:opacity-70"
       >
         {sending ? "Enviando..." : "Enviar mensaje"}
       </button>
       {status.text ? (
-        <p className={`mt-3 ${status.variant === "error" ? "text-red-600" : "text-green-700"}`}>
+        <p
+          className={`mt-3 ${
+            status.variant === "error" ? "text-red-600" : "text-green-700"
+          }`}
+        >
           {status.text}
         </p>
       ) : null}
@@ -601,16 +638,33 @@ const Footer = () => (
     <div className="site-footer__container">
       <div className="site-footer__social">
         <a href="#" className="site-footer__social-link" aria-label="Facebook">
-          Fb
+          <img
+            src="/social-media/facebook.png"
+            alt="icono de facebook"
+            loading="lazy"
+          />
         </a>
         <a href="#" className="site-footer__social-link" aria-label="Instagram">
-          Ig
+          <img
+            src="/social-media/instagram.png"
+            alt="icono de instagram"
+            loading="lazy"
+          />
         </a>
         <a href="#" className="site-footer__social-link" aria-label="X">
-          X
+          <img
+            src="/social-media/twitter.png"
+            alt="icono de twiter o actualmente x"
+            loading="lazy"
+            className="w-8 h-8"
+          />
         </a>
         <a href="#" className="site-footer__social-link" aria-label="YouTube">
-          Yt
+          <img
+            src="/social-media/youtube.png"
+            alt="icono de Youtube"
+            loading="lazy"
+          />
         </a>
       </div>
       <p className="site-footer__copy">
@@ -652,4 +706,3 @@ export default function HomePage() {
     </>
   );
 }
-
