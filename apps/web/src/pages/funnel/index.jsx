@@ -66,7 +66,7 @@ const FunnelView = () => {
     },
     {
       id: 2,
-      title: "Preferencias y verificaciA3n",
+      title: "Preferencias y verificacion",
       component: (
         <Funnel.Steps.Preferences
           data={formData.preferences}

@@ -37,6 +37,8 @@ const ShipmentStep = ({
           type="number"
           min="0"
           step="0.1"
+          inputMode="decimal"
+          pattern="[0-9]*"
           value={data.weightLbs}
           disabled={isCash}
           onChange={(event) =>
