@@ -469,6 +469,7 @@ const ContactForm = () => {
   });
   const [status, setStatus] = useState({ text: "", variant: "" });
   const [sending, setSending] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState("");
 
   const handleChange = (field) => (event) => {
     const value = field === "smsConsent" ? event.target.checked : event.target.value;
@@ -478,12 +479,16 @@ const ContactForm = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setStatus({ text: "", variant: "" });
+    if (!recaptchaToken) {
+      setStatus({ text: "Confirma el reCAPTCHA antes de enviar.", variant: "error" });
+      return;
+    }
     setSending(true);
     try {
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, recaptchaToken }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -491,6 +496,7 @@ const ContactForm = () => {
       }
       setStatus({ text: "Mensaje enviado. Te contactaremos pronto.", variant: "success" });
       setForm({ name: "", email: "", phone: "", message: "", smsConsent: false });
+      setRecaptchaToken("");
     } catch (error) {
       setStatus({ text: error.message || "No pudimos enviar tu mensaje.", variant: "error" });
     } finally {
@@ -569,6 +575,9 @@ const ContactForm = () => {
         <label htmlFor="contactSmsConsent" className="text-gray-700 text-sm leading-relaxed">
           Acepto recibir mensajes de texto para confirmar mi solicitud y coordinar detalles del envio.
         </label>
+      </div>
+      <div className="my-4 flex justify-end">
+        <ReCaptchaCheckbox onTokenChange={setRecaptchaToken} />
       </div>
       <button
         type="submit"

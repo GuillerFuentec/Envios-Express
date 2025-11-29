@@ -1,5 +1,7 @@
 "use strict";
 
+const { requireRecaptcha } = require("../../lib/server/recaptcha");
+
 const normalizeBaseUrl = (value = "") => {
   const trimmed = value.replace(/\/+$/, "");
   if (trimmed.endsWith("/api")) {
@@ -16,6 +18,8 @@ export default async function handler(req, res) {
 
   try {
     const body = req.body || {};
+    await requireRecaptcha({ token: body.recaptchaToken });
+
     const baseUrl = normalizeBaseUrl(
       process.env.STRAPI_WEB_API_URL || process.env.STRAPI_API_URL
     );

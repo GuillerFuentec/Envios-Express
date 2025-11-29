@@ -114,9 +114,9 @@ const FunnelView = () => {
         ))}
       </div>
 
-      {currentStep >= 2 && (
-        <div className="mt-4 mb-6 flex flex-col gap-2">
-          <p className="text-sm text-gray-600">Confirma que no eres un robot para continuar.</p>
+      {currentStep === 3 && (
+        <div className="mt-4 mb-6 flex flex-col gap-2 items-end">
+          <p className="text-sm text-gray-600 text-right">Confirma que no eres un robot para continuar.</p>
           <ReCaptchaCheckbox />
         </div>
       )}
