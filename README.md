@@ -95,9 +95,9 @@ pnpm --filter server dev   # http://localhost:1337
 - CORS en Strapi: define `CORS_ORIGIN=https://<tu-app>.vercel.app` (puedes pasar multiples separados por coma).
 
 ### Web en Railway (opcional)
-- Servicio Node con Root `apps/web` o usa el `apps/web/Dockerfile`.
+- Servicio Node con Root `apps/web` (Nixpacks) o usando el `Dockerfile.web` en la raiz.
 - Nixpacks/Node: Install `pnpm install --filter web... --frozen-lockfile`, Build `pnpm --filter web build`, Start `pnpm --filter web start`, Node 20.
-- Docker: selecciona `apps/web/Dockerfile`; expone puerto `3000`.
+- Docker: selecciona `Dockerfile.web` (contexto raiz del repo); expone puerto `3000`.
 - Variables: mismas que en Vercel (Stripe, reCAPTCHA, Strapi, agencia, INTERNAL_API_TOKEN/ADMIN_API_TOKEN, etc.).
 - Webhook Stripe: `https://<tu-servicio>.up.railway.app/api/payments/webhook`.
 
