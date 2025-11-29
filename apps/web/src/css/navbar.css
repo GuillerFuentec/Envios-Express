@@ -500,6 +500,11 @@
 
   .site-navbar__brand-group {
     justify-content: flex-start;
+    flex: 1 1 auto;
+  }
+
+  .site-navbar__toggle {
+    margin-left: auto;
   }
 }
 

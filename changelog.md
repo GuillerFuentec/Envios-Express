@@ -11,6 +11,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Actualizado el ejemplo de entorno con las claves requeridas por la integracion (`apps/web/.env.local.example:1`).
 - Dockerfile dedicado para desplegar `apps/web` en Railway/containers (`Dockerfile.web:1`).
 - Migracion a reCAPTCHA v2 (checkbox) con nuevo widget y cliente `react-google-recaptcha` (`apps/web/src/components/ReCaptchaCheckbox.jsx:1`, `apps/web/src/components/ReCaptchaProvider.jsx:1`).
+- Home page modularizada: navbar, hero, secciones, FAQ, contacto y footer movidos a `apps/web/src/components/home/*` para reducir tamaño de `pages/index.jsx`.
+- Navbar mobile extraido a componente separado `MobileNavbar` (`apps/web/src/components/home/MobileNavbar.jsx:1`) y consumido desde el navbar principal.
+- Hero optimizado para mobile: oculta la imagen en pantallas pequeñas y centra el texto y botones (`apps/web/src/components/home/Hero.jsx:1`).
 
 ### Changed
 - El controlador del funnel ahora ejecuta reCAPTCHA antes de cotizar, crear ordenes o iniciar el checkout, y deshabilita la accion principal hasta contar con un desglose valido (`apps/web/hooks/useFunnelController.js:1`, `apps/web/components/Funnel/ActionsBar.jsx:1`).
