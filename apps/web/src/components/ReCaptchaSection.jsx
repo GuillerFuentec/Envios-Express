@@ -18,14 +18,20 @@ export const ReCaptchaSection = ({ action = "manualCheck", className = "" }) => 
 
   const handleVerify = useCallback(async () => {
     if (!executeRecaptcha) {
+      console.warn("[recaptcha-client] executeRecaptcha no listo", { action });
       setStatus("error");
-      setMessage("reCAPTCHA aún no está listo. Inténtalo nuevamente.");
+      setMessage("reCAPTCHA aun no esta listo. Intentalo nuevamente.");
       return;
     }
+    console.info("[recaptcha-client] inicio verificacion manual", { action });
     setStatus("loading");
     setMessage(STATUS_COPY.loading.text);
     try {
       const token = await executeRecaptcha(action);
+      console.info("[recaptcha-client] token obtenido", {
+        action,
+        tokenLength: token?.length || 0,
+      });
       const response = await fetch("/api/verify-recaptcha", {
         method: "POST",
         headers: {
@@ -35,6 +41,12 @@ export const ReCaptchaSection = ({ action = "manualCheck", className = "" }) => 
       });
 
       const data = await response.json();
+      console.info("[recaptcha-client] respuesta del backend", {
+        ok: response.ok,
+        status: response.status,
+        success: data?.success ?? null,
+        score: data?.score ?? null,
+      });
 
       if (response.ok && data.success) {
         console.debug("reCaptcha verification success:\n", data);
@@ -43,7 +55,7 @@ export const ReCaptchaSection = ({ action = "manualCheck", className = "" }) => 
         return;
       }
 
-      throw new Error(data?.error || "reCAPTCHA rechazó la actividad.");
+      throw new Error(data?.error || "reCAPTCHA rechazo la actividad.");
     } catch (error) {
       console.debug("reCaptcha verification failed:\n", error);
       setStatus("error");

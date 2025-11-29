@@ -9,6 +9,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Integrado Google reCAPTCHA v3 en el frontend mediante el nuevo proveedor global y la seccion de verificacion manual (`apps/web/components/ReCaptchaProvider.jsx:1`, `apps/web/components/ReCaptchaSection.jsx:1`), habilitando la obtencion de tokens en toda la app.
 - Incorporado el modulo de verificacion server-side y la ruta auxiliar `/api/verify-recaptcha` para confirmar tokens desde el funnel (`apps/web/lib/server/recaptcha.js:1`, `apps/web/pages/api/verify-recaptcha.js:1`).
 - Actualizado el ejemplo de entorno con las claves requeridas por la integracion (`apps/web/.env.local.example:1`).
+- Dockerfile dedicado para desplegar `apps/web` en Railway/containers (`apps/web/Dockerfile:1`).
 
 ### Changed
 - El controlador del funnel ahora ejecuta reCAPTCHA antes de cotizar, crear ordenes o iniciar el checkout, y deshabilita la accion principal hasta contar con un desglose valido (`apps/web/hooks/useFunnelController.js:1`, `apps/web/components/Funnel/ActionsBar.jsx:1`).

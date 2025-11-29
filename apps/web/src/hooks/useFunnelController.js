@@ -85,10 +85,17 @@ export const useFunnelController = () => {
   const getRecaptchaToken = useCallback(
     async (action) => {
       if (!executeRecaptcha) {
-        throw new Error("reCAPTCHA aún no está listo. Intenta en unos segundos.");
+        console.warn("[recaptcha-client] executeRecaptcha no listo", { action });
+        throw new Error("reCAPTCHA aun no esta listo. Intenta en unos segundos.");
       }
       try {
-        return await executeRecaptcha(action);
+        console.info("[recaptcha-client] solicitando token", { action });
+        const token = await executeRecaptcha(action);
+        console.info("[recaptcha-client] token recibido", {
+          action,
+          tokenLength: token?.length || 0,
+        });
+        return token;
       } catch (error) {
         console.error("[recaptcha] executeRecaptcha error", error);
         throw new Error("No pudimos validar tu actividad con reCAPTCHA.");

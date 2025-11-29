@@ -31,6 +31,11 @@ const verifyRecaptchaToken = async (token, expectedAction, minScoreOverride) => 
     throw error;
   }
 
+  console.info("[recaptcha] inicio verificacion", {
+    action: expectedAction || null,
+    tokenLength: token.length || 0,
+  });
+
   const params = new URLSearchParams({
     secret: secretKey,
     response: token,
@@ -70,6 +75,15 @@ const verifyRecaptchaToken = async (token, expectedAction, minScoreOverride) => 
     Boolean(payload.success) &&
     actionMatches &&
     score >= minScore;
+
+  console.info("[recaptcha] respuesta verificada", {
+    success,
+    action,
+    expectedAction: expectedAction || null,
+    score,
+    minScore,
+    errorCodes: payload["error-codes"] || [],
+  });
 
   return {
     success,

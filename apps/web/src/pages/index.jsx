@@ -7,18 +7,35 @@ import { useState, useRef, useEffect } from "react";
 const Nav = () => {
   const [open, setOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownPinned, setDropdownPinned] = useState(false);
   const dropdownRef = useRef(null);
   const btnRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownPinned(false);
         setDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleToggleDropdown = () => {
+    setDropdownPinned((prev) => {
+      const nextPinned = !prev;
+      setDropdownOpen(nextPinned ? true : false);
+      return nextPinned;
+    });
+  };
+
+  const handleMouseLeaveDropdown = () => {
+    if (!dropdownPinned) {
+      setDropdownOpen(false);
+    }
+  };
+
   return (
     <nav className="site-navbar">
       <div className="site-navbar__container">
@@ -80,15 +97,13 @@ const Nav = () => {
             className="site-navbar__dropdown"
             ref={dropdownRef}
             onMouseEnter={() => setDropdownOpen(true)}
-            onMouseLeave={() => {}}
+            onMouseLeave={handleMouseLeaveDropdown}
           >
             <button
               type="button"
               className="site-navbar__dropdown-button"
               ref={btnRef}
-              onClick={() => {
-                setDropdownOpen((v) => !v);
-              }}
+              onClick={handleToggleDropdown}
               aria-expanded={dropdownOpen}
             >
               Atajos
