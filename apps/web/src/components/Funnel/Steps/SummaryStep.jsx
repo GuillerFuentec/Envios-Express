@@ -130,7 +130,7 @@ const SummaryStep = ({
           } max-w-full`}
         >
           <span>Se enviara un recibo de pago</span>
-          <strong className="summary-pill__email">
+          <strong className="summary-pill__email  no-underline text-inherit pointer-events-none">
             {contactEmail || "Falta correo valido"}
           </strong>
         </div>
@@ -190,12 +190,14 @@ const SummaryStep = ({
                 </dd>
               </div>
               <div className="summary-list__item">
-                <dt>Correo</dt>
+                <dt className="no-underline text-inherit pointer-events-none">
+                  Correo
+                </dt>
                 <dd className="max-w-full break-words">
                   {contactEmail || "-"}
                 </dd>
               </div>
-              <div className="summary-list__item">
+              <div className="summary-list__item no-underline text-inherit pointer-events-none">
                 <dt>Telefono</dt>
                 <dd className="max-w-full break-words">
                   {contactInfo?.phone || "-"}
@@ -225,14 +227,14 @@ const SummaryStep = ({
                 {formatCurrency(pricingInfo?.pricePerLb || pricePerLb || 0)} por
                 cada libra.
               </li>
-              <hr/>
+              <hr />
               <li className="py-2">
                 <strong>Recogida a domicilio:</strong> El precio base es $
                 {pricingInfo?.pickupBase || 10} + $
                 {pricingInfo?.pickupPerMile || 0.99}
-                 <span className="pl-[5px]">por cada milla.</span>
+                <span className="pl-[5px]">por cada milla.</span>
               </li>
-              <hr/>
+              <hr />
               <li className="py-2">
                 <strong>Procesamiento:</strong> Cobro por la gestion.
               </li>

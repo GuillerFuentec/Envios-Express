@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRecaptcha } from "../components/ReCaptchaProvider";
+import { useRefreshPrompt } from "../contexts/RefreshPromptContext";
 import { useAgencyConfig } from "./useAgencyConfig";
 import {
   createAgencyOrder,
@@ -63,6 +64,7 @@ const consumeCheckoutPayload = (sessionId) => {
 
 export const useFunnelController = () => {
   const { data: agencyConfig, loading: configLoading, error: configError } = useAgencyConfig();
+  const { markDirty } = useRefreshPrompt();
 
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const [currentStep, setCurrentStep] = useState(0);
@@ -143,10 +145,11 @@ export const useFunnelController = () => {
           [section]: nextSection,
         };
       });
+      markDirty();
       setShowGlobalError(false);
       clearFieldError(section, field);
     },
-    [clearFieldError]
+    [clearFieldError, markDirty]
   );
 
   const runContactValidation = useCallback(() => {
@@ -315,11 +318,6 @@ export const useFunnelController = () => {
 
     const prefersOnline = formData.preferences.paymentMethod === "online";
     const recaptchaAction = prefersOnline ? "checkout" : "order";
-    let checkoutWindow = null;
-
-    if (prefersOnline) {
-      checkoutWindow = window.open("", "_blank", "noopener");
-    }
 
     try {
       const recaptchaToken = await getRecaptchaToken(recaptchaAction);
@@ -335,16 +333,9 @@ export const useFunnelController = () => {
         }
         setPendingSessionId(sessionId);
         storeCheckoutPayload(sessionId, payload);
-        if (checkoutWindow) {
-          checkoutWindow.location = checkoutUrl;
-          checkoutWindow.focus?.();
-        } else {
-          window.location.assign(checkoutUrl);
-        }
+        window.location.assign(checkoutUrl);
         setStatusMessage({
-          text: checkoutWindow
-            ? "Te llevamos a Stripe en una nueva pestaña. Esperamos la confirmación del pago..."
-            : "Te redirigimos a Stripe en esta pestaña. Esperamos la confirmación del pago...",
+          text: "Te redirigimos al checkout para completar el pago...",
           variant: "info",
         });
         return;
@@ -358,9 +349,6 @@ export const useFunnelController = () => {
         `/funnel/status/success?mode=agency${data.orderId ? `&orderId=${encodeURIComponent(data.orderId)}` : ""}`
       );
     } catch (error) {
-      if (checkoutWindow && !checkoutWindow.closed) {
-        checkoutWindow.close();
-      }
       setStatusMessage({
         text: error.message || "No pudimos completar la acción.",
         variant: "error",

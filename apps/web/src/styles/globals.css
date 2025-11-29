@@ -893,6 +893,76 @@ a {
   cursor: pointer;
 }
 
+.exit-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 200;
+}
+
+.exit-modal {
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.exit-title {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--color-text);
+}
+
+.exit-text {
+  margin: 0;
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+.exit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-safe,
+.btn-danger {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.btn-safe {
+  background: #0c5e58;
+  color: #fafafa;
+}
+
+.btn-safe:hover {
+  background: rgb(59, 73, 90);
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+}
+
 @media (orientation: landscape) and (max-width: 900px) {
   .page-shell,
   .steps-grid,

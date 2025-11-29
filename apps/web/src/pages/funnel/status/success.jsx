@@ -96,13 +96,11 @@ const SuccessPage = () => {
             <div className="status-card status-card--highlight">
               <p className="status-card__title">Recibo y seguimiento</p>
               <p className="status-copy">
-                Enviamos un comprobante de pago al correo del contacto y te avisaremos
-                ante cualquier novedad del envio.
+                Enviamos un comprobante de pago al correo del contacto y te
+                avisaremos ante cualquier novedad del envio.
               </p>
               <ul className="status-list">
-                <li>
-                  Busca tu recibo en tu bandeja de entrada o spam.
-                </li>
+                <li>Busca tu recibo en tu bandeja de entrada o spam.</li>
                 <li>
                   Guarda el ID de la sesion de orden por si necesitas soporte.
                 </li>
@@ -157,10 +155,44 @@ const SuccessPage = () => {
           </div>
 
           <div className="status-actions">
-            <Link href="/funnel" className="btn-primary status-action">
-              Crear otro envio
+            <Link
+              href="/funnel"
+              className="btn-primary status-action     inline-flex items-center justify-center
+    rounded-lg px-4 py-2
+    text-sm font-medium
+    shadow-sm
+    border
+    transition
+    duration-150
+    ease-out
+    hover:shadow-md
+    active:scale-[0.97]
+    focus-visible:outline-none
+    focus-visible:ring-2
+    focus-visible:ring-offset-2
+    disabled:opacity-60
+    disabled:cursor-not-allowed"
+            >
+              Realizar otro envio
             </Link>
-            <Link href="/" className="btn-secondary status-action">
+            <Link
+              href="/"
+              className="btn-secondary status-action     inline-flex items-center justify-center
+    rounded-lg px-4 py-2
+    text-sm font-medium
+    shadow-sm
+    border
+    transition
+    duration-150
+    ease-out
+    hover:shadow-md
+    active:scale-[0.97]
+    focus-visible:outline-none
+    focus-visible:ring-2
+    focus-visible:ring-offset-2
+    disabled:opacity-60
+    disabled:cursor-not-allowed"
+            >
               Ir al inicio
             </Link>
           </div>

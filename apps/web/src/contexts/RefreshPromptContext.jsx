@@ -1,61 +1,118 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 const RefreshPromptContext = createContext({
-  allowUnload: () => {},
+  isDirty: false,
+  markDirty: () => {},
+  clearDirty: () => {},
+  requestNavigation: () => {},
 });
 
 export const useRefreshPrompt = () => useContext(RefreshPromptContext);
 
 export function RefreshPromptProvider({ children }) {
+  const router = useRouter();
   const [showPrompt, setShowPrompt] = useState(false);
-  const allowRef = useRef(false);
+  const [pendingRoute, setPendingRoute] = useState(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const dirtyRef = useRef(false);
+  const allowNextNavigationRef = useRef(false);
 
-  const allowUnload = useCallback(() => {
-    allowRef.current = true;
+  const setDirty = useCallback((dirty) => {
+    dirtyRef.current = dirty;
+    setIsDirty(dirty);
   }, []);
 
-  useEffect(() => {
-    const handleBeforeUnload = (event) => {
-      if (allowRef.current) {
+  const markDirty = useCallback(() => setDirty(true), [setDirty]);
+  const clearDirty = useCallback(() => setDirty(false), [setDirty]);
+
+  const requestNavigation = useCallback(
+    (nextPath) => {
+      if (!dirtyRef.current) {
+        router.push(nextPath);
         return;
       }
-      event.preventDefault();
-      event.returnValue =
-        "Esta seguro que desea refrescar la pagina. Si lo hace todo el progreso se perdera";
+      setPendingRoute(nextPath);
       setShowPrompt(true);
-      return event.returnValue;
+    },
+    [router]
+  );
+
+  useEffect(() => {
+    const handleRouteChangeStart = (url) => {
+      if (allowNextNavigationRef.current) {
+        allowNextNavigationRef.current = false;
+        return;
+      }
+      if (!dirtyRef.current) {
+        return;
+      }
+      if (url === router.asPath) {
+        return;
+      }
+      setPendingRoute(url);
+      setShowPrompt(true);
+      router.events.emit("routeChangeError");
+      throw "Navigation blocked to show unsaved changes prompt.";
     };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+
+    router.events.on("routeChangeStart", handleRouteChangeStart);
+    return () => router.events.off("routeChangeStart", handleRouteChangeStart);
+  }, [router]);
+
+  const confirmNavigation = useCallback(() => {
+    if (!pendingRoute) {
+      setShowPrompt(false);
+      return;
+    }
+    allowNextNavigationRef.current = true;
+    clearDirty();
+    setShowPrompt(false);
+    setPendingRoute(null);
+    router.push(pendingRoute);
+  }, [clearDirty, pendingRoute, router]);
+
+  const cancelNavigation = useCallback(() => {
+    setPendingRoute(null);
+    setShowPrompt(false);
   }, []);
 
-  const confirmExit = () => {
-    allowRef.current = true;
-    setShowPrompt(false);
-    window.location.reload();
-  };
-
-  const cancelExit = () => {
-    setShowPrompt(false);
-  };
+  const contextValue = useMemo(
+    () => ({
+      isDirty,
+      markDirty,
+      clearDirty,
+      requestNavigation,
+    }),
+    [clearDirty, isDirty, markDirty, requestNavigation]
+  );
 
   return (
-    <RefreshPromptContext.Provider value={{ allowUnload }}>
+    <RefreshPromptContext.Provider value={contextValue}>
       {children}
       {showPrompt && (
-        <div className="exit-overlay">
+        <div className="exit-overlay" role="dialog" aria-modal="true">
           <div className="exit-modal">
+            <h3 className="exit-title">Perderás tu progreso</h3>
             <p className="exit-text">
-              Esta seguro que desea refrescar la pagina. Si lo hace todo el progreso se perdera.
+              Tienes cambios sin guardar. Si abandonas esta página los datos se perderán.
             </p>
             <div className="exit-actions">
-              <button type="button" className="btn-danger" onClick={confirmExit}>
-                Si
+              <button type="button " className="btn-safe bg-[#0c5e58]" onClick={cancelNavigation}>
+                Seguir aquí
               </button>
-              <button type="button" className="btn-safe" onClick={cancelExit}>
-                No
+              <button type="button" className="btn-danger" onClick={confirmNavigation}>
+                Salir de todos modos
               </button>
             </div>
           </div>

@@ -1,7 +1,7 @@
 "use strict";
 
 import Head from "next/head";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback } from "react";
 import Funnel from "../../components/Funnel";
 import { FunnelProvider, useFunnel } from "../../contexts/FunnelContext";
 import { RefreshPromptProvider } from "../../contexts/RefreshPromptContext";
@@ -121,7 +121,7 @@ const FunnelView = () => {
       {currentStep === 3 && (
         <div className="mt-4 mb-6 flex flex-col gap-2 items-end">
           <p className="text-sm text-gray-600 text-right">
-            Confirma que no eres un robot para continuar.
+            Confirma que no eres un robot.
           </p>
           <ReCaptchaCheckbox />
         </div>
@@ -146,29 +146,6 @@ const FunnelView = () => {
 };
 
 export default function FunnelPage() {
-  const allowUnloadRef = useRef(false);
-
-  useEffect(() => {
-    const handleBeforeUnload = (event) => {
-      if (allowUnloadRef.current) {
-        return;
-      }
-      const message =
-        "Esta seguro que desea refrescar la pagina. Si lo hace todo el progreso se perdera";
-      event.preventDefault();
-      event.returnValue = message;
-      return message;
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, []);
-
-  const confirmExit = () => {
-    allowUnloadRef.current = true;
-    window.location.reload();
-  };
-
   return (
     <>
       <Head>
