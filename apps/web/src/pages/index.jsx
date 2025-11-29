@@ -3,6 +3,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
+import ReCaptchaCheckbox from "../components/ReCaptchaCheckbox";
 
 const Nav = () => {
   const [open, setOpen] = useState(false);
