@@ -1,7 +1,7 @@
 "use strict";
 
 import Head from "next/head";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import Funnel from "../../components/Funnel";
 import { FunnelProvider, useFunnel } from "../../contexts/FunnelContext";
 import { RefreshPromptProvider } from "../../contexts/RefreshPromptContext";
@@ -98,6 +98,10 @@ const FunnelView = () => {
       ? "Pagar online"
       : "Confirmar y pagar en agencia";
 
+  const handlePrimaryBlocked = useCallback(() => {
+    alert("Debes completar el captcha para continuar.");
+  }, []);
+
   return (
     <Funnel.Layout>
       <div className="funnel-header">
@@ -128,6 +132,7 @@ const FunnelView = () => {
         onPrev={handlePrev}
         onNext={handleNext}
         onPrimary={handlePrimaryAction}
+        onPrimaryBlocked={handlePrimaryBlocked}
         actionLoading={actionLoading}
         quoteReady={Boolean(quoteState.data) && !quoteState.loading && !quoteState.error}
         disablePrimary={!recaptchaReady}

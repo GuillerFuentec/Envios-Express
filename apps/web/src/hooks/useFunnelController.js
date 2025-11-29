@@ -315,6 +315,11 @@ export const useFunnelController = () => {
 
     const prefersOnline = formData.preferences.paymentMethod === "online";
     const recaptchaAction = prefersOnline ? "checkout" : "order";
+    let checkoutWindow = null;
+
+    if (prefersOnline) {
+      checkoutWindow = window.open("", "_blank", "noopener");
+    }
 
     try {
       const recaptchaToken = await getRecaptchaToken(recaptchaAction);
@@ -324,11 +329,22 @@ export const useFunnelController = () => {
           recaptchaToken,
         });
         const sessionId = data.sessionId || "";
+        const checkoutUrl = data.url || "";
+        if (!checkoutUrl) {
+          throw new Error("No pudimos iniciar el pago. Intenta de nuevo.");
+        }
         setPendingSessionId(sessionId);
         storeCheckoutPayload(sessionId, payload);
-        window.open(data.url, "_blank", "noopener");
+        if (checkoutWindow) {
+          checkoutWindow.location = checkoutUrl;
+          checkoutWindow.focus?.();
+        } else {
+          window.location.assign(checkoutUrl);
+        }
         setStatusMessage({
-          text: "Te llevamos a Stripe en una nueva pestaña. Esperamos la confirmación del pago...",
+          text: checkoutWindow
+            ? "Te llevamos a Stripe en una nueva pestaña. Esperamos la confirmación del pago..."
+            : "Te redirigimos a Stripe en esta pestaña. Esperamos la confirmación del pago...",
           variant: "info",
         });
         return;
@@ -342,6 +358,9 @@ export const useFunnelController = () => {
         `/funnel/status/success?mode=agency${data.orderId ? `&orderId=${encodeURIComponent(data.orderId)}` : ""}`
       );
     } catch (error) {
+      if (checkoutWindow && !checkoutWindow.closed) {
+        checkoutWindow.close();
+      }
       setStatusMessage({
         text: error.message || "No pudimos completar la acción.",
         variant: "error",
