@@ -100,7 +100,7 @@ const FunnelView = () => {
     <Funnel.Layout>
       <div className="funnel-header">
         <p className="funnel-eyebrow">Paso {currentStep + 1} de 4</p>
-        <h1 style={{ margin: 0 }}>Planificador de envA-os</h1>
+        <h1 style={{ margin: 0 }}>Planificador de envios</h1>
         <Funnel.ProgressBar currentStep={currentStep} />
       </div>
       <div className="steps-grid">
@@ -138,7 +138,6 @@ const FunnelView = () => {
 };
 
 export default function FunnelPage() {
-  const [showExitPrompt, setShowExitPrompt] = useState(false);
   const allowUnloadRef = useRef(false);
 
   useEffect(() => {
@@ -146,29 +145,26 @@ export default function FunnelPage() {
       if (allowUnloadRef.current) {
         return;
       }
+      const message =
+        "Esta seguro que desea refrescar la pagina. Si lo hace todo el progreso se perdera";
       event.preventDefault();
-      event.returnValue = "";
-      setShowExitPrompt(true);
-      return "";
+      event.returnValue = message;
+      return message;
     };
+
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, []);
 
   const confirmExit = () => {
     allowUnloadRef.current = true;
-    setShowExitPrompt(false);
     window.location.reload();
-  };
-
-  const cancelExit = () => {
-    setShowExitPrompt(false);
   };
 
   return (
     <>
       <Head>
-        <title>Funnel �?" EnvA-os a Cuba</title>
+        <title>Envios Express</title>
       </Head>
       <SiteNavbar />
       <main className="page-shell">
@@ -177,26 +173,6 @@ export default function FunnelPage() {
         </FunnelProvider>
       </main>
       <Footer />
-
-      {showExitPrompt && (
-        <div className="exit-overlay">
-          <div className="exit-modal">
-            <p className="exit-text">
-              Esta seguro que desea refrescar la pagina. Si lo hace todo el progreso se perdera
-
-              Si refrescas la pagina se perdera todo el progreso.
-            </p>
-            <div className="exit-actions">
-              <button type="button" className="btn-danger" onClick={confirmExit}>
-                Si, refrescar
-              </button>
-              <button type="button" className="btn-safe" onClick={cancelExit}>
-                No, continuar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

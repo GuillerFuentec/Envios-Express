@@ -16,10 +16,10 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Hero optimizado para mobile: oculta la imagen en pantallas pequeñas y centra el texto y botones (`apps/web/src/components/home/Hero.jsx:1`).
 - Footer unificado en funnel usando el mismo de la home (`apps/web/src/pages/funnel/index.jsx:1`).
 - Selector de app de mapas (Google/Apple) con preferencia recordable en la sección Ubicación (`apps/web/src/components/home/Location.jsx:1`) y estilos de modal (`globals.css`).
-- Prompt de confirmación al refrescar/abandonar funnel con botones rojo/verde (`apps/web/src/pages/funnel/index.jsx:1`, `globals.css`).
 - Ajustes responsive en landscape para evitar deformaciones y overflow (`apps/web/src/styles/globals.css:1`).
 - Fecha de entrega muestra valor por defecto (minDate) para mayor visibilidad en mobile (`apps/web/src/components/Funnel/Steps/ShipmentStep.jsx:1`).
 - Quote ya no exige reCAPTCHA; el token se requiere solo para crear orden o pagar (`apps/web/src/pages/api/quote.js:1`, `apps/web/src/hooks/useFunnelController.js:1`).
+- Funnel persiste estado (formulario y paso) en localStorage para evitar perdida de progreso al refrescar, incl. mobile (`apps/web/src/hooks/useFunnelController.js:1`).
 
 ### Changed
 - El controlador del funnel ahora ejecuta reCAPTCHA antes de cotizar, crear ordenes o iniciar el checkout, y deshabilita la accion principal hasta contar con un desglose valido (`apps/web/hooks/useFunnelController.js:1`, `apps/web/components/Funnel/ActionsBar.jsx:1`).
