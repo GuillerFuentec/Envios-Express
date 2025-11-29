@@ -7,6 +7,7 @@ const ActionsBar = ({
   onPrimary,
   actionLoading,
   quoteReady,
+  disablePrimary,
   primaryLabel,
 }) => (
   <div className="actions-row">
@@ -25,7 +26,7 @@ const ActionsBar = ({
         type="button"
         className="btn-primary"
         onClick={onPrimary}
-        disabled={actionLoading || !quoteReady}
+        disabled={actionLoading || !quoteReady || disablePrimary}
       >
         {actionLoading ? "Procesando..." : primaryLabel || "Confirmar"}
       </button>

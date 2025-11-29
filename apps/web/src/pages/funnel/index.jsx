@@ -4,6 +4,7 @@ import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
 import Funnel from "../../components/Funnel";
 import { FunnelProvider, useFunnel } from "../../contexts/FunnelContext";
+import { RefreshPromptProvider } from "../../contexts/RefreshPromptContext";
 import { getTomorrowIso } from "../../utils/dates";
 import SiteNavbar from "../../components/layout/SiteNavbar";
 import ReCaptchaCheckbox from "../../components/ReCaptchaCheckbox";
@@ -32,6 +33,7 @@ const FunnelView = () => {
     handlePrev,
     handlePrimaryAction,
     handleQuoteRetry,
+    recaptchaReady,
   } = useFunnel();
 
   const steps = [
@@ -48,7 +50,7 @@ const FunnelView = () => {
     },
     {
       id: 1,
-      title: "Detalles del envA-o",
+      title: "Detalles del envio",
       component: (
         <Funnel.Steps.Shipment
           data={formData.shipment}
@@ -128,6 +130,7 @@ const FunnelView = () => {
         onPrimary={handlePrimaryAction}
         actionLoading={actionLoading}
         quoteReady={Boolean(quoteState.data) && !quoteState.loading && !quoteState.error}
+        disablePrimary={!recaptchaReady}
         primaryLabel={primaryLabel}
       />
 
@@ -166,13 +169,15 @@ export default function FunnelPage() {
       <Head>
         <title>Envios Express</title>
       </Head>
-      <SiteNavbar />
-      <main className="page-shell">
-        <FunnelProvider>
-          <FunnelView />
-        </FunnelProvider>
-      </main>
-      <Footer />
+      <RefreshPromptProvider>
+        <SiteNavbar />
+        <main className="page-shell">
+          <FunnelProvider>
+            <FunnelView />
+          </FunnelProvider>
+        </main>
+        <Footer />
+      </RefreshPromptProvider>
     </>
   );
 }

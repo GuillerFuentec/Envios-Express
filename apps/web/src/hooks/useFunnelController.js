@@ -81,6 +81,7 @@ export const useFunnelController = () => {
   const quotePayload = useMemo(() => buildQuotePayload(formData), [formData]);
   const quotePayloadKey = useMemo(() => JSON.stringify(quotePayload), [quotePayload]);
   const { token: recaptchaToken } = useRecaptcha();
+  const recaptchaReady = Boolean(recaptchaToken);
 
   const getRecaptchaToken = useCallback(
     async (action) => {
@@ -391,5 +392,6 @@ export const useFunnelController = () => {
     handlePrimaryAction,
     handleQuoteRetry,
     consumeCheckoutPayload,
+    recaptchaReady,
   };
 };
