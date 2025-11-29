@@ -1,12 +1,4 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "apps/web/next.config.js",
-      "use": "@vercel/next"
-    }
-  ],
   "installCommand": "pnpm install --filter web... --frozen-lockfile",
-  "buildCommand": "pnpm --filter web build",
-  "framework": "nextjs"
+  "buildCommand": "pnpm --filter web build"
 }
