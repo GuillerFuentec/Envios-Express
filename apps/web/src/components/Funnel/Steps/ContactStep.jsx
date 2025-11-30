@@ -1,10 +1,12 @@
 "use strict";
 
+import { FormLabel, FormControl } from "../../ui/FormControls";
+
 const ContactStep = ({ data, errors, onChange }) => (
   <div className="fields-grid">
     <div className="field">
-      <label htmlFor="contactName">Nombre completo</label>
-      <input
+      <FormLabel htmlFor="contactName">Nombre completo*</FormLabel>
+      <FormControl
         id="contactName"
         type="text"
         value={data.name}
@@ -14,8 +16,8 @@ const ContactStep = ({ data, errors, onChange }) => (
       {errors.name && <span className="field-error">{errors.name}</span>}
     </div>
     <div className="field">
-      <label htmlFor="contactEmail">Correo electrónico</label>
-      <input
+      <FormLabel htmlFor="contactEmail">Correo electrónico*</FormLabel>
+      <FormControl
         id="contactEmail"
         type="email"
         value={data.email}
@@ -25,8 +27,8 @@ const ContactStep = ({ data, errors, onChange }) => (
       {errors.email && <span className="field-error">{errors.email}</span>}
     </div>
     <div className="field">
-      <label htmlFor="contactPhone">Teléfono</label>
-      <input
+      <FormLabel htmlFor="contactPhone">Teléfono*</FormLabel>
+      <FormControl
         id="contactPhone"
         type="tel"
         value={data.phone}
@@ -35,15 +37,16 @@ const ContactStep = ({ data, errors, onChange }) => (
       />
       {errors.phone && <span className="field-error">{errors.phone}</span>}
     </div>
-    <label className="toggle-row" htmlFor="smsConsent">
+    <FormLabel className="toggle-row" htmlFor="smsConsent">
       <span>Acepto recibir actualizaciones vía SMS y correo electrónico</span>
-      <input
+      <FormControl
         id="smsConsent"
         type="checkbox"
+        unstyled
         checked={data.smsConsent}
         onChange={(event) => onChange("contact", "smsConsent", event.target.checked)}
       />
-    </label>
+    </FormLabel>
     {errors.smsConsent && <span className="field-error">{errors.smsConsent}</span>}
   </div>
 );

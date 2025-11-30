@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ReCaptchaCheckbox from "../ReCaptchaCheckbox";
+import { FormControl, FormLabel, FormWrapper } from "../ui";
 
 const ContactInfo = () => (
   <div className="space-y-4 mt-8">
@@ -112,10 +113,10 @@ const ContactForm = () => {
   return (
     <form className="surface-card surface-card--subtle" onSubmit={handleSubmit}>
       <div className="mb-4">
-        <label htmlFor="contactName" className="block text-gray-700 mb-2">
+        <FormLabel htmlFor="contactName" className="block text-gray-700 mb-2">
           Nombre completo
-        </label>
-        <input
+        </FormLabel>
+        <FormControl
           type="text"
           id="contactName"
           name="name"
@@ -126,10 +127,10 @@ const ContactForm = () => {
         />
       </div>
       <div className="mb-4">
-        <label htmlFor="contactEmail" className="block text-gray-700 mb-2">
+        <FormLabel htmlFor="contactEmail" className="block text-gray-700 mb-2">
           Email
-        </label>
-        <input
+        </FormLabel>
+        <FormControl
           type="email"
           id="contactEmail"
           name="email"
@@ -140,10 +141,10 @@ const ContactForm = () => {
         />
       </div>
       <div className="mb-4">
-        <label htmlFor="contactPhone" className="block text-gray-700 mb-2">
+        <FormLabel htmlFor="contactPhone" className="block text-gray-700 mb-2">
           Telefono
-        </label>
-        <input
+        </FormLabel>
+        <FormControl
           type="tel"
           id="contactPhone"
           name="phone"
@@ -155,10 +156,14 @@ const ContactForm = () => {
         />
       </div>
       <div className="my-4">
-        <label htmlFor="contactMessage" className="block text-gray-700 mb-2">
+        <FormLabel
+          htmlFor="contactMessage"
+          className="block text-gray-700 mb-2"
+        >
           Mensaje
-        </label>
-        <textarea
+        </FormLabel>
+        <FormControl
+          as="textarea"
           id="contactMessage"
           name="message"
           rows="4"
@@ -169,21 +174,22 @@ const ContactForm = () => {
         />
       </div>
       <div className="my-4 flex items-start gap-3">
-        <input
+        <FormControl
           type="checkbox"
           id="contactSmsConsent"
+          unstyled
           required
           checked={form.smsConsent}
           onChange={handleChange("smsConsent")}
           className="mt-1 w-4 h-4 border-gray-300 text-accent focus:ring-accent"
         />
-        <label
+        <FormLabel
           htmlFor="contactSmsConsent"
           className="text-gray-700 text-sm leading-relaxed"
         >
           Acepto recibir mensajes de texto y correos electronicos por parte de
           Raccoon Studios LLC
-        </label>
+        </FormLabel>
       </div>
       <div className="my-6 flex">
         <ReCaptchaCheckbox onTokenChange={setRecaptchaToken} />
@@ -225,9 +231,9 @@ export default function Contact() {
           <div className="order-2 md:order-1">
             <ContactInfo />
           </div>
-          <div className="order-1 md:order-2">
+          <FormWrapper>
             <ContactForm />
-          </div>
+          </FormWrapper>
         </div>
       </div>
     </section>

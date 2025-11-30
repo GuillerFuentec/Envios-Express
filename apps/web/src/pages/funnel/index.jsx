@@ -1,7 +1,7 @@
 "use strict";
 
 import Head from "next/head";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import Funnel from "../../components/Funnel";
 import { FunnelProvider, useFunnel } from "../../contexts/FunnelContext";
 import { RefreshPromptProvider } from "../../contexts/RefreshPromptContext";
@@ -97,6 +97,11 @@ const FunnelView = () => {
     formData.preferences.paymentMethod === "online"
       ? "Pagar online"
       : "Confirmar y pagar en agencia";
+
+  useEffect(() => {
+    // Asegura que cada paso nuevo arranque en la parte superior para que los campos iniciales sean visibles
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentStep]);
 
   const handlePrimaryBlocked = useCallback(() => {
     alert("Debes completar el captcha para continuar.");

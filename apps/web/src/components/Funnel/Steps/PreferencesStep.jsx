@@ -3,6 +3,7 @@
 import { useCallback, useMemo } from "react";
 import { AddressCaptureInput } from "../../address-capture";
 import { createEmptyAddress } from "../../../utils/addressState";
+import { FormControl, FormLabel } from "../../ui/FormControls";
 
 const PreferencesStep = ({
   data,
@@ -126,18 +127,19 @@ const PreferencesStep = ({
 
   return (
     <div className="fields-grid">
-      <label className="toggle-row" htmlFor="pickupToggle">
-        <span>¿Necesitas recogida a domicilio?</span>
-        <input
+      <FormLabel className="toggle-row" htmlFor="pickupToggle">
+        <span>¿Necesitas que recojamos el paquete a su domicilio?{" -->"}</span>
+        <FormControl
           id="pickupToggle"
           type="checkbox"
+          unstyled
           checked={
             Boolean(data?.pickup) && !isCash && data?.paymentMethod !== "agency"
           }
           onChange={handlePickupToggle}
           disabled={isCash || data?.paymentMethod === "agency"}
         />
-      </label>
+      </FormLabel>
 
       {data?.pickup && !isCash && (
         <div className="field">
@@ -161,10 +163,10 @@ const PreferencesStep = ({
       )}
 
       <div className="field">
-        <label>¿Cómo pagarás?</label>
+        <FormLabel>¿Cómo pagarás?</FormLabel>
         <div className="radio-row">
           {["online", "agency"].map((method) => (
-            <label
+            <FormLabel
               key={method}
               className={`radio-pill ${
                 data?.paymentMethod === method ? "active" : ""
@@ -176,7 +178,8 @@ const PreferencesStep = ({
                     : 1,
               }}
             >
-              <input
+              <FormControl
+                unstyled
                 type="radio"
                 name="paymentMethod"
                 value={method}
@@ -189,7 +192,7 @@ const PreferencesStep = ({
               <span>
                 {method === "online" ? "Pago online" : "Pagar en agencia"}
               </span>
-            </label>
+            </FormLabel>
           ))}
         </div>
         {(shouldDisableAgency || isCash) && (
@@ -219,8 +222,9 @@ const PreferencesStep = ({
       ) : null}
 
       <div className="field">
-        <label htmlFor="additionalComments">Comentarios adicionales</label>
-        <textarea
+        <FormLabel htmlFor="additionalComments">Hay algun comentario que deba hacernos sobre su pedido?</FormLabel>
+        <FormControl
+          as="textarea"
           id="additionalComments"
           value={data?.additionalComments || ""}
           onChange={(event) =>

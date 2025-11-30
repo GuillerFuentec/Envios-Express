@@ -69,7 +69,7 @@ const ErrorPage = () => {
     disabled:opacity-60
     disabled:cursor-not-allowed"
             >
-              Realizar otro envio
+              Intentar otra vez
             </Link>
             <Link
               href="/"

@@ -18,7 +18,7 @@ export default function Hero() {
           <div className="flex flex-wrap gap-4 mt-8 hero__actions justify-center md:justify-start">
             <Link
               href="/funnel"
-              className="bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 px-6 rounded-lg transition !text-white"
+              className="bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 px-6 rounded-lg transition cta-blink"
             >
               Planificar envio
             </Link>

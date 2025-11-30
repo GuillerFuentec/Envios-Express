@@ -224,7 +224,7 @@ const calculateQuote = async (payload = {}) => {
       pickup: pickupEnabled
         ? {
             amount: pickupAmount,
-            label: `Pick-up ($${PICKUP_BASE_FEE} + $${PICKUP_PER_MILE}/mi * ${
+            label: `Recogida a domicilio ($${PICKUP_BASE_FEE} + $${PICKUP_PER_MILE}/mi * ${
               pickupDetails?.distanceMiles ?? 0
             }mi)`,
             ...pickupDetails,

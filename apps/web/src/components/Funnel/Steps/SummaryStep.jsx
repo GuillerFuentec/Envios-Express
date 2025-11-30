@@ -56,7 +56,7 @@ const SummaryStep = ({
 
   const pickupLabel =
     breakdown?.pickup?.label ||
-    `Pick-up = $10 + $0.99/mi * ${breakdown?.pickup?.distanceMiles || 0}mi`;
+    `Recogida a domicilio = $10 + $0.99/mi * ${breakdown?.pickup?.distanceMiles || 0}mi`;
 
   const cashLabel = breakdown?.cashFee?.label || "Fee (Dinero en efectivo)";
   const processingLabel =
