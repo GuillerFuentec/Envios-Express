@@ -33,8 +33,7 @@ Repositorio con dos aplicaciones:
 | Strapi | CMS/API headless | https://strapi.io/favicon.ico |
 | pnpm | Gestor de paquetes | https://pnpm.io/logo.png |
 | Docker | Contenedores de backend | https://www.docker.com/favicon.ico |
-| Vercel | Hosting frontend | https://vercel.com/favicon.ico |
-| Railway (opcional) | Hosting backend | https://railway.app/favicon.ico |
+| Railway | Hosting | https://railway.app/favicon.ico |
 
 ## Flujos clave
 - **Funnel y cotizacion**: el cliente ingresa datos, la web llama `calculateQuote` (usa `AGENCY_INFO_URL` y Distance Matrix si hay pickup) para mostrar precios y validaciones de negocio.
@@ -55,7 +54,7 @@ Repositorio con dos aplicaciones:
 - Stripe: `STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_CONNECT_DESTINATION`, `STRIPE_CONNECT_ACCOUNT_ID`, `STRIPE_PROC_PERCENT`, `STRIPE_PROC_FIXED`, `STRIPE_SUCCESS_URL`, `STRIPE_CANCEL_URL`, `PUBLIC_SITE_URL`
 - Plataforma/fees: `PLATFORM_FEE_PERCENT`, `PLATFORM_FEE_RATE`, `PLATFORM_FEE_MIN`, `PLATFORM_FEE_MIN_USD`, `DEFAULT_PRICE_PER_LB`, `PRICE_LB_FALLBACK`
 - Agencia/config: `AGENCY_INFO_URL`, `AGENCY_TOKEN`, `AGENCY_PLACE_ID`, `AGENCY_NAME`, `AGENCY_ADDRESS`
-- Strapi API: `STRAPI_WEB_API_URL` o `STRAPI_API_URL` (o `AGENCY_API_URL`), usa `AGENCY_TOKEN` como bearer para `/api/clients`, `/api/contacts` y `/api/payments/process-transfer`
+- Strapi API: `STRAPI_WEB_API_URL` (o `AGENCY_API_URL`), usa `AGENCY_TOKEN` como bearer para `/api/clients`, `/api/contacts` y `/api/payments/process-transfer`
 - Seguridad/otros: `PAYMENT_FAIL_ALERT_THRESHOLD`, `AGENCY_TOKEN` (bearer hacia Strapi y header admin en `/api/connected-accounts`), `PUBLIC_URL`
 - Rate limit checkout (opcional): `CHECKOUT_RATE_LIMIT_MAX` (default 10), `CHECKOUT_RATE_LIMIT_WINDOW_MS` (default 60000)
 
@@ -83,35 +82,25 @@ cp .env.example .env       # ajusta llaves y DB si quieres postgres
 pnpm --filter server dev   # http://localhost:1337
 ```
 
-## Despliegue
+## Despliegue (Railway)
 
-### Web en Vercel
-- Root directory: `apps/web`
-- Framework: Next.js
-- Install command: `pnpm install --filter web... --frozen-lockfile`
-- Build command: `pnpm --filter web build`
-- Node 20
-- Variables de entorno: todas las listadas en la seccion Web (usa production keys, no las de prueba).
-- Webhook Stripe: configura en el dashboard la URL `https://<tu-app>.vercel.app/api/payments/webhook` con `STRIPE_WEBHOOK_SECRET`.
-- CORS en Strapi: define `CORS_ORIGIN=https://<tu-app>.vercel.app` (puedes pasar multiples separados por coma).
+- Frontend (apps/web):
+  - Servicio Node (Nixpacks) o Docker con `Dockerfile.web` (contexto raíz). Puerto: `3000`.
+  - Comandos típicos Nixpacks: Install `pnpm install --filter web... --frozen-lockfile`, Build `pnpm --filter web build`, Start `pnpm --filter web start`, Node 20.
+  - Webhook Stripe: `https://<tu-web>.up.railway.app/api/payments/webhook`.
 
-### Web en Railway (opcional)
-- Servicio Node con Root `apps/web` (Nixpacks) o usando el `Dockerfile.web` en la raiz.
-- Nixpacks/Node: Install `pnpm install --filter web... --frozen-lockfile`, Build `pnpm --filter web build`, Start `pnpm --filter web start`, Node 20.
-- Docker: selecciona `Dockerfile.web` (contexto raiz del repo); expone puerto `3000`.
-- Variables: mismas que en Vercel (Stripe, reCAPTCHA, Strapi, agencia, INTERNAL_API_TOKEN/ADMIN_API_TOKEN, etc.).
-- Webhook Stripe: `https://<tu-servicio>.up.railway.app/api/payments/webhook`.
+- Backend (apps/server, Strapi):
+  - Usa el `Dockerfile` de la raíz; Railway lo detecta automáticamente. Puerto expuesto: `1337`.
+  - Variables mínimas: `NODE_ENV=production`, `DATABASE_CLIENT=postgres`, `DATABASE_URL`, `DATABASE_SSL=true`, `PUBLIC_URL=https://<tu-backend>`, `CORS_ORIGIN=https://<tu-web>`, llaves de Strapi y Stripe.
+  - Para probar webhooks localmente: `stripe listen --forward-to http://localhost:1337/stripe/webhook`.
 
-### Backend en Railway (o similar)
-- Usa el `Dockerfile` de la raiz; Railway lo detecta automaticamente.
-- Variables minimas: `NODE_ENV=production`, `DATABASE_CLIENT=postgres`, `DATABASE_URL`, `DATABASE_SSL=true`, `PUBLIC_URL=https://<tu-backend>`, `CORS_ORIGIN=https://<tu-frontend>`, llaves de Strapi y Stripe.
-- Puerto expuesto por la imagen: `1337`.
-- Si quieres probar Stripe webhooks localmente: `stripe listen --forward-to http://localhost:1337/stripe/webhook`.
+- Variables de entorno (web): todas las listadas en la sección Web (Stripe, reCAPTCHA, Strapi/AGENCY, etc.).
+- Variables de entorno (server): llaves de Strapi, Stripe, DB y notificaciones (ver sección Backend).
 
 ### Conexion Web <-> Server
 - `AGENCY_INFO_URL` debe apuntar a `https://<tu-backend>/api/agency-info/resume` (opcional `AGENCY_TOKEN` si lo proteges en Strapi).
 - `STRAPI_WEB_API_URL` (o `AGENCY_API_URL`) debe apuntar a `https://<tu-backend>/api` y requerir `AGENCY_TOKEN` como bearer para `/api/clients`, `/api/contacts` y `/api/payments/process-transfer`.
-- Ajusta CORS en Strapi (`CORS_ORIGIN`) para permitir el dominio de Vercel.
+- Ajusta CORS en Strapi (`CORS_ORIGIN`) para permitir el dominio de tu app en Railway.
 
 ## Configurar permisos en Strapi
 Para evitar errores 403 al crear clientes/contactos desde el frontend:
@@ -127,7 +116,7 @@ Para evitar errores 403 al crear clientes/contactos desde el frontend:
 - No uses las llaves de prueba del repo en produccion; rota todas las credenciales y webhook secrets.
 - Protege `/api/connected-accounts` con el header `x-admin-token: AGENCY_TOKEN`; si quieres reforzar `/api/orders/confirm` añade un header interno/CSRF (hoy confía en Stripe + reCAPTCHA).
 - Habilita rate limiting a los endpoints de pagos si usas un edge/middleware.
-- Asegura que `STRIPE_WEBHOOK_SECRET` este definido en Vercel para validar firmas.
+- Asegura que `STRIPE_WEBHOOK_SECRET` esté definido en Railway (o tu plataforma de despliegue) para validar firmas.
 - No expongas `STRIPE_SECRET_KEY`, `AGENCY_TOKEN` o tokens de Strapi en el frontend.
 
 ## Estructura del repo

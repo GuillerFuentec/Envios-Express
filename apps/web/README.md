@@ -1,22 +1,19 @@
-# Despliegue en Vercel
+# Despliegue en Railway
 
-Guia rapida para publicar la aplicacion Next.js en Vercel dentro de este monorepo.
+Guía rápida para publicar la aplicación Next.js (`apps/web`) en Railway dentro de este monorepo.
 
-## Configuracion del proyecto en Vercel
-
+## Configuración del servicio en Railway
 - Root directory: `apps/web`
-- Framework: Next.js (autodetectado)
+- Framework: Next.js (Nixpacks lo detecta automáticamente)
 - Install command: `pnpm install --filter web... --frozen-lockfile`
 - Build command: `pnpm --filter web build`
-- Node: `20` (usa la version LTS)
+- Start command: `pnpm --filter web start`
+- Node: `20` (LTS)
 - Opcional: `NEXT_TELEMETRY_DISABLED=1`
 
-> Nota: en la raiz del repo hay un `vercel.json` que ya apunta al builder de Next para `apps/web/next.config.js` y reutiliza los comandos anteriores.
+> También puedes usar el `Dockerfile.web` en la raíz como alternativa de despliegue (puerto 3000).
 
 ## Variables de entorno
-
-Define en Vercel (Project Settings > Environment Variables):
-
 - `STRIPE_PUBLISHABLE_KEY`
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
@@ -34,9 +31,7 @@ Define en Vercel (Project Settings > Environment Variables):
 - El endpoint interno `/api/connected-accounts` exige `x-admin-token: AGENCY_TOKEN`; no es público.
 
 ## Desarrollo local
-
 ```bash
 pnpm --filter web dev
 ```
-
 El servidor local corre en `http://localhost:3000` y usa las variables de `.env.local` dentro de `apps/web`.
