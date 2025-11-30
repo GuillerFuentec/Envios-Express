@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm -C apps/server build",
-    "start": "pnpm -C apps/server start"
+    "start": "pnpm -C apps/server start",
+    "start:prod": "pnpm -C apps/server build && pnpm -C apps/web build && pnpm -r --filter ./apps/server --filter ./apps/web --parallel start"
   },
   "dependencies": {
     "react-google-recaptcha-v3": "^1.11.0"

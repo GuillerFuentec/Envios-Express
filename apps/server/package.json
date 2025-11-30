@@ -1,6 +1,6 @@
 {
-  "name": "Envios-Express-server",
-  "version": "2.0",
+  "name": "envios-express-server",
+  "version": "2.0.0",
   "private": true,
   "description": "Servidor de servicio envios-express",
   "scripts": {

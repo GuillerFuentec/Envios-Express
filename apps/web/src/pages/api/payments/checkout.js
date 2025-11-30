@@ -44,6 +44,9 @@ const toMinorUnit = (value) => {
   return Math.round(amount * 100);
 };
 
+const isMockMode = () =>
+  process.env.MOCK_STRIPE === "true" || process.env.LOAD_TEST_MODE === "true";
+
 const buildQuotePayload = (body = {}) => {
   const fallback = body?.quoteRequest || {};
   const shipment = body?.shipment || {};
@@ -146,6 +149,16 @@ const pickReceiptEmail = (contact = {}, payload = {}) => {
   return "";
 };
 
+const buildMockSession = ({ quote, receiptEmail, origin }) => {
+  const id = `cs_test_mock_${Date.now()}`;
+  return {
+    id,
+    url: `${origin}/mock-checkout/${id}`,
+    amount_total: Math.round((quote?.total || 0) * 100),
+    customer_email: receiptEmail,
+  };
+};
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
@@ -154,7 +167,7 @@ export default async function handler(req, res) {
 
   try {
     enforceRateLimit(req);
-    const stripe = getStripeClient();
+    const stripe = isMockMode() ? null : getStripeClient();
     const body = req.body || {};
     const { recaptchaToken, ...payload } = body;
 
@@ -211,51 +224,60 @@ export default async function handler(req, res) {
       amountTotalCents - stripeFeeCents - platformFeeCents
     );
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      payment_method_types: ["card"],
-      line_items: lineItems,
-      customer_email: receiptEmail,
-      payment_intent_data: {
-        receipt_email: receiptEmail,
-        // No usamos transfer_data para que el cobro quede en la cuenta de plataforma
-        // y luego se transfiera manualmente al conectado.
-        application_fee_amount: undefined,
-        transfer_data: undefined,
-        metadata: {
-          platform_fee_amount: platformFeeCents,
-          destination_account: destinationAccount,
-          contact_name: normalizedContact.name || "",
-          contact_phone: normalizedContact.phone || "",
-          contact_email: receiptEmail,
-          sms_consent: contact.smsConsent ? "true" : "false",
-          city_cuba: quotePayload.cityCuba || "",
-          content_type: quotePayload.contentType || "",
-          cash_amount: quotePayload.cashAmount || "",
-          pickup: quotePayload.pickup ? "true" : "false",
-          delivery_date: quotePayload.deliveryDate || "",
-          weight_lbs: quotePayload.weightLbs || "",
-          // el ID de sesión se inyecta en el webhook desde el evento de checkout.session.completed
-        },
-      },
-      success_url: buildSuccessUrl(origin),
-      cancel_url: buildCancelUrl(origin),
-      metadata: {
-        payment_origin: "web-funnel",
-        contact_name: normalizedContact.name || "",
-        contact_phone: normalizedContact.phone || "",
-        contact_email: receiptEmail,
-        sms_consent: contact.smsConsent ? "true" : "false",
-        city_cuba: quotePayload.cityCuba || "",
-        content_type: quotePayload.contentType || "",
-        cash_amount: quotePayload.cashAmount || "",
-        pickup: quotePayload.pickup ? "true" : "false",
-        delivery_date: quotePayload.deliveryDate || "",
-        weight_lbs: quotePayload.weightLbs || "",
-        platform_fee_amount: platformFeeCents,
-        destination_account: destinationAccount,
-      },
-    });
+    const session = isMockMode()
+      ? (() => {
+          const mock = buildMockSession({ quote, receiptEmail, origin });
+          console.info("[api/payments/checkout] Stripe MOCK activado", {
+            sessionId: mock.id,
+            amount: mock.amount_total,
+          });
+          return mock;
+        })()
+      : await stripe.checkout.sessions.create({
+          mode: "payment",
+          payment_method_types: ["card"],
+          line_items: lineItems,
+          customer_email: receiptEmail,
+          payment_intent_data: {
+            receipt_email: receiptEmail,
+            // No usamos transfer_data para que el cobro quede en la cuenta de plataforma
+            // y luego se transfiera manualmente al conectado.
+            application_fee_amount: undefined,
+            transfer_data: undefined,
+            metadata: {
+              platform_fee_amount: platformFeeCents,
+              destination_account: destinationAccount,
+              contact_name: normalizedContact.name || "",
+              contact_phone: normalizedContact.phone || "",
+              contact_email: receiptEmail,
+              sms_consent: contact.smsConsent ? "true" : "false",
+              city_cuba: quotePayload.cityCuba || "",
+              content_type: quotePayload.contentType || "",
+              cash_amount: quotePayload.cashAmount || "",
+              pickup: quotePayload.pickup ? "true" : "false",
+              delivery_date: quotePayload.deliveryDate || "",
+              weight_lbs: quotePayload.weightLbs || "",
+              // el ID de sesión se inyecta en el webhook desde el evento de checkout.session.completed
+            },
+          },
+          success_url: buildSuccessUrl(origin),
+          cancel_url: buildCancelUrl(origin),
+          metadata: {
+            payment_origin: "web-funnel",
+            contact_name: normalizedContact.name || "",
+            contact_phone: normalizedContact.phone || "",
+            contact_email: receiptEmail,
+            sms_consent: contact.smsConsent ? "true" : "false",
+            city_cuba: quotePayload.cityCuba || "",
+            content_type: quotePayload.contentType || "",
+            cash_amount: quotePayload.cashAmount || "",
+            pickup: quotePayload.pickup ? "true" : "false",
+            delivery_date: quotePayload.deliveryDate || "",
+            weight_lbs: quotePayload.weightLbs || "",
+            platform_fee_amount: platformFeeCents,
+            destination_account: destinationAccount,
+          },
+        });
 
     return res.status(200).json({
       url: session.url,

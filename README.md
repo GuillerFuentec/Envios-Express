@@ -13,6 +13,7 @@ Repositorio con dos aplicaciones:
 - [Despliegue](#despliegue)
 - [Seguridad y buenas practicas](#seguridad-y-buenas-practicas)
 - [Estructura del repo](#estructura-del-repo)
+- [Pruebas de carga](#pruebas-de-carga)
 
 ## Arquitectura
 - Frontend Next.js con rutas de API para cotizacion, checkout Stripe y validacion reCAPTCHA.
@@ -134,4 +135,7 @@ pnpm-workspace.yaml
 vercel.json
 railway.toml
 Dockerfile    # Construye y arranca solo apps/server en contenedor
+
+## Pruebas de carga
+- Script k6 para checkout en `scripts/k6-checkout.js` y guía detallada en `docs/load-test.md`.
 ```
