@@ -1,5 +1,41 @@
 'use strict';
 
+const setupGracefulShutdown = (strapi) => {
+  let shuttingDown = false;
+  const logger = strapi.log;
+
+  const closeServer = () =>
+    new Promise((resolve) => {
+      const httpServer = strapi.server?.httpServer;
+      if (httpServer?.close) {
+        httpServer.close(() => resolve());
+        return;
+      }
+      resolve();
+    });
+
+  const shutdown = async (signal) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    logger.info(`[graceful] ${signal} recibido. Cerrando servidor...`);
+    try {
+      await closeServer();
+      if (strapi.db?.connection?.destroy) {
+        await strapi.db.connection.destroy();
+      }
+      logger.info('[graceful] Recursos liberados; saliendo.');
+      process.exit(0);
+    } catch (error) {
+      logger.error('[graceful] Error al cerrar', error);
+      process.exit(1);
+    }
+  };
+
+  ['SIGTERM', 'SIGINT'].forEach((signal) => {
+    process.on(signal, () => shutdown(signal));
+  });
+};
+
 module.exports = {
   /**
    * An asynchronous register function that runs before
@@ -32,5 +68,7 @@ module.exports = {
     } catch (error) {
       strapi.log.error("[bootstrap] Error precalentando place_id", error);
     }
+
+    setupGracefulShutdown(strapi);
   },
 };

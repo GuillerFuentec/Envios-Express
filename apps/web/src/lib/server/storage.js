@@ -1,36 +1,43 @@
 "use strict";
 
-const fs = require("fs");
-const path = require("path");
+// concurrency: async, stateless storage backed by Redis or in-memory fallback
+const { getCache, setCache, deleteCache } = require("./cache");
 
-const dataDir = path.join(process.cwd(), "data");
+const DEFAULT_STORAGE_TTL_MS =
+  Number(process.env.KV_STORAGE_TTL_MS || process.env.CONNECTED_ACCOUNTS_TTL_MS) ||
+  7 * 24 * 60 * 60 * 1000; // 7 days
 
-const ensureDir = () => {
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-};
-
-const readJson = (filename, fallback = {}) => {
+const readJson = async (key, fallback = {}) => {
   try {
-    ensureDir();
-    const full = path.join(dataDir, filename);
-    if (!fs.existsSync(full)) return fallback;
-    const raw = fs.readFileSync(full, "utf8");
-    return JSON.parse(raw);
+    const value = await getCache(key);
+    if (value !== null && value !== undefined) {
+      return value;
+    }
+    return fallback;
   } catch (err) {
     console.error("[storage] readJson error", err);
     return fallback;
   }
 };
 
-const writeJson = (filename, data) => {
-  ensureDir();
-  const full = path.join(dataDir, filename);
-  fs.writeFileSync(full, JSON.stringify(data, null, 2), "utf8");
+const writeJson = async (key, data, ttlMs = DEFAULT_STORAGE_TTL_MS) => {
+  try {
+    await setCache(key, data, ttlMs);
+  } catch (err) {
+    console.error("[storage] writeJson error", err);
+  }
+};
+
+const removeJson = async (key) => {
+  try {
+    await deleteCache(key);
+  } catch (err) {
+    console.error("[storage] removeJson error", err);
+  }
 };
 
 module.exports = {
   readJson,
   writeJson,
+  removeJson,
 };

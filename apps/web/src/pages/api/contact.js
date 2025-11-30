@@ -1,6 +1,7 @@
 "use strict";
 
 const { requireRecaptcha } = require("../../lib/server/recaptcha");
+const { enforceRateLimit } = require("../../lib/server/rate-limit");
 
 const normalizeBaseUrl = (value = "") => {
   const trimmed = value.replace(/\/+$/, "");
@@ -10,6 +11,14 @@ const normalizeBaseUrl = (value = "") => {
   return trimmed;
 };
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "1mb",
+    },
+  },
+};
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
@@ -17,8 +26,23 @@ export default async function handler(req, res) {
   }
 
   try {
+    await enforceRateLimit({
+      req,
+      key: "contact",
+      windowMs: Number(process.env.CONTACT_RATE_LIMIT_WINDOW_MS || 60_000),
+      max: Number(process.env.CONTACT_RATE_LIMIT_MAX || 20),
+      identifier: req.body?.email,
+    });
+
     const body = req.body || {};
     await requireRecaptcha({ token: body.recaptchaToken });
+
+    if (body.message && String(body.message).length > 2000) {
+      return res.status(400).json({ error: "El mensaje es demasiado largo." });
+    }
+    if (!body.email || typeof body.email !== "string") {
+      return res.status(400).json({ error: "Email requerido." });
+    }
 
     const baseUrl = normalizeBaseUrl(
       process.env.STRAPI_WEB_API_URL || process.env.STRAPI_API_URL || process.env.AGENCY_API_URL

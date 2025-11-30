@@ -1,5 +1,9 @@
 "use strict";
 
+const { getCache, setCache } = require("./cache");
+
+const DISTANCE_CACHE_TTL_MS = Number(process.env.DISTANCE_CACHE_TTL_MS || 120_000);
+
 const metersToMiles = (meters) => {
   if (!Number.isFinite(meters)) {
     return 0;
@@ -53,6 +57,12 @@ const getDistanceMatrix = async ({ originPlaceId, destinationPlaceId, destinatio
   });
 
   const url = `https://maps.googleapis.com/maps/api/distancematrix/json?${params.toString()}`;
+  const cacheKey = `distance:${originParam}:${destinationParam}`;
+  const cached = await getCache(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const response = await fetch(url);
   const payload = await response.json();
 
@@ -77,6 +87,7 @@ const getDistanceMatrix = async ({ originPlaceId, destinationPlaceId, destinatio
     durationMinutes: secondsToMinutes(durationSeconds),
   };
   console.log('[distance-matrix] Response', result);
+  await setCache(cacheKey, result, DISTANCE_CACHE_TTL_MS); // concurrency: avoid repeated upstream calls
   return result;
 };
 

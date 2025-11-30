@@ -2,6 +2,7 @@
 
 const { createTransfer, verificarEstadoTransaccion, getStripeClient } = require('../../../utils/stripe');
 const { getTransferConfig, shouldProcessTransferNow, formatScheduleInfo, getNextScheduledDate, TRANSFER_MODES } = require('../../../utils/transfer-config');
+const { enqueueJob, queueSize } = require('../../../utils/job-queue');
 
 const computeStripeFeeCents = (amountCents) => {
   const percent = Number(process.env.STRIPE_PROC_PERCENT || 2.9) / 100;
@@ -15,6 +16,197 @@ const computePlatformFeeCents = (amountCents, stripeFeeCents) => {
   return Math.max(110, Math.round(base * rate)); // mínimo $1.10
 };
 
+const buildHttpError = (status, message, details) => {
+  const error = new Error(message);
+  error.status = status;
+  if (details) error.details = details;
+  return error;
+};
+
+const findClientRecord = async ({ sessionId, clientId }) => {
+  if (clientId) {
+    return strapi.entityService.findOne('api::client.client', clientId);
+  }
+  const clients = await strapi.entityService.findMany('api::client.client', {
+    filters: {
+      client_info: {
+        sessionId: { $eq: sessionId },
+      },
+    },
+    limit: 1,
+  });
+  return clients?.[0] || null;
+};
+
+const processTransferJob = async ({ sessionId, clientId }) => {
+  if (!sessionId) {
+    throw buildHttpError(400, 'sessionId es requerido');
+  }
+
+  // 1. Verificar estado de pago
+  const stripeSession = await verificarEstadoTransaccion(sessionId);
+  if (!stripeSession || stripeSession.estadoPago !== 'paid') {
+    throw buildHttpError(
+      400,
+      `Pago no completado. Estado: ${stripeSession?.estadoPago || 'desconocido'}`
+    );
+  }
+
+  // 2. Obtener cliente
+  const clientRecord = await findClientRecord({ sessionId, clientId });
+  if (!clientRecord) {
+    throw buildHttpError(404, `No se encontró cliente para sessionId: ${sessionId}`);
+  }
+  const billing = clientRecord.client_info?.billing || {};
+
+  // 3. Obtener datos frescos de Stripe
+  const stripe = getStripeClient();
+  if (!stripe) {
+    throw buildHttpError(503, 'Stripe no configurado');
+  }
+  let liveSession = null;
+  try {
+    liveSession = await stripe.checkout.sessions.retrieve(sessionId, { expand: ['payment_intent'] });
+  } catch (err) {
+    strapi.log.warn('[payments] No se pudo recuperar la checkout session para transferencia', {
+      sessionId,
+      error: err.message,
+    });
+  }
+  const pi = liveSession?.payment_intent;
+
+  const destinationAccount =
+    pi?.transfer_data?.destination ||
+    process.env.STRIPE_CONNECT_ACCOUNT_ID ||
+    billing.destinationAccount;
+
+  const amountReceived = typeof pi?.amount_received === 'number' ? pi.amount_received : null;
+  const billingStripeFee = billing.stripeFeeCents || computeStripeFeeCents(amountReceived || 0);
+  const billingPlatformFee = billing.platformFeeCents || computePlatformFeeCents(amountReceived || 0, billingStripeFee);
+  const destinationAmountCents =
+    (amountReceived !== null
+      ? amountReceived - billingStripeFee - billingPlatformFee
+      : undefined) ||
+    billing.destinationAmountCents;
+
+  try {
+    strapi.log.debug('[payments] Billing/destino calculado', {
+      sessionId,
+      clientId: clientRecord.id,
+      billingJson: JSON.stringify(billing),
+      clientInfoKeys: Object.keys(clientRecord.client_info || {}),
+      destinationAccount,
+      destinationAmountCents,
+      piHasDestination: !!pi?.transfer_data?.destination,
+      piAmountReceived: pi?.amount_received,
+      piApplicationFee: pi?.application_fee_amount,
+    });
+  } catch (e) {
+    strapi.log.debug('[payments] No se pudo loggear billing', { error: e.message });
+  }
+
+  if (!destinationAccount || !destinationAmountCents || destinationAmountCents <= 0) {
+    const ctxLog = {
+      sessionId,
+      clientId: clientRecord.id,
+      destinationAccount,
+      destinationAmountCents,
+      hasDestination: !!destinationAccount,
+      hasAmount: !!destinationAmountCents,
+      fullBilling: billing,
+      clientInfoKeys: Object.keys(clientRecord.client_info || {}),
+      piHasDestination: !!pi?.transfer_data?.destination,
+      piAmountReceived: pi?.amount_received,
+      piApplicationFee: pi?.application_fee_amount,
+    };
+    strapi.log.error('[payments] Datos de transferencia faltantes/invalidos ' + JSON.stringify(ctxLog));
+    throw buildHttpError(400, 'Datos de transferencia incompletos en el registro del cliente', {
+      hasDestination: !!destinationAccount,
+      hasAmount: !!destinationAmountCents,
+      amount: destinationAmountCents,
+    });
+  }
+
+  if (billing.transferId) {
+    throw buildHttpError(409, 'Transferencia ya procesada', {
+      transferId: billing.transferId,
+      transferredAt: billing.transferredAt,
+    });
+  }
+
+  const sourceTransaction = stripeSession.detallesCargo?.id || pi?.latest_charge;
+  if (!sourceTransaction) {
+    throw buildHttpError(400, 'No se pudo obtener ID del cargo para vincular la transferencia');
+  }
+
+  // 4. Crear transferencia
+  const transfer = await createTransfer({
+    destinationAccount,
+    amountCents: destinationAmountCents,
+    currency: stripeSession.moneda,
+    sourceTransaction,
+    description: `Pago agencia - Cliente ${clientRecord.id} - Session ${sessionId}`,
+    idempotencyKey: `transfer_client_${clientRecord.id}_${sessionId}`,
+  });
+
+  // 5. Actualizar registro cliente
+  const updatedClient = await strapi.entityService.update('api::client.client', clientRecord.id, {
+    data: {
+      client_info: {
+        ...clientRecord.client_info,
+        billing: {
+          ...billing,
+          transferId: transfer.id,
+          transferredAt: new Date().toISOString(),
+          transferStatus: 'completed',
+          destinationAccount,
+          destinationAmountCents,
+        },
+      },
+    },
+  });
+
+  strapi.log.info('[payments] Transferencia procesada exitosamente', {
+    clientId: clientRecord.id,
+    sessionId,
+    transferId: transfer.id,
+    destinationAccount,
+    amountCents: destinationAmountCents,
+  });
+
+  return {
+    transfer,
+    client: updatedClient || clientRecord,
+    currency: stripeSession.moneda,
+    destinationAccount,
+    destinationAmountCents,
+  };
+};
+
+const respondWithError = (ctx, error) => {
+  strapi.log.error('[payments] Error procesando transferencia', {
+    sessionId: ctx.request.body?.sessionId,
+    clientId: ctx.request.body?.clientId,
+    error: error.message,
+    code: error.code,
+    type: error.type,
+  });
+
+  if (error.status) {
+    ctx.status = error.status;
+    ctx.body = { error: error.message, details: error.details || null };
+    return;
+  }
+
+  if (error.type === 'StripeError') {
+    ctx.status = 400;
+    ctx.body = { error: `Error de Stripe: ${error.message}`, code: error.code, param: error.param };
+    return;
+  }
+
+  ctx.internalServerError('Error interno procesando transferencia');
+};
+
 module.exports = {
   /**
    * Procesa transferencia a cuenta conectada tras pago exitoso
@@ -22,199 +214,24 @@ module.exports = {
    * Body: { sessionId: 'cs_test_...', clientId?: 123 }
    */
   async processTransfer(ctx) {
-    const { sessionId, clientId } = ctx.request.body || {};
-
-    if (!sessionId) {
-      return ctx.badRequest('sessionId es requerido');
-    }
-
     try {
-      // 1. Verificar estado del pago en Stripe
-      const stripeSession = await verificarEstadoTransaccion(sessionId);
-      
-      if (!stripeSession || stripeSession.estadoPago !== 'paid') {
-        return ctx.badRequest(`Pago no completado. Estado: ${stripeSession?.estadoPago || 'desconocido'}`);
-      }
-
-      // 2. Buscar registro del cliente para logging y actualización posterior
-      let clientRecord = null;
-      
-      if (clientId) {
-        // Buscar por ID si se proporciona
-        clientRecord = await strapi.entityService.findOne('api::client.client', clientId);
-      } else {
-        // Buscar por sessionId si no se proporciona clientId
-        const clients = await strapi.entityService.findMany('api::client.client', {
-          filters: {
-            client_info: {
-              sessionId: { $eq: sessionId },
-            },
-          },
-          limit: 1,
-        });
-        clientRecord = clients?.[0] || null;
-      }
-
-      if (!clientRecord) {
-        return ctx.notFound(`No se encontró cliente para sessionId: ${sessionId}`);
-      }
-
-      const billing = clientRecord.client_info?.billing || {};
-
-      // 2.1 Obtener datos frescos desde Stripe (Checkout Session + PI) para saber destino y monto
-      const stripe = getStripeClient();
-      if (!stripe) {
-        ctx.throw(503, 'Stripe no configurado');
-      }
-
-      let liveSession = null;
-      try {
-        liveSession = await stripe.checkout.sessions.retrieve(sessionId, { expand: ['payment_intent'] });
-      } catch (err) {
-        strapi.log.warn('[payments] No se pudo recuperar la checkout session para transferencia', {
-          sessionId,
-          error: err.message,
-        });
-      }
-
-      const pi = liveSession?.payment_intent;
-
-      const destinationAccount =
-        pi?.transfer_data?.destination ||
-        process.env.STRIPE_CONNECT_ACCOUNT_ID ||
-        billing.destinationAccount;
-
-      const amountReceived = typeof pi?.amount_received === 'number' ? pi.amount_received : null;
-      const billingStripeFee = billing.stripeFeeCents || computeStripeFeeCents(amountReceived || 0);
-      const billingPlatformFee = billing.platformFeeCents || computePlatformFeeCents(amountReceived || 0, billingStripeFee);
-      const destinationAmountCents =
-        (amountReceived !== null
-          ? amountReceived - billingStripeFee - billingPlatformFee
-          : undefined) ||
-        billing.destinationAmountCents;
-
-      // Log estado del registro de cliente y cálculo de destino/monto
-      try {
-        strapi.log.debug('[payments] Billing/destino calculado', {
-          sessionId,
-          clientId: clientRecord.id,
-          billingJson: JSON.stringify(billing),
-          clientInfoKeys: Object.keys(clientRecord.client_info || {}),
-          destinationAccount,
-          destinationAmountCents,
-          piHasDestination: !!pi?.transfer_data?.destination,
-          piAmountReceived: pi?.amount_received,
-          piApplicationFee: pi?.application_fee_amount,
-        });
-      } catch (e) {
-        strapi.log.debug('[payments] No se pudo loggear billing', { error: e.message });
-      }
-
-      // 3. Validar datos de transferencia
-      if (!destinationAccount || !destinationAmountCents || destinationAmountCents <= 0) {
-        const ctxLog = {
-          sessionId,
-          clientId: clientRecord.id,
-          destinationAccount,
-          destinationAmountCents,
-          hasDestination: !!destinationAccount,
-          hasAmount: !!destinationAmountCents,
-          fullBilling: billing,
-          clientInfoKeys: Object.keys(clientRecord.client_info || {}),
-          piHasDestination: !!pi?.transfer_data?.destination,
-          piAmountReceived: pi?.amount_received,
-          piApplicationFee: pi?.application_fee_amount,
-        };
-        strapi.log.error('[payments] Datos de transferencia faltantes/invalidos ' + JSON.stringify(ctxLog));
-        return ctx.badRequest('Datos de transferencia incompletos en el registro del cliente', {
-          hasDestination: !!destinationAccount,
-          hasAmount: !!destinationAmountCents,
-          amount: destinationAmountCents,
-        });
-      }
-
-      // 4. Verificar si ya se procesó la transferencia
-      if (billing.transferId) {
-        return ctx.conflict('Transferencia ya procesada', {
-          transferId: billing.transferId,
-          transferredAt: billing.transferredAt,
-        });
-      }
-
-      // 5. Obtener sourceTransaction del PaymentIntent
-      const sourceTransaction = stripeSession.detallesCargo?.id || pi?.latest_charge;
-      if (!sourceTransaction) {
-        return ctx.badRequest('No se pudo obtener ID del cargo para vincular la transferencia');
-      }
-
-      // 6. Crear transferencia en Stripe
-      const transfer = await createTransfer({
-        destinationAccount,
-        amountCents: destinationAmountCents,
-        currency: stripeSession.moneda,
-        sourceTransaction,
-        description: `Pago agencia - Cliente ${clientRecord.id} - Session ${sessionId}`,
-        idempotencyKey: `transfer_client_${clientRecord.id}_${sessionId}`,
-      });
-
-      // 7. Actualizar registro del cliente con datos de transferencia
-      const updatedClient = await strapi.entityService.update('api::client.client', clientRecord.id, {
-        data: {
-          client_info: {
-            ...clientRecord.client_info,
-            billing: {
-              ...billing,
-              transferId: transfer.id,
-              transferredAt: new Date().toISOString(),
-              transferStatus: 'completed',
-            },
-          },
-        },
-      });
-
-      // 8. Log de éxito
-      strapi.log.info('[payments] Transferencia procesada exitosamente', {
-        clientId: clientRecord.id,
-        sessionId,
-        transferId: transfer.id,
-        destinationAccount,
-        amountCents: destinationAmountCents,
-      });
-
-      // 9. Respuesta al cliente
+      const result = await processTransferJob({ sessionId, clientId });
       ctx.body = {
         success: true,
         transfer: {
-          id: transfer.id,
-          amount: destinationAmountCents,
-          currency: stripeSession.moneda,
-          destination: destinationAccount,
+          id: result.transfer.id,
+          amount: result.destinationAmountCents,
+          currency: result.currency,
+          destination: result.destinationAccount,
           processedAt: new Date().toISOString(),
         },
         client: {
-          id: clientRecord.id,
+          id: result.client?.id || clientId,
           sessionId,
         },
       };
-
     } catch (error) {
-      strapi.log.error('[payments] Error procesando transferencia', {
-        sessionId,
-        clientId,
-        error: error.message,
-        code: error.code,
-        type: error.type,
-      });
-
-      // Manejar errores específicos de Stripe
-      if (error.type === 'StripeError') {
-        return ctx.badRequest(`Error de Stripe: ${error.message}`, {
-          code: error.code,
-          param: error.param,
-        });
-      }
-
-      return ctx.internalServerError('Error interno procesando transferencia');
+      respondWithError(ctx, error);
     }
   },
 
@@ -359,7 +376,7 @@ module.exports = {
       });
       
       const results = [];
-      let totalProcessed = 0;
+      let totalQueued = 0;
       let totalAmount = 0;
       
       for (const client of clientsWithPending) {
@@ -368,53 +385,54 @@ module.exports = {
         
         const shouldProcess = force || shouldProcessTransferNow(config, amountUSD);
         
-        if (shouldProcess) {
-          if (!dryRun) {
-            try {
-              // Usar el endpoint existente internamente
-              const sessionId = client.client_info?.sessionId;
-              if (sessionId) {
-                // Simular llamada interna al processTransfer
-                await this.processTransfer({
-                  request: { body: { sessionId, clientId: client.id } },
-                  badRequest: (msg) => { throw new Error(msg); },
-                  notFound: (msg) => { throw new Error(msg); },
-                  conflict: (msg) => { throw new Error(msg); },
-                  internalServerError: (msg) => { throw new Error(msg); },
-                });
-                
-                totalProcessed++;
-                totalAmount += amountUSD;
-              }
-            } catch (transferError) {
-              results.push({
-                clientId: client.id,
-                amount: amountUSD,
-                status: 'failed',
-                error: transferError.message,
-              });
-              continue;
-            }
-          }
-          
-          results.push({
-            clientId: client.id,
-            amount: amountUSD,
-            status: dryRun ? 'would_process' : 'processed',
-          });
-        } else {
+        if (!shouldProcess) {
           results.push({
             clientId: client.id,
             amount: amountUSD,
             status: 'skipped',
             reason: `Below minimum ${config.minimumAmount} or wrong schedule`,
           });
+          continue;
         }
+
+        const sessionId = client.client_info?.sessionId;
+        if (!sessionId) {
+          results.push({
+            clientId: client.id,
+            amount: amountUSD,
+            status: 'failed',
+            error: 'El cliente no tiene sessionId para procesar transferencia',
+          });
+          continue;
+        }
+
+        if (dryRun) {
+          results.push({
+            clientId: client.id,
+            amount: amountUSD,
+            status: 'would_process',
+          });
+          continue;
+        }
+
+        const jobId = enqueueJob('transfer', () =>
+          processTransferJob({ sessionId, clientId: client.id })
+        );
+
+        totalQueued++;
+        totalAmount += amountUSD;
+        results.push({
+          clientId: client.id,
+          amount: amountUSD,
+          status: 'queued',
+          jobId,
+          sessionId,
+        });
       }
       
       strapi.log.info('[transfers] Procesamiento por lotes completado', {
         totalClients: clientsWithPending.length,
-        totalProcessed,
+        totalQueued,
         totalAmount,
         dryRun,
         config: config.mode,
@@ -424,10 +442,11 @@ module.exports = {
         success: true,
         summary: {
           totalFound: clientsWithPending.length,
-          totalProcessed,
+          totalQueued,
           totalAmount: `$${totalAmount.toFixed(2)}`,
           dryRun,
           config: formatScheduleInfo(config),
+          queueDepth: queueSize(),
         },
         results,
       };

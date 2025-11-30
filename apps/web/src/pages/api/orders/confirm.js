@@ -2,6 +2,7 @@
 
 const { calculateQuote } = require("../../../lib/server/quote");
 const { getStripeClient } = require("../../../lib/server/stripe");
+const { enforceRateLimit } = require("../../../lib/server/rate-limit");
 
 const normalizeBaseUrl = (value = "") => {
   const trimmed = value.replace(/\/+$/, "");
@@ -34,6 +35,14 @@ const computePlatformFeeCents = (amountCents, stripeFeeCents) => {
       100 || 0.023; // 2.3% por defecto
   const base = amountCents - (stripeFeeCents || 0);
   return Math.max(110, Math.round(base * rate)); // mínimo $1.10
+};
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "1mb",
+    },
+  },
 };
 
 const postToStrapi = async (payload) => {
@@ -94,6 +103,13 @@ export default async function handler(req, res) {
   try {
     const stripe = getStripeClient();
     const { sessionId, payload } = req.body || {};
+    await enforceRateLimit({
+      req,
+      key: "order-confirm",
+      windowMs: Number(process.env.ORDER_CONFIRM_RATE_LIMIT_WINDOW_MS || 60_000),
+      max: Number(process.env.ORDER_CONFIRM_RATE_LIMIT_MAX || 30),
+      identifier: sessionId || payload?.contact?.email,
+    });
     if (!sessionId) {
       return res.status(400).json({ error: "Falta sessionId." });
     }
@@ -132,10 +148,10 @@ export default async function handler(req, res) {
       typeof stripeSession?.amount_total === "number"
         ? stripeSession.amount_total
         : undefined;
+    const stripeFeeCents = computeStripeFeeCents(amountTotalCents || 0);
     const platformFeeCents = md.platform_fee_amount
       ? Number(md.platform_fee_amount)
       : computePlatformFeeCents(amountTotalCents, stripeFeeCents);
-    const stripeFeeCents = computeStripeFeeCents(amountTotalCents || 0);
     const destinationAccount =
       md.destination_account ||
       paymentIntent?.transfer_data?.destination ||

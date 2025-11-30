@@ -1,4 +1,5 @@
 const { createCoreController } = require("@strapi/strapi").factories;
+const { getCache, setCache } = require("../../../utils/cache");
 
 const DEFAULT_CONFIG = {
   address: "425 NE 22nd St, Miami, FL 33137, USA",
@@ -225,11 +226,23 @@ const buildResumePayload = async () => {
   };
 };
 
+const AGENCY_RESUME_CACHE_KEY = "agency:resume:payload";
+const AGENCY_RESUME_TTL_MS = Number(process.env.AGENCY_RESUME_TTL_MS || 120_000);
+
 module.exports = createCoreController("api::agency-info.agency-info", () => ({
   async resume(ctx) {
     strapi.log.info("[agency-info] Generando payload para /resume...");
+
+    const cached = await getCache(AGENCY_RESUME_CACHE_KEY);
+    if (cached) {
+      ctx.body = cached;
+      return;
+    }
+
     const payload = await buildResumePayload();
     ctx.body = payload;
+    // concurrency: memoize expensive resume generation across requests
+    await setCache(AGENCY_RESUME_CACHE_KEY, payload, AGENCY_RESUME_TTL_MS);
   },
 }));
 

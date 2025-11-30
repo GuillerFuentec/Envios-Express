@@ -1,6 +1,7 @@
 "use strict";
 
 const { requireRecaptcha } = require("../../lib/server/recaptcha");
+const { enforceRateLimit } = require("../../lib/server/rate-limit");
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -9,6 +10,13 @@ export default async function handler(req, res) {
   }
 
   try {
+    await enforceRateLimit({
+      req,
+      key: "verify-recaptcha",
+      windowMs: Number(process.env.RECAPTCHA_RATE_LIMIT_WINDOW_MS || 60_000),
+      max: Number(process.env.RECAPTCHA_RATE_LIMIT_MAX || 120),
+    });
+
     const body = req.body || {};
     const { token, action } = body;
 

@@ -2,6 +2,9 @@
 
 import Stripe from "stripe";
 import { writeJson, readJson } from "../../../lib/server/storage";
+import { getCache, setCache } from "../../../lib/server/cache";
+import { enforceRateLimit } from "../../../lib/server/rate-limit";
+import { enqueueJob } from "../../../lib/server/job-queue";
 
 export const config = {
   api: {
@@ -12,6 +15,9 @@ export const config = {
 const processedEvents = new Set();
 const processedSessions = new Set();
 const FAIL_THRESHOLD = Number(process.env.PAYMENT_FAIL_ALERT_THRESHOLD || 5);
+const EVENT_LOG_TTL_MS = Number(process.env.PAYMENT_EVENT_TTL_MS || 24 * 60 * 60 * 1000);
+const FAILCOUNT_TTL_MS = Number(process.env.PAYMENT_FAIL_TTL_MS || 6 * 60 * 60 * 1000);
+const PROCESSED_TTL_MS = Number(process.env.WEBHOOK_DEDUPE_TTL_MS || 60 * 60 * 1000);
 
 const boolFromMetadata = (value) => value === true || value === "true" || value === "1";
 
@@ -214,21 +220,29 @@ const buildClientInfoFromIntent = (intent) => {
   };
 };
 
-const logEvent = (event) => {
-  const events = readJson("payment-events.json", []);
+const markProcessed = async (setRef, cacheKey, id) => {
+  setRef.add(id);
+  await setCache(cacheKey, true, PROCESSED_TTL_MS);
+};
+
+const hasProcessed = async (setRef, cacheKey, id) =>
+  setRef.has(id) || Boolean(await getCache(cacheKey));
+
+const logEvent = async (event) => {
+  const events = await readJson("payment-events.json", []);
   events.push({
     id: event.id,
     type: event.type,
     created: event.created,
     data: event.data?.object?.id || null,
   });
-  writeJson("payment-events.json", events.slice(-500)); // keep last 500
+  await writeJson("payment-events.json", events.slice(-500), EVENT_LOG_TTL_MS); // keep last 500
 };
 
-const countFailures = (key) => {
-  const failCounts = readJson("payment-fail-counts.json", {});
+const countFailures = async (key) => {
+  const failCounts = await readJson("payment-fail-counts.json", {});
   failCounts[key] = (failCounts[key] || 0) + 1;
-  writeJson("payment-fail-counts.json", failCounts);
+  await writeJson("payment-fail-counts.json", failCounts, FAILCOUNT_TTL_MS);
   return failCounts[key];
 };
 
@@ -260,12 +274,12 @@ const handleEvent = async (event) => {
   const type = event.type;
   const data = event.data?.object || {};
 
-  if (processedEvents.has(event.id)) {
+  const eventKey = `stripe:webhook:event:${event.id}`;
+  if (await hasProcessed(processedEvents, eventKey, event.id)) {
     return;
   }
-  processedEvents.add(event.id);
-
-  logEvent(event);
+  await logEvent(event);
+  await markProcessed(processedEvents, eventKey, event.id);
 
   switch (type) {
     case "checkout.session.completed": {
@@ -275,13 +289,18 @@ const handleEvent = async (event) => {
         customer_email: data.customer_details?.email,
       });
 
-      if (!processedSessions.has(data.id)) {
+      const sessionKey = `stripe:webhook:session:${data.id}`;
+      if (!(await hasProcessed(processedSessions, sessionKey, data.id))) {
         try {
           const clientInfo = buildClientInfoFromSession(data);
           await postClientToStrapi(clientInfo);
-          processedSessions.add(data.id);
+          await markProcessed(processedSessions, sessionKey, data.id);
           if (data.payment_intent) {
-            processedSessions.add(data.payment_intent);
+            await markProcessed(
+              processedSessions,
+              `stripe:webhook:session:${data.payment_intent}`,
+              data.payment_intent
+            );
           }
         } catch (error) {
           console.error("[webhook] Error creating client in Strapi (session)", error);
@@ -308,12 +327,17 @@ const handleEvent = async (event) => {
       });
 
       const sessionId = data.metadata?.checkout_session_id || data.id;
-      if (!processedSessions.has(sessionId)) {
+      const sessionKey = `stripe:webhook:session:${sessionId}`;
+      if (!(await hasProcessed(processedSessions, sessionKey, sessionId))) {
         try {
           const clientInfo = buildClientInfoFromIntent(data);
           await postClientToStrapi(clientInfo);
-          processedSessions.add(sessionId);
-          processedSessions.add(data.id);
+          await markProcessed(processedSessions, sessionKey, sessionId);
+          await markProcessed(
+            processedSessions,
+            `stripe:webhook:session:${data.id}`,
+            data.id
+          );
         } catch (error) {
           console.error("[webhook] Error creating client in Strapi (intent)", error);
         }
@@ -341,7 +365,7 @@ const handleEvent = async (event) => {
         data.metadata?.contact_phone,
         "Tu pago fallo, intenta nuevamente."
       );
-      const count = countFailures(data.receipt_email || data.id);
+      const count = await countFailures(data.receipt_email || data.id);
       if (count >= FAIL_THRESHOLD) {
         await notifyOwner(
           "Alerta: fallos repetidos de pago",
@@ -376,8 +400,17 @@ export default async function handler(req, res) {
   }
 
   try {
-    await handleEvent(event);
-    return res.status(200).json({ received: true });
+    await enforceRateLimit({
+      req,
+      key: "stripe-webhook",
+      windowMs: Number(process.env.STRIPE_WEBHOOK_WINDOW_MS || 300_000),
+      max: Number(process.env.STRIPE_WEBHOOK_MAX || 400),
+      identifier: event?.type,
+    });
+
+    enqueueJob("stripe-webhook", () => handleEvent(event));
+
+    return res.status(200).json({ received: true, queued: true });
   } catch (err) {
     console.error("[webhook] Handler error", err);
     return res.status(500).json({ error: "Webhook handler failure" });

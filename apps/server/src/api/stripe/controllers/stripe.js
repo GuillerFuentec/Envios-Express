@@ -2,6 +2,7 @@
 
 const { getStripeClient, verificarEstadoTransaccion, createTransfer } = require('../../../utils/stripe');
 const { sendReceiptEmail } = require('../../../utils/resend');
+const { enqueueJob } = require('../../../utils/job-queue');
 
 // Idempotencia simple: evitar enviar múltiples recibos por el mismo PaymentIntent
 // Usa almacenamiento de Strapi si está disponible; fallback a memoria.
@@ -60,7 +61,7 @@ const findClientBySessionId = async (sessionId) => {
 };
 
 // Envía recibo con reintentos exponenciales y idempotencia por PaymentIntent.
-const sendReceiptForIntent = async ({ stripe, paymentIntent }) => {
+const sendReceiptForIntent = async ({ stripe = getStripeClient(), paymentIntent }) => {
   const intentId = paymentIntent.id;
   if (await hasSentReceipt(intentId)) {
     strapi.log.debug('[stripe] Recibo ya enviado; omitimos', { intentId });
@@ -259,7 +260,14 @@ module.exports = {
           const paymentIntent = event.data.object;
           strapi.log.info(`[stripe] Pago confirmado ${paymentIntent.id}`);
           strapi.log.debug(`[stripe] PaymentIntent completo:`, JSON.stringify(paymentIntent, null, 2));
-          await sendReceiptForIntent({ stripe, paymentIntent });
+          // concurrency: offload email + transfer processing away from webhook response
+          enqueueJob('send-receipt', async () => {
+            const client = getStripeClient();
+            if (!client) {
+              throw new Error('Stripe no esta configurado.');
+            }
+            await sendReceiptForIntent({ stripe: client, paymentIntent });
+          });
           break;
         }
         case 'payment_intent.payment_failed': {

@@ -1,6 +1,10 @@
 "use strict";
 
+const { getCache, setCache } = require("./cache");
+
 const CACHE_TTL = 5 * 60 * 1000;
+const AGENCY_CACHE_KEY = "agency:profile";
+const AGENCY_CACHE_TTL_MS = Number(process.env.AGENCY_CACHE_TTL_MS || CACHE_TTL);
 
 let cachedProfile = null;
 let cachedAt = 0;
@@ -113,12 +117,14 @@ const fetchAgencyProfile = async () => {
 
 const getAgencyProfile = async () => {
   const now = Date.now();
-  if (cachedProfile && now - cachedAt < CACHE_TTL) {
-    return cachedProfile;
-  }
+  const shared = await getCache(AGENCY_CACHE_KEY);
+  if (shared) return shared;
+  if (cachedProfile && now - cachedAt < CACHE_TTL) return cachedProfile;
+
   const profile = await fetchAgencyProfile();
   cachedProfile = profile;
   cachedAt = now;
+  await setCache(AGENCY_CACHE_KEY, profile, AGENCY_CACHE_TTL_MS);
   return profile;
 };
 

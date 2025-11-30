@@ -1,6 +1,16 @@
 "use strict";
 
 const { calculateQuote } = require("../../lib/server/quote");
+const { requireRecaptcha } = require("../../lib/server/recaptcha");
+const { enforceRateLimit } = require("../../lib/server/rate-limit");
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "1mb",
+    },
+  },
+};
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -11,6 +21,16 @@ export default async function handler(req, res) {
   try {
     const body = req.body || {};
     const { recaptchaToken, ...payload } = body;
+
+    await enforceRateLimit({
+      req,
+      key: "quote",
+      windowMs: Number(process.env.QUOTE_RATE_LIMIT_WINDOW_MS || 60_000),
+      max: Number(process.env.QUOTE_RATE_LIMIT_MAX || 40),
+      identifier: payload?.pickupAddressPlaceId,
+    });
+
+    await requireRecaptcha({ token: recaptchaToken, action: "quote" });
 
     console.log("[api/quote] Request received", {
       weight: payload.weightLbs,

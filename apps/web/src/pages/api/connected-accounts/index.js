@@ -7,6 +7,7 @@ import {
   getConnectedAccount,
   deleteConnectedAccount,
 } from "../../../lib/server/connectedAccounts";
+import { enforceRateLimit } from "../../../lib/server/rate-limit";
 
 const stripe = () => {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -30,16 +31,24 @@ const ensureAuth = (req) => {
 
 export default async function handler(req, res) {
   try {
+    await enforceRateLimit({
+      req,
+      key: "connected-accounts",
+      windowMs: Number(process.env.CONNECTED_ACCOUNTS_WINDOW_MS || 60_000),
+      max: Number(process.env.CONNECTED_ACCOUNTS_MAX || 30),
+      identifier: req.query?.serviceId || req.body?.serviceId,
+    });
     ensureAuth(req);
     const client = stripe();
 
     if (req.method === "GET") {
       const serviceId = req.query.serviceId;
       if (serviceId) {
-        const accountId = getConnectedAccount(serviceId);
+        const accountId = await getConnectedAccount(serviceId);
         return res.status(200).json({ serviceId, accountId });
       }
-      return res.status(200).json({ accounts: listConnectedAccounts() });
+      const accounts = await listConnectedAccounts();
+      return res.status(200).json({ accounts });
     }
 
     if (req.method === "POST") {
@@ -51,7 +60,7 @@ export default async function handler(req, res) {
       }
       // valida que la cuenta existe
       await client.accounts.retrieve(accountId);
-      setConnectedAccount(serviceId, accountId);
+      await setConnectedAccount(serviceId, accountId);
       return res
         .status(200)
         .json({ ok: true, serviceId, accountId, message: "Cuenta registrada" });
@@ -62,7 +71,7 @@ export default async function handler(req, res) {
       if (!serviceId) {
         return res.status(400).json({ error: "serviceId es obligatorio" });
       }
-      const removed = deleteConnectedAccount(serviceId);
+      const removed = await deleteConnectedAccount(serviceId);
       return res
         .status(200)
         .json({ ok: removed, serviceId, message: "Cuenta desvinculada" });

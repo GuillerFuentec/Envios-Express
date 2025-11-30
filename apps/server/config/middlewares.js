@@ -17,6 +17,13 @@ module.exports = [
       credentials: true,
     },
   },
+  {
+    name: 'global::rate-limit',
+    config: {
+      windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000),
+      max: Number(process.env.RATE_LIMIT_MAX || 240),
+    },
+  },
   'strapi::poweredBy',
   'strapi::query',
   {
