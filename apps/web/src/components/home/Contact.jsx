@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ReCaptchaCheckbox from "../ReCaptchaCheckbox";
+import { normalizePhoneNumber, formatPhoneForInput } from "../../utils/phone";
 import { FormControl, FormLabel, FormWrapper } from "../ui";
 
 const ContactInfo = () => (
@@ -62,8 +63,13 @@ const ContactForm = () => {
   const [recaptchaToken, setRecaptchaToken] = useState("");
 
   const handleChange = (field) => (event) => {
+    const rawValue = event.target.value;
     const value =
-      field === "smsConsent" ? event.target.checked : event.target.value;
+      field === "smsConsent"
+        ? event.target.checked
+        : field === "phone"
+        ? formatPhoneForInput(rawValue)
+        : rawValue;
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -82,7 +88,11 @@ const ContactForm = () => {
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, recaptchaToken }),
+        body: JSON.stringify({
+          ...form,
+          phone: normalizePhoneNumber(form.phone) || form.phone,
+          recaptchaToken,
+        }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {

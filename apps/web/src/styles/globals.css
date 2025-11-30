@@ -1047,46 +1047,9 @@ a {
   }
 }
 
-/* Animacion de formulario con Dashes */
-
-.animated-border {
-  position: relative;
-  border-radius: 16px;      
-  padding: 24px;            
-}
-
-/* el borde animado */
-.animated-border::before {
-  content: "";
-  position: absolute;
-  inset: 0;                
-  border-radius: inherit;
-  padding: 2px;            
-
-  /* patrón de guiones */
-  background: repeating-linear-gradient(
-    90deg,
-    #185a3d 0 10px,         /* color y tamaño del guion */
-    transparent 10px 20px   /* hueco entre guiones */
-  );
-
-  /* truco para que solo se vea como borde */
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-          mask-composite: exclude;
-
-  animation: move-border 1s linear infinite;
-}
-
-/* animación: mueve el patrón de guiones */
-@keyframes move-border {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: 20px 0; /* mismo valor que el tamaño del patrón */
-  }
+.contact-wrapper {
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  padding: 24px;
 }
 

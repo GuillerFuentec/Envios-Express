@@ -1,6 +1,7 @@
 "use strict";
 
 import { FormLabel, FormControl } from "../../ui/FormControls";
+import { formatPhoneForInput } from "../../../utils/phone";
 
 const ContactStep = ({ data, errors, onChange }) => (
   <div className="fields-grid">
@@ -32,7 +33,7 @@ const ContactStep = ({ data, errors, onChange }) => (
         id="contactPhone"
         type="tel"
         value={data.phone}
-        onChange={(event) => onChange("contact", "phone", event.target.value)}
+        onChange={(event) => onChange("contact", "phone", formatPhoneForInput(event.target.value))}
         placeholder="+1 305 555 1234"
       />
       {errors.phone && <span className="field-error">{errors.phone}</span>}

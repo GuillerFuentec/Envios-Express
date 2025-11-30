@@ -4,18 +4,16 @@ DEVELOPER LICENSE AGREEMENT
 
 Copyright (c) 2025-present Raccoon Studios LLC
 
-The DEVELOPER retains all intellectual property rights in the source code of this project. The CLIENT is granted a non-exclusive, perpetual, limited license to use the site at the following domain:
-
-    www.cutnsew.net
+The DEVELOPER retains all intellectual property rights in the source code of this project. The CLIENT is granted a non-exclusive, perpetual, limited license to use under raccoon studios LLC terms.
 
 This license allows the CLIENT to:
-  • Deploy and use the website at the specified domain.  
+  • Deploy and use the app.  
   • Receive updates and maintenance from the DEVELOPER under the agreed terms.  
-  • Distribute only the **build artifacts** (compiled HTML/CSS/JS) for use on the authorized domain.
+  • Distribute only the for use on the authorized terms.
 
 The CLIENT may **not**:
   • Redistribute, copy, or modify the **source code** without the DEVELOPER’s express written permission.  
-  • Use the source code or deploy the site on any other domain.  
+  • Use the source code or deploy the site on any other unauthorized domain.  
   • Extract or reuse components, templates, or assets in isolation from the complete, deployed product.
 
 -------------------------------------------------------------------------------

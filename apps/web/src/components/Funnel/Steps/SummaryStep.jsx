@@ -1,6 +1,7 @@
 "use strict";
 
 import { formatCurrency } from "../../../utils/currency";
+import { formatPhoneDisplay } from "../../../utils/phone";
 
 const SummarySkeleton = () => (
   <div className="summary-card summary-card--primary w-full">
@@ -49,6 +50,7 @@ const SummaryStep = ({
     quoteState.data;
 
   const contactEmail = (contactInfo?.email || "").trim();
+  const contactPhone = formatPhoneDisplay(contactInfo?.phone || "");
 
   const weightLabel =
     breakdown?.weight?.label ||
@@ -200,7 +202,7 @@ const SummaryStep = ({
               <div className="summary-list__item no-underline text-inherit pointer-events-none">
                 <dt>Telefono</dt>
                 <dd className="max-w-full break-words">
-                  {contactInfo?.phone || "-"}
+                  {contactPhone || "-"}
                 </dd>
               </div>
             </dl>

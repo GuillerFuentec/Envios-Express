@@ -20,6 +20,10 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Fecha de entrega muestra valor por defecto (minDate) para mayor visibilidad en mobile (`apps/web/src/components/Funnel/Steps/ShipmentStep.jsx:1`).
 - Quote ya no exige reCAPTCHA; el token se requiere solo para crear orden o pagar (`apps/web/src/pages/api/quote.js:1`, `apps/web/src/hooks/useFunnelController.js:1`).
 - Funnel persiste estado (formulario y paso) en localStorage para evitar perdida de progreso al refrescar, incl. mobile (`apps/web/src/hooks/useFunnelController.js:1`).
+- Componentes unificados de formulario (`FormLabel`, `FormControl`, `FormWrapper`) para inputs/labels consistentes en funnel y contacto (`apps/web/src/components/ui/FormControls.jsx`, `FormWrapper.jsx`), aplicados en pasos de Contacto, Envío, Preferencias y formulario de contacto.
+- Formateo en UI de teléfonos como `(123) 456-7890` mientras se escribe y en el resumen; se envían normalizados al backend (`apps/web/src/utils/phone.js`, `ContactStep.jsx`, `home/Contact.jsx`, `SummaryStep.jsx`).
+- Meta `format-detection` y estilos táctiles para mejorar UX móvil (evitar data detectors y mejorar targets) (`apps/web/src/pages/_document.js`, `apps/web/src/styles/globals.css`).
+- CTA “Planificar envío” con animación de parpadeo configurable (`globals.css`, `home/Hero.jsx`).
 
 ### Changed
 - El controlador del funnel ahora ejecuta reCAPTCHA antes de cotizar, crear ordenes o iniciar el checkout, y deshabilita la accion principal hasta contar con un desglose valido (`apps/web/hooks/useFunnelController.js:1`, `apps/web/components/Funnel/ActionsBar.jsx:1`).

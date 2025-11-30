@@ -45,6 +45,7 @@ Repositorio con dos aplicaciones:
   - Endpoint `api/payments/process-transfer` (Strapi) puede ejecutar transferencias al conectado tras un pago confirmado.
 - **Cuenta conectada**: endpoint `/api/connected-accounts` acepta `x-admin-token=AGENCY_TOKEN` para mapear `serviceId -> accountId` en Stripe.
 - **reCAPTCHA**: checkbox V2 renderizado con `ReCaptchaProvider`/`ReCaptchaCheckbox`; las API routes exigen `recaptchaToken` validado con `SECRET_RECAPTCHA_KEY` o `RECAPTCHA_SECRET_KEY`.
+- **Formularios unificados**: inputs y labels reutilizan componentes base (`FormLabel`, `FormControl`, `FormWrapper`) para mantener estilos consistentes y permitir overrides; el teléfono se muestra formateado `(123) 456-7890` en UI y se envía normalizado al backend.
 
 ## Variables de entorno
 
