@@ -7,13 +7,15 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
 
-const WARM_VUS = Number(__ENV.WARM_VUS || 5);
-const PEAK_VUS = Number(__ENV.PEAK_VUS || 20);
+const WARM_VUS = Number(__ENV.WARM_VUS || 500);
+const PEAK_VUS = Number(__ENV.PEAK_VUS || 3000);
+const WARM_DURATION = __ENV.WARM_DURATION || "1m";
+const PEAK_DURATION = __ENV.PEAK_DURATION || "2m";
 
 export const options = {
   stages: [
-    { duration: "30s", target: WARM_VUS }, // calentamiento
-    { duration: "1m", target: PEAK_VUS }, // carga ligera
+    { duration: WARM_DURATION, target: WARM_VUS }, // calentamiento
+    { duration: PEAK_DURATION, target: PEAK_VUS }, // carga pesada
     { duration: "30s", target: 0 }, // enfriamiento
   ],
   thresholds: {

@@ -19,6 +19,7 @@ module.exports = [
   },
   {
     name: 'global::rate-limit',
+    resolve: './src/middlewares/rate-limit',
     config: {
       windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000),
       max: Number(process.env.RATE_LIMIT_MAX || 240),

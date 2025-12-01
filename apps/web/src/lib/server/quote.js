@@ -17,17 +17,29 @@ const roundCurrency = (value) => {
   return Math.round(amount * 100) / 100;
 };
 
-const ensureDateAtLeastTomorrow = (dateString) => {
-  if (!dateString) {
-    return false;
+const parseLocalDate = (value) => {
+  if (!value || typeof value !== "string") return null;
+  const parts = value.split("-").map((p) => Number(p));
+  if (parts.length === 3 && parts.every((n) => Number.isFinite(n))) {
+    const [y, m, d] = parts;
+    const dt = new Date(y, m - 1, d);
+    if (!Number.isNaN(dt.getTime())) {
+      return dt;
+    }
   }
-  const parsed = new Date(dateString);
-  if (Number.isNaN(parsed.getTime())) {
+  const fallback = new Date(value);
+  return Number.isNaN(fallback.getTime()) ? null : fallback;
+};
+
+const ensureDateAtLeastTomorrow = (dateString) => {
+  const parsed = parseLocalDate(dateString);
+  if (!parsed) {
     return false;
   }
   const tomorrow = new Date();
   tomorrow.setHours(0, 0, 0, 0);
   tomorrow.setDate(tomorrow.getDate() + 1);
+  parsed.setHours(0, 0, 0, 0);
   return parsed >= tomorrow;
 };
 

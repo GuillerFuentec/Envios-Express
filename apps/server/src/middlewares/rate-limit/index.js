@@ -45,7 +45,7 @@ const pickRule = (path, rules = []) => {
   return null;
 };
 
-module.exports = (userConfig = {}, { strapi }) => {
+const rateLimitMiddleware = (userConfig = {}, { strapi }) => {
   const logger = strapi.log;
   const routes = Array.isArray(userConfig.routes) ? userConfig.routes : defaultRoutes;
   const windowMs = Number(userConfig.windowMs || DEFAULT_WINDOW_MS);
@@ -82,3 +82,6 @@ module.exports = (userConfig = {}, { strapi }) => {
     await next();
   };
 };
+
+module.exports = rateLimitMiddleware;
+module.exports.default = rateLimitMiddleware;

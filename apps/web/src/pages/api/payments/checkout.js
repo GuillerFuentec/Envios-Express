@@ -5,6 +5,15 @@ const { getStripeClient } = require("../../../lib/server/stripe");
 const { requireRecaptcha } = require("../../../lib/server/recaptcha");
 const { enforceRateLimit } = require("../../../lib/server/rate-limit");
 
+const quietLogs = process.env.QUIET_LOGS === "true" || process.env.LOAD_TEST_MODE === "true";
+const logInfo = (...args) => {
+  if (!quietLogs) console.info(...args);
+};
+const logWarn = (...args) => {
+  if (!quietLogs) console.warn(...args);
+};
+const logError = (...args) => console.error(...args);
+
 const toMinorUnit = (value) => {
   const amount = Number(value);
   if (!Number.isFinite(amount) || amount <= 0) {
@@ -210,7 +219,7 @@ export default async function handler(req, res) {
     const session = isMockMode()
       ? (() => {
           const mock = buildMockSession({ quote, receiptEmail, origin });
-          console.info("[api/payments/checkout] Stripe MOCK activado", {
+          logInfo("[api/payments/checkout] Stripe MOCK activado", {
             sessionId: mock.id,
             amount: mock.amount_total,
           });
@@ -273,9 +282,9 @@ export default async function handler(req, res) {
       },
     });
   } catch (error) {
-    console.error("[api/payments/checkout]", error);
+    logError("[api/payments/checkout]", error);
     if (error?.raw) {
-      console.error("[api/payments/checkout] raw", error.raw);
+      logError("[api/payments/checkout] raw", error.raw);
     }
     return res
       .status(error.status || 500)

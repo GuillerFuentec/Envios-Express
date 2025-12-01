@@ -222,8 +222,10 @@ export const useFunnelController = () => {
 
     const fetchQuote = async () => {
       try {
+        const recaptchaToken = await getRecaptchaToken("quote");
         const data = await requestQuote({
           ...quotePayload,
+          recaptchaToken,
         });
         if (!active) {
           return;
