@@ -4,15 +4,15 @@ const { calculateQuote } = require("../../../lib/server/quote");
 const { getStripeClient } = require("../../../lib/server/stripe");
 const { requireRecaptcha } = require("../../../lib/server/recaptcha");
 const { enforceRateLimit } = require("../../../lib/server/rate-limit");
+const { makeLogger } = require("../../../lib/server/logger");
+const { mockFlag } = require("../../../lib/server/mock-flags");
 
-const quietLogs = process.env.QUIET_LOGS === "true" || process.env.LOAD_TEST_MODE === "true";
-const logInfo = (...args) => {
-  if (!quietLogs) console.info(...args);
+const toBool = (value) => {
+  if (typeof value !== "string") return false;
+  return ["true", "1", "yes", "on"].includes(value.toLowerCase());
 };
-const logWarn = (...args) => {
-  if (!quietLogs) console.warn(...args);
-};
-const logError = (...args) => console.error(...args);
+
+const quietLogs = toBool(process.env.QUIET_LOGS);
 
 const toMinorUnit = (value) => {
   const amount = Number(value);
@@ -22,8 +22,7 @@ const toMinorUnit = (value) => {
   return Math.round(amount * 100);
 };
 
-const isMockMode = () =>
-  process.env.MOCK_STRIPE === "true" || process.env.LOAD_TEST_MODE === "true";
+const isMockMode = () => mockFlag("MOCK_STRIPE") || mockFlag("LOAD_TEST_MODE");
 
 const buildQuotePayload = (body = {}) => {
   const fallback = body?.quoteRequest || {};
@@ -146,6 +145,9 @@ export const config = {
 };
 
 export default async function handler(req, res) {
+  const startedAt = Date.now();
+  const logger = makeLogger("api/payments/checkout");
+  logger.info("inicio checkout", { path: req.url });
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
     return res.status(405).json({ error: "Método no permitido." });
@@ -216,61 +218,53 @@ export default async function handler(req, res) {
       amountTotalCents - stripeFeeCents - platformFeeCents
     );
 
-    const session = isMockMode()
-      ? (() => {
-          const mock = buildMockSession({ quote, receiptEmail, origin });
-          logInfo("[api/payments/checkout] Stripe MOCK activado", {
-            sessionId: mock.id,
-            amount: mock.amount_total,
-          });
-          return mock;
-        })()
-      : await stripe.checkout.sessions.create({
-          mode: "payment",
-          payment_method_types: ["card"],
-          line_items: lineItems,
-          customer_email: receiptEmail,
-          payment_intent_data: {
-            receipt_email: receiptEmail,
-            // No usamos transfer_data para que el cobro quede en la cuenta de plataforma
-            // y luego se transfiera manualmente al conectado.
-            application_fee_amount: undefined,
-            transfer_data: undefined,
-            metadata: {
-              platform_fee_amount: platformFeeCents,
-              destination_account: destinationAccount,
-              contact_name: normalizedContact.name || "",
-              contact_phone: normalizedContact.phone || "",
-              contact_email: receiptEmail,
-              sms_consent: contact.smsConsent ? "true" : "false",
-              city_cuba: quotePayload.cityCuba || "",
-              content_type: quotePayload.contentType || "",
-              cash_amount: quotePayload.cashAmount || "",
-              pickup: quotePayload.pickup ? "true" : "false",
-              delivery_date: quotePayload.deliveryDate || "",
-              weight_lbs: quotePayload.weightLbs || "",
-              // el ID de sesión se inyecta en el webhook desde el evento de checkout.session.completed
-            },
-          },
-          success_url: buildSuccessUrl(origin),
-          cancel_url: buildCancelUrl(origin),
-          metadata: {
-            payment_origin: "web-funnel",
-            contact_name: normalizedContact.name || "",
-            contact_phone: normalizedContact.phone || "",
-            contact_email: receiptEmail,
-            sms_consent: contact.smsConsent ? "true" : "false",
-            city_cuba: quotePayload.cityCuba || "",
-            content_type: quotePayload.contentType || "",
-            cash_amount: quotePayload.cashAmount || "",
-            pickup: quotePayload.pickup ? "true" : "false",
-            delivery_date: quotePayload.deliveryDate || "",
-            weight_lbs: quotePayload.weightLbs || "",
-            platform_fee_amount: platformFeeCents,
-            destination_account: destinationAccount,
-          },
-        });
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      payment_method_types: ["card"],
+      line_items: lineItems,
+      customer_email: receiptEmail,
+      payment_intent_data: {
+        receipt_email: receiptEmail,
+        // No usamos transfer_data para que el cobro quede en la cuenta de plataforma
+        // y luego se transfiera manualmente al conectado.
+        application_fee_amount: undefined,
+        transfer_data: undefined,
+        metadata: {
+          platform_fee_amount: platformFeeCents,
+          destination_account: destinationAccount,
+          contact_name: normalizedContact.name || "",
+          contact_phone: normalizedContact.phone || "",
+          contact_email: receiptEmail,
+          sms_consent: contact.smsConsent ? "true" : "false",
+          city_cuba: quotePayload.cityCuba || "",
+          content_type: quotePayload.contentType || "",
+          cash_amount: quotePayload.cashAmount || "",
+          pickup: quotePayload.pickup ? "true" : "false",
+          delivery_date: quotePayload.deliveryDate || "",
+          weight_lbs: quotePayload.weightLbs || "",
+          // el ID de sesión se inyecta en el webhook desde el evento de checkout.session.completed
+        },
+      },
+      success_url: buildSuccessUrl(origin),
+      cancel_url: buildCancelUrl(origin),
+      metadata: {
+        payment_origin: "web-funnel",
+        contact_name: normalizedContact.name || "",
+        contact_phone: normalizedContact.phone || "",
+        contact_email: receiptEmail,
+        sms_consent: contact.smsConsent ? "true" : "false",
+        city_cuba: quotePayload.cityCuba || "",
+        content_type: quotePayload.contentType || "",
+        cash_amount: quotePayload.cashAmount || "",
+        pickup: quotePayload.pickup ? "true" : "false",
+        delivery_date: quotePayload.deliveryDate || "",
+        weight_lbs: quotePayload.weightLbs || "",
+        platform_fee_amount: platformFeeCents,
+        destination_account: destinationAccount,
+      },
+    });
 
+    logger.end("completado", { sessionId: session.id });
     return res.status(200).json({
       url: session.url,
       sessionId: session.id,
@@ -282,9 +276,10 @@ export default async function handler(req, res) {
       },
     });
   } catch (error) {
-    logError("[api/payments/checkout]", error);
+    const durationMs = Date.now() - startedAt;
+    logger.error("checkout fallo", { error: error.message, durationMs, stack: error.stack });
     if (error?.raw) {
-      logError("[api/payments/checkout] raw", error.raw);
+      logger.error("stripe raw", error.raw);
     }
     return res
       .status(error.status || 500)

@@ -39,6 +39,7 @@ const normalizeAgencyPayload = (raw) => {
     toNumber(process.env.PRICE_LB_FALLBACK, null) ?? fallbackPrice;
   const agencySection = raw?.agency || raw?.data?.agency || {};
   const stripeSection = raw?.stripe || raw?.data?.stripe || {};
+  const config = raw?.config || raw?.data?.config || {};
 
   const normalized = {
     name: agencySection.name || raw?.name || '',
@@ -46,23 +47,34 @@ const normalizeAgencyPayload = (raw) => {
     place_id:
       agencySection.place_id ||
       raw?.place_id ||
+      config?.agency?.place_id ||
       process.env.AGENCY_PLACE_ID ||
       '',
     Price_lb:
       resolvePricePerLb(raw) ||
       resolvePricePerLb(agencySection) ||
+      resolvePricePerLb(config) ||
       priceFromEnv,
     ciudades_de_destino_cuba:
-      raw?.ciudades_de_destino_cuba || raw?.cities || [],
-    contenido_principal: raw?.contenido_principal || raw?.main_contents || [],
+      raw?.ciudades_de_destino_cuba ||
+      config?.ciudades_de_destino_cuba ||
+      raw?.cities ||
+      [],
+    contenido_principal:
+      raw?.contenido_principal ||
+      config?.contenido_principal ||
+      raw?.main_contents ||
+      [],
     stripe_processing_percent:
       raw?.stripe_processing_percent ??
       raw?.stripe_fee_percent ??
       stripeSection.stripe_fee_percent ??
+      config?.stripe?.stripe_fee_percent ??
       toNumber(process.env.STRIPE_PROCESSING_PERCENT || 0.029),
     stripe_processing_fixed:
       raw?.stripe_processing_fixed ??
       stripeSection.stripe_fixed_fee ??
+      config?.stripe?.stripe_fixed_fee ??
       toNumber(process.env.STRIPE_PROCESSING_FIXED || 0.3),
   };
 

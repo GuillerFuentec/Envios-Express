@@ -5,7 +5,7 @@
         "country": "US",
         "lat": 25.798336,
         "lng": -80.187402,
-        "zelle_email": "payment@example.com"
+        "zelle_email": ["payment@example.com"]
     },
     "stripe": {
         "area_limit_per_miles": 25,

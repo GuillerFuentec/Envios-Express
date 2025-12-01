@@ -33,6 +33,22 @@ const DEFAULT_CONFIG = {
   ],
   stripe_processing_percent: 0.029,
   stripe_processing_fixed: 0.3,
+  config: {
+    agency: {
+      lat: null,
+      lng: null,
+      zelle: [],
+      country: "US",
+    },
+    stripe: {
+      currency: "USD",
+      stripe_fixed_fee: 0.3,
+      stripe_fee_percent: 0.029,
+      area_limit_per_miles: 25,
+      cash_fee_per_10_online: 0.89,
+      cash_fee_per_10_in_person: 1,
+    },
+  },
 };
 
 // Cache in-memory durante el ciclo de vida del proceso
@@ -56,7 +72,17 @@ const getOrCreateAgencyInfo = async () => {
   );
   if (existing?.length) return existing[0];
   return strapi.entityService.create("api::agency-info.agency-info", {
-    data: { address: DEFAULT_ADDRESS },
+    data: {
+      name: process.env.AGENCY_NAME || "agency llc",
+      address: DEFAULT_ADDRESS,
+      stripe_acc_id: process.env.STRIPE_CONNECT_ACCOUNT_ID || "",
+      config: DEFAULT_CONFIG.config,
+      Price_lb: DEFAULT_CONFIG.Price_lb,
+      ciudades_de_destino_cuba: DEFAULT_CONFIG.ciudades_de_destino_cuba,
+      contenido_principal: DEFAULT_CONFIG.contenido_principal,
+      stripe_processing_percent: DEFAULT_CONFIG.stripe_processing_percent,
+      stripe_processing_fixed: DEFAULT_CONFIG.stripe_processing_fixed,
+    },
   });
 };
 
@@ -184,6 +210,7 @@ const buildResumePayload = async () => {
   const percentFromEnv = process.env.STRIPE_PROCESSING_PERCENT;
   const fixedFromEnv = process.env.STRIPE_PROCESSING_FIXED;
   const agencyAddress = process.env.AGENCY_ADDRESS || DEFAULT_CONFIG.address;
+  const agencyName = process.env.AGENCY_NAME || "agency llc";
 
   strapi.log.info(`[agency-info] Usando direccion de agencia: "${agencyAddress}"`);
 
@@ -199,30 +226,81 @@ const buildResumePayload = async () => {
     );
   }
 
-  return {
-    address: agencyAddress,
-    place_id: finalPlaceId,
-    Price_lb: Number(
-      process.env.PRICE_LB ||
-        process.env.PRICE_LB_FALLBACK ||
-        DEFAULT_CONFIG.Price_lb
+  const priceLb = Number(
+    process.env.PRICE_LB ||
+      process.env.PRICE_LB_FALLBACK ||
+      DEFAULT_CONFIG.Price_lb
+  );
+
+  const baseConfig = {
+    agency: {
+      lat: process.env.AGENCY_LAT ? Number(process.env.AGENCY_LAT) : null,
+      lng: process.env.AGENCY_LNG ? Number(process.env.AGENCY_LNG) : null,
+      zelle: parseList(process.env.AGENCY_ZELLE, []),
+      country: process.env.AGENCY_COUNTRY || "US",
+    },
+    stripe: {
+      currency: process.env.STRIPE_DEFAULT_CURRENCY || "USD",
+      stripe_fixed_fee:
+        fixedFromEnv !== undefined
+          ? Number(fixedFromEnv)
+          : DEFAULT_CONFIG.stripe_processing_fixed,
+      stripe_fee_percent:
+        percentFromEnv !== undefined
+          ? Number(percentFromEnv)
+          : DEFAULT_CONFIG.stripe_processing_percent,
+      area_limit_per_miles: Number(process.env.AGENCY_AREA_LIMIT_MILES || 25),
+      cash_fee_per_10_online: Number(process.env.CASH_FEE_ONLINE_PER10 || 0.89),
+      cash_fee_per_10_in_person: Number(process.env.CASH_FEE_AGENCY_PER10 || 1),
+    },
+    Price_lb: priceLb,
+    contenido_principal: parseList(
+      process.env.CUBA_CONTENT_TYPES,
+      DEFAULT_CONFIG.contenido_principal
     ),
     ciudades_de_destino_cuba: parseList(
       process.env.CUBA_DESTINATIONS,
       DEFAULT_CONFIG.ciudades_de_destino_cuba
     ),
-    contenido_principal: parseList(
-      process.env.CUBA_CONTENT_TYPES,
-      DEFAULT_CONFIG.contenido_principal
-    ),
+  };
+
+  // Merge DB config if present (without mutating)
+  const agencyRecord = await getOrCreateAgencyInfo();
+  const recordConfig = agencyRecord?.config || {};
+  const mergedConfig = {
+    ...baseConfig,
+    ...(recordConfig || {}),
+    agency: {
+      ...baseConfig.agency,
+      ...(recordConfig?.agency || {}),
+    },
+    stripe: {
+      ...baseConfig.stripe,
+      ...(recordConfig?.stripe || {}),
+    },
+  };
+
+  return {
+    name: agencyRecord?.name || agencyName,
+    address: agencyRecord?.address || agencyAddress,
+    place_id: finalPlaceId,
+    stripe_acc_id:
+      agencyRecord?.stripe_acc_id ||
+      process.env.STRIPE_CONNECT_ACCOUNT_ID ||
+      "",
+    Price_lb: mergedConfig.Price_lb || priceLb,
+    ciudades_de_destino_cuba:
+      mergedConfig.ciudades_de_destino_cuba ||
+      baseConfig.ciudades_de_destino_cuba,
+    contenido_principal:
+      mergedConfig.contenido_principal || baseConfig.contenido_principal,
     stripe_processing_percent:
-      percentFromEnv !== undefined
-        ? Number(percentFromEnv)
-        : DEFAULT_CONFIG.stripe_processing_percent,
+      mergedConfig.stripe?.stripe_fee_percent ||
+      baseConfig.stripe.stripe_fee_percent,
     stripe_processing_fixed:
-      fixedFromEnv !== undefined
-        ? Number(fixedFromEnv)
-        : DEFAULT_CONFIG.stripe_processing_fixed,
+      mergedConfig.stripe?.stripe_fixed_fee ||
+      baseConfig.stripe.stripe_fixed_fee,
+    config: mergedConfig,
   };
 };
 

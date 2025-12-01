@@ -3,6 +3,7 @@
 const { calculateQuote } = require("../../../lib/server/quote");
 const { getStripeClient } = require("../../../lib/server/stripe");
 const { enforceRateLimit } = require("../../../lib/server/rate-limit");
+const { makeLogger } = require("../../../lib/server/logger");
 
 const normalizeBaseUrl = (value = "") => {
   const trimmed = value.replace(/\/+$/, "");
@@ -95,6 +96,8 @@ const postToStrapi = async (payload) => {
 };
 
 export default async function handler(req, res) {
+  const startedAt = Date.now();
+  const logger = makeLogger("api/orders/confirm");
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
     return res.status(405).json({ error: "Método no permitido." });
@@ -235,9 +238,12 @@ export default async function handler(req, res) {
       console.warn(`[api/orders/confirm] Error procesando transferencia automática:`, transferError.message);
     }
 
+    const durationMs = Date.now() - startedAt;
+    logger.end("completado", { orderId, durationMs });
     return res.status(200).json({ ok: true, orderId });
   } catch (error) {
-    console.error("[api/orders/confirm]", error);
+    const durationMs = Date.now() - startedAt;
+    logger.error("error", { error: error.message, durationMs, stack: error.stack });
     return res
       .status(error.status || 500)
       .json({ error: error.message || "No se pudo confirmar la orden." });

@@ -7,8 +7,9 @@ const getSecretKey = () =>
   process.env.SECRET_RECAPTCHA_KEY ||
   "";
 
-const shouldBypassRecaptcha = () =>
-  process.env.MOCK_RECAPTCHA === "true" || process.env.LOAD_TEST_MODE === "true";
+const { mockFlag } = require("./mock-flags");
+
+const shouldBypassRecaptcha = () => mockFlag("MOCK_RECAPTCHA") || mockFlag("LOAD_TEST_MODE");
 
 const verifyRecaptchaToken = async (token) => {
   if (shouldBypassRecaptcha()) {

@@ -7,14 +7,42 @@
     "displayName": "agency-info"
   },
   "options": {
-    "comment": ""
+    "draftAndPublish": false
   },
+  "pluginOptions": {},
   "attributes": {
     "address": {
       "type": "string"
     },
     "place_id": {
       "type": "string"
+    },
+    "stripe_acc_id": {
+      "type": "string",
+      "required": false
+    },
+    "name": {
+      "type": "string",
+      "default": "agency llc",
+      "required": true
+    },
+    "config": {
+      "type": "json"
+    },
+    "Price_lb": {
+      "type": "decimal"
+    },
+    "ciudades_de_destino_cuba": {
+      "type": "json"
+    },
+    "contenido_principal": {
+      "type": "json"
+    },
+    "stripe_processing_percent": {
+      "type": "decimal"
+    },
+    "stripe_processing_fixed": {
+      "type": "decimal"
     }
   }
 }

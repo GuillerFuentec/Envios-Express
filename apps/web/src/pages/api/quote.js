@@ -3,8 +3,7 @@
 const { calculateQuote } = require("../../lib/server/quote");
 const { requireRecaptcha } = require("../../lib/server/recaptcha");
 const { enforceRateLimit } = require("../../lib/server/rate-limit");
-
-const RECAPTCHA_REQUIRED = process.env.FORCE_QUOTE_RECAPTCHA === "true";
+const { makeLogger } = require("../../lib/server/logger");
 
 export const config = {
   api: {
@@ -15,6 +14,8 @@ export const config = {
 };
 
 export default async function handler(req, res) {
+  const startedAt = Date.now();
+  const logger = makeLogger("api/quote");
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
     return res.status(405).json({ error: "MActodo no permitido." });
@@ -32,42 +33,34 @@ export default async function handler(req, res) {
       identifier: payload?.pickupAddressPlaceId,
     });
 
-    if (recaptchaToken) {
-      await requireRecaptcha({ token: recaptchaToken, action: "quote" });
-    } else if (RECAPTCHA_REQUIRED) {
-      const err = new Error("Falta el token de reCAPTCHA.");
-      err.status = 400;
-      throw err;
-    }
+    await requireRecaptcha({ token: recaptchaToken, action: "quote" });
 
-    console.log("[api/quote] Request received", {
+    logger.info("request", {
       weight: payload.weightLbs,
-      cashAmount: payload.cashAmount,
       pickup: payload.pickup,
-      hasPlaceId: Boolean(payload.pickupAddressPlaceId),
-      hasAddress: Boolean(payload.pickupAddress),
       paymentMethod: payload.paymentMethod,
       deliveryDate: payload.deliveryDate,
     });
 
     const quote = await calculateQuote(payload);
 
-    console.debug("[api/quote] Quote calculated", {
+    logger.info("quote calculado", {
       total: quote.total,
-      breakdown: {
-        weight: quote.breakdown?.weight?.amount,
-        pickup: quote.breakdown?.pickup?.amount,
-        cashFee: quote.breakdown?.cashFee?.amount,
-      },
+      weight: quote.breakdown?.weight?.amount,
+      pickup: quote.breakdown?.pickup?.amount,
       policy: quote.policy,
     });
 
+    const durationMs = Date.now() - startedAt;
+    logger.end("completado", { payloadPreview: { weight: payload.weightLbs, pickup: payload.pickup } });
     return res.status(200).json(quote);
   } catch (error) {
-    console.error("[api/quote] Error", {
+    const durationMs = Date.now() - startedAt;
+    logger.error("error", {
       message: error.message,
       status: error.status,
       stack: error.stack,
+      durationMs,
     });
     return res
       .status(error.status || 500)

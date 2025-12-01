@@ -2,6 +2,7 @@
 
 const { requireRecaptcha } = require("../../lib/server/recaptcha");
 const { enforceRateLimit } = require("../../lib/server/rate-limit");
+const { makeLogger } = require("../../lib/server/logger");
 
 const normalizeBaseUrl = (value = "") => {
   const trimmed = value.replace(/\/+$/, "");
@@ -20,6 +21,7 @@ export const config = {
 };
 
 export default async function handler(req, res) {
+  const logger = makeLogger("api/contact");
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
     return res.status(405).json({ error: "Método no permitido." });
@@ -50,7 +52,7 @@ export default async function handler(req, res) {
     if (!baseUrl) {
       throw new Error("Falta STRAPI_WEB_API_URL/AGENCY_API_URL para enviar el contacto.");
     }
-    console.info("[api/contact] Enviando contacto a Strapi", {
+    logger.info("enviando contacto a Strapi", {
       baseUrl,
       hasToken: Boolean(process.env.AGENCY_TOKEN),
       email: body.email || "",
@@ -95,9 +97,10 @@ export default async function handler(req, res) {
       throw error;
     }
 
+    logger.end("contacto creado");
     return res.status(200).json({ ok: true });
   } catch (error) {
-    console.error("[api/contact]", error);
+    logger.error("error", { error: error.message, stack: error.stack });
     return res
       .status(error.status || 500)
       .json({ error: error.message || "No pudimos enviar tu mensaje." });

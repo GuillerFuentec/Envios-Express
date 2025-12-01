@@ -1,6 +1,7 @@
 'use strict';
 
 const { getStripeClient, toMinorUnit } = require('../../../utils/stripe');
+const { mockFlag } = require('../../../utils/mock-flags');
 
 const sanitizeMetadata = (metadata = {}) => {
   if (!metadata || typeof metadata !== 'object') {
@@ -42,8 +43,7 @@ const pickReceiptEmail = (payload = {}) => {
 
 module.exports = {
   async createIntent(ctx) {
-    if (process.env.PAYMENTS_MOCK_MODE === 'true') {
-      // perf: mock mode to bypass Stripe during load tests
+    if (mockFlag('PAYMENTS_MOCK_MODE') && !mockFlag('FORCE_REAL_PAYMENTS')) {
       ctx.body = { clientSecret: `pi_mock_${Date.now()}_secret_mock` };
       return;
     }

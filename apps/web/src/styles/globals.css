@@ -207,11 +207,19 @@ a {
 }
 
 .step-group {
-  display: none;
+  opacity: 0;
+  transform: translateY(12px);
+  max-height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s ease, max-height 0.35s ease;
 }
 
 .step-group.active {
-  display: block;
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 3000px;
+  pointer-events: auto;
 }
 
 .step-title {

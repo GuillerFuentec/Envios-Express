@@ -438,11 +438,13 @@ export interface ApiAgencyInfoAgencyInfo extends Struct.CollectionTypeSchema {
     singularName: 'agency-info';
   };
   options: {
-    comment: '';
     draftAndPublish: false;
   };
   attributes: {
     address: Schema.Attribute.String;
+    ciudades_de_destino_cuba: Schema.Attribute.JSON;
+    config: Schema.Attribute.JSON;
+    contenido_principal: Schema.Attribute.JSON;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -452,8 +454,15 @@ export interface ApiAgencyInfoAgencyInfo extends Struct.CollectionTypeSchema {
       'api::agency-info.agency-info'
     > &
       Schema.Attribute.Private;
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'agency llc'>;
     place_id: Schema.Attribute.String;
+    Price_lb: Schema.Attribute.Decimal;
     publishedAt: Schema.Attribute.DateTime;
+    stripe_acc_id: Schema.Attribute.String;
+    stripe_processing_fixed: Schema.Attribute.Decimal;
+    stripe_processing_percent: Schema.Attribute.Decimal;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
