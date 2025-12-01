@@ -222,7 +222,13 @@ export const useFunnelController = () => {
 
     const fetchQuote = async () => {
       try {
-        const recaptchaToken = await getRecaptchaToken("quote");
+        let recaptchaToken = null;
+        try {
+          recaptchaToken = await getRecaptchaToken("quote");
+        } catch (tokenError) {
+          // Si reCAPTCHA no está listo, continuamos sin él y dejamos que el backend lo haga opcional.
+          recaptchaToken = null;
+        }
         const data = await requestQuote({
           ...quotePayload,
           recaptchaToken,

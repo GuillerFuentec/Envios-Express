@@ -4,6 +4,8 @@ const { calculateQuote } = require("../../lib/server/quote");
 const { requireRecaptcha } = require("../../lib/server/recaptcha");
 const { enforceRateLimit } = require("../../lib/server/rate-limit");
 
+const RECAPTCHA_REQUIRED = process.env.FORCE_QUOTE_RECAPTCHA === "true";
+
 export const config = {
   api: {
     bodyParser: {
@@ -30,7 +32,13 @@ export default async function handler(req, res) {
       identifier: payload?.pickupAddressPlaceId,
     });
 
-    await requireRecaptcha({ token: recaptchaToken, action: "quote" });
+    if (recaptchaToken) {
+      await requireRecaptcha({ token: recaptchaToken, action: "quote" });
+    } else if (RECAPTCHA_REQUIRED) {
+      const err = new Error("Falta el token de reCAPTCHA.");
+      err.status = 400;
+      throw err;
+    }
 
     console.log("[api/quote] Request received", {
       weight: payload.weightLbs,
