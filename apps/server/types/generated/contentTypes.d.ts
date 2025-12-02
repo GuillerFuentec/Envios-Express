@@ -443,6 +443,9 @@ export interface ApiAgencyInfoAgencyInfo extends Struct.CollectionTypeSchema {
   };
   attributes: {
     address: Schema.Attribute.String;
+    ciudades_de_destino_cuba: Schema.Attribute.JSON;
+    config: Schema.Attribute.JSON;
+    contenido_principal: Schema.Attribute.JSON;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -452,8 +455,14 @@ export interface ApiAgencyInfoAgencyInfo extends Struct.CollectionTypeSchema {
       'api::agency-info.agency-info'
     > &
       Schema.Attribute.Private;
+    money_cash_fee: Schema.Attribute.Decimal;
+    name: Schema.Attribute.String;
+    package_price: Schema.Attribute.Decimal;
+    pick_up_price: Schema.Attribute.Decimal;
     place_id: Schema.Attribute.String;
+    Price_lb: Schema.Attribute.Decimal;
     publishedAt: Schema.Attribute.DateTime;
+    stripe_acc_id: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

@@ -7,22 +7,7 @@ const getSecretKey = () =>
   process.env.SECRET_RECAPTCHA_KEY ||
   "";
 
-const shouldBypassRecaptcha = () =>
-  process.env.MOCK_RECAPTCHA === "true" || process.env.LOAD_TEST_MODE === "true";
-
 const verifyRecaptchaToken = async (token) => {
-  if (shouldBypassRecaptcha()) {
-    console.info("[recaptcha] bypass activado (mock)");
-    return {
-      success: true,
-      score: 0.9,
-      action: "mock",
-      challengeTs: new Date().toISOString(),
-      hostname: "mock",
-      errorCodes: [],
-      raw: { bypass: true },
-    };
-  }
 
   const secretKey = getSecretKey();
   if (!secretKey) {

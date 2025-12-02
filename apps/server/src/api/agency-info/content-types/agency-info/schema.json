@@ -10,11 +10,38 @@
     "comment": ""
   },
   "attributes": {
+    "name": {
+      "type": "string"
+    },
     "address": {
+      "type": "string"
+    },
+    "stripe_acc_id": {
       "type": "string"
     },
     "place_id": {
       "type": "string"
+      },
+    "Price_lb": {
+      "type": "decimal"
+    },
+    "pick_up_price": {
+      "type": "decimal"
+    },
+    "money_cash_fee": {
+      "type": "decimal"
+    },
+    "package_price": {
+      "type": "decimal"
+    },
+    "ciudades_de_destino_cuba": {
+      "type": "json"
+    },
+    "contenido_principal": {
+      "type": "json"
+    },
+    "config": {
+      "type": "json"
     }
   }
 }
