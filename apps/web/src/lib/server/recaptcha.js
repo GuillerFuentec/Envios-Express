@@ -7,9 +7,6 @@ const getSecretKey = () =>
   process.env.SECRET_RECAPTCHA_KEY ||
   "";
 
-const { mockFlag } = require("./mock-flags");
-
-const shouldBypassRecaptcha = () => mockFlag("MOCK_RECAPTCHA") || mockFlag("LOAD_TEST_MODE");
 
 const verifyRecaptchaToken = async (token) => {
 

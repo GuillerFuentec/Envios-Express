@@ -39,6 +39,13 @@ const findClientRecord = async ({ sessionId, clientId }) => {
 };
 
 const processTransferJob = async ({ sessionId, clientId }) => {
+  strapi.log.info('[payments] Inicio processTransferJob', {
+    sessionId,
+    clientId,
+    hasSessionId: Boolean(sessionId),
+    hasClientId: Boolean(clientId),
+  });
+
   if (!sessionId) {
     throw buildHttpError(400, 'sessionId es requerido');
   }
@@ -46,6 +53,11 @@ const processTransferJob = async ({ sessionId, clientId }) => {
   // 1. Verificar estado de pago
   const stripeSession = await verificarEstadoTransaccion(sessionId);
   if (!stripeSession || stripeSession.estadoPago !== 'paid') {
+    strapi.log.warn('[payments] Pago no completado para transferencia', {
+      sessionId,
+      estadoPago: stripeSession?.estadoPago,
+      estadoSesion: stripeSession?.estadoSesion,
+    });
     throw buildHttpError(
       400,
       `Pago no completado. Estado: ${stripeSession?.estadoPago || 'desconocido'}`
@@ -58,6 +70,14 @@ const processTransferJob = async ({ sessionId, clientId }) => {
     throw buildHttpError(404, `No se encontró cliente para sessionId: ${sessionId}`);
   }
   const billing = clientRecord.client_info?.billing || {};
+  strapi.log.info('[payments] Cliente recuperado para transferencia', {
+    clientId: clientRecord.id,
+    sessionId,
+    hasBilling: Boolean(clientRecord.client_info?.billing),
+    billingKeys: Object.keys(billing),
+    hasDestination: Boolean(billing.destinationAccount),
+    hasAmount: Boolean(billing.destinationAmountCents),
+  });
 
   // 3. Obtener datos frescos de Stripe
   const stripe = getStripeClient();
@@ -71,9 +91,18 @@ const processTransferJob = async ({ sessionId, clientId }) => {
     strapi.log.warn('[payments] No se pudo recuperar la checkout session para transferencia', {
       sessionId,
       error: err.message,
+      stack: err.stack,
     });
   }
   const pi = liveSession?.payment_intent;
+  strapi.log.info('[payments] Detalles Stripe para transferencia', {
+    sessionId,
+    liveSessionStatus: liveSession?.status,
+    piStatus: pi?.status,
+    piAmountReceived: pi?.amount_received,
+    piDestination: pi?.transfer_data?.destination,
+    billingDestination: billing.destinationAccount,
+  });
 
   const destinationAccount =
     pi?.transfer_data?.destination ||
@@ -100,6 +129,9 @@ const processTransferJob = async ({ sessionId, clientId }) => {
       piHasDestination: !!pi?.transfer_data?.destination,
       piAmountReceived: pi?.amount_received,
       piApplicationFee: pi?.application_fee_amount,
+      amountReceived,
+      billingStripeFee,
+      billingPlatformFee,
     });
   } catch (e) {
     strapi.log.debug('[payments] No se pudo loggear billing', { error: e.message });
@@ -140,6 +172,16 @@ const processTransferJob = async ({ sessionId, clientId }) => {
   }
 
   // 4. Crear transferencia
+  strapi.log.info('[payments] Creando transferencia', {
+    sessionId,
+    clientId: clientRecord.id,
+    destinationAccount,
+    destinationAmountCents,
+    currency: stripeSession.moneda,
+    sourceTransaction,
+    stripeFeeCents: billingStripeFee,
+    platformFeeCents: billingPlatformFee,
+  });
   const transfer = await createTransfer({
     destinationAccount,
     amountCents: destinationAmountCents,
@@ -190,6 +232,8 @@ const respondWithError = (ctx, error) => {
     error: error.message,
     code: error.code,
     type: error.type,
+    stack: error.stack,
+    rawBodyKeys: Object.keys(ctx.request.body || {}),
   });
 
   if (error.status) {
@@ -214,6 +258,18 @@ module.exports = {
    * Body: { sessionId: 'cs_test_...', clientId?: 123 }
    */
   async processTransfer(ctx) {
+    const body = ctx.request.body || {};
+    const { sessionId, clientId } = body;
+    strapi.log.info('[payments] processTransfer request', {
+      sessionId,
+      clientId,
+      bodyKeys: Object.keys(body),
+      path: ctx.request.url,
+      hasAuthHeader: Boolean(ctx.request.header?.authorization),
+    });
+    if (!sessionId) {
+      return ctx.badRequest('sessionId es requerido');
+    }
     try {
       const result = await processTransferJob({ sessionId, clientId });
       ctx.body = {

@@ -5,7 +5,6 @@ const { getStripeClient } = require("../../../lib/server/stripe");
 const { requireRecaptcha } = require("../../../lib/server/recaptcha");
 const { enforceRateLimit } = require("../../../lib/server/rate-limit");
 const { makeLogger } = require("../../../lib/server/logger");
-const { mockFlag } = require("../../../lib/server/mock-flags");
 
 const toBool = (value) => {
   if (typeof value !== "string") return false;
@@ -124,8 +123,6 @@ const pickReceiptEmail = (contact = {}, payload = {}) => {
   return "";
 };
 
-const isStripeMock = () => false;
-
 export const config = {
   api: {
     bodyParser: {
@@ -135,7 +132,6 @@ export const config = {
 };
 
 const handler = async (req, res) => {
-export default async function handler(req, res) {
   const startedAt = Date.now();
   const logger = makeLogger("api/payments/checkout");
   logger.info("inicio checkout", { path: req.url });
@@ -214,52 +210,6 @@ export default async function handler(req, res) {
       0,
       amountTotalCents - stripeFeeCents - platformFeeCents
     );
-
-    const session = await stripe.checkout.sessions.create({
-        mode: "payment",
-        payment_method_types: ["card"],
-        line_items: lineItems,
-        customer_email: receiptEmail,
-        payment_intent_data: {
-            receipt_email: receiptEmail,
-            // No usamos transfer_data para que el cobro quede en la cuenta de plataforma
-            // y luego se transfiera manualmente al conectado.
-            application_fee_amount: undefined,
-            transfer_data: undefined,
-            metadata: {
-              platform_fee_amount: platformFeeCents,
-              destination_account: destinationAccount,
-              contact_name: normalizedContact.name || "",
-              contact_phone: normalizedContact.phone || "",
-              contact_email: receiptEmail,
-              sms_consent: contact.smsConsent ? "true" : "false",
-              city_cuba: quotePayload.cityCuba || "",
-              content_type: quotePayload.contentType || "",
-              cash_amount: quotePayload.cashAmount || "",
-              pickup: quotePayload.pickup ? "true" : "false",
-              delivery_date: quotePayload.deliveryDate || "",
-              weight_lbs: quotePayload.weightLbs || "",
-              // el ID de sesión se inyecta en el webhook desde el evento de checkout.session.completed
-            },
-          },
-          success_url: buildSuccessUrl(origin),
-          cancel_url: buildCancelUrl(origin),
-          metadata: {
-            payment_origin: "web-funnel",
-            contact_name: normalizedContact.name || "",
-            contact_phone: normalizedContact.phone || "",
-            contact_email: receiptEmail,
-            sms_consent: contact.smsConsent ? "true" : "false",
-            city_cuba: quotePayload.cityCuba || "",
-            content_type: quotePayload.contentType || "",
-            cash_amount: quotePayload.cashAmount || "",
-            pickup: quotePayload.pickup ? "true" : "false",
-            delivery_date: quotePayload.deliveryDate || "",
-            weight_lbs: quotePayload.weightLbs || "",
-            platform_fee_amount: platformFeeCents,
-            destination_account: destinationAccount,
-          },
-        });
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],

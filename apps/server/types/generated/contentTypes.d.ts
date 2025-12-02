@@ -445,9 +445,6 @@ export interface ApiAgencyInfoAgencyInfo extends Struct.CollectionTypeSchema {
     ciudades_de_destino_cuba: Schema.Attribute.JSON;
     config: Schema.Attribute.JSON;
     contenido_principal: Schema.Attribute.JSON;
-    ciudades_de_destino_cuba: Schema.Attribute.JSON;
-    config: Schema.Attribute.JSON;
-    contenido_principal: Schema.Attribute.JSON;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

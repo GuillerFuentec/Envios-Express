@@ -30,6 +30,7 @@ async function verificarEstadoTransaccion(sessionId) {
   const stripe = getStripeClient();
 
   try {
+    strapi.log.info('[stripe] Verificando estado de transaccion', { sessionId });
     if (!stripe) throw new Error("Stripe no configurado (faltan env vars).");
     // Recupera la sesión de Checkout con detalles del PaymentIntent
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
@@ -83,7 +84,13 @@ async function verificarEstadoTransaccion(sessionId) {
       fechaCreacion: new Date(session.created * 1000).toISOString(),
     };
   } catch (error) {
-    strapi.log.error(`Stripe no configurado: ${error.message}`);
+    strapi.log.error('[stripe] Error verificando transaccion', {
+      sessionId,
+      message: error.message,
+      stack: error.stack,
+      type: error.type,
+      code: error.code,
+    });
   }
 }
 

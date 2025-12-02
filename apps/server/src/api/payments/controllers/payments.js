@@ -1,7 +1,6 @@
 'use strict';
 
 const { getStripeClient, toMinorUnit } = require('../../../utils/stripe');
-const { mockFlag } = require('../../../utils/mock-flags');
 
 const sanitizeMetadata = (metadata = {}) => {
   if (!metadata || typeof metadata !== 'object') {

@@ -215,6 +215,12 @@ export default async function handler(req, res) {
 
     // Procesar transferencia automática si está configurado
     try {
+      console.log("[api/orders/confirm] Iniciando transferencia automatica", {
+        sessionId,
+        orderId,
+        destinationAccount,
+        destinationAmountCents,
+      });
       const transferResponse = await fetch(`${normalizeBaseUrl(process.env.STRAPI_WEB_API_URL || process.env.STRAPI_API_URL || process.env.AGENCY_API_URL)}/api/payments/process-transfer`, {
         method: "POST",
         headers: {
@@ -227,11 +233,20 @@ export default async function handler(req, res) {
       });
 
       if (transferResponse.ok) {
-        console.log(`[api/orders/confirm] Transferencia procesada para orden ${orderId}`);
+        const transferBody = await transferResponse.text().catch(() => "");
+        console.log(`[api/orders/confirm] Transferencia procesada para orden ${orderId}`, {
+          status: transferResponse.status,
+          body: transferBody,
+        });
       } else {
         // No es crítico si falla - se puede reintentar manualmente
-        console.warn(`[api/orders/confirm] Falló transferencia automática para orden ${orderId}:`, 
-          await transferResponse.text().catch(() => 'unknown error'));
+        const transferErrorText = await transferResponse.text().catch(() => "unknown error");
+        console.warn(`[api/orders/confirm] Falló transferencia automática para orden ${orderId}:`, {
+          status: transferResponse.status,
+          statusText: transferResponse.statusText,
+          body: transferErrorText,
+          sessionId,
+        });
       }
     } catch (transferError) {
       // Log pero no fallar la confirmación de orden

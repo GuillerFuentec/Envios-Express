@@ -168,7 +168,7 @@ const buildClientInfoFromSession = (session) => {
 const buildClientInfoFromIntent = (intent) => {
   const md = intent.metadata || {};
   const email = intent.receipt_email || md.contact_email || "";
-  const sessionId = md.checkout_session_id || intent.id;
+  const sessionId = md.checkout_session_id || md.session_id || "";
   const platformFeeCents = md.platform_fee_amount ? Number(md.platform_fee_amount) : undefined;
   const amountTotalCents =
     typeof intent.amount_received === "number" ? intent.amount_received : undefined;

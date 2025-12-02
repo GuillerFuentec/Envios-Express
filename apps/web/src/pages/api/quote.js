@@ -33,7 +33,11 @@ export default async function handler(req, res) {
       identifier: payload?.pickupAddressPlaceId,
     });
 
-    await requireRecaptcha({ token: recaptchaToken, action: "quote" });
+    if (recaptchaToken) {
+      await requireRecaptcha({ token: recaptchaToken, action: "quote" });
+    } else {
+      logger.info("recaptcha omitido para quote", { reason: "token faltante" });
+    }
 
     logger.info("request", {
       weight: payload.weightLbs,

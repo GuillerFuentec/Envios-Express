@@ -6,13 +6,15 @@ const { sendNotificationEmail, sendReceiptEmail } = require("../../../../utils/r
 const { sendClientThankYouSms } = require("../../../../utils/notification-api");
 const { normalizePhoneNumber } = require("../../../../utils/phone");
 
-const escapeHtml = (value = "") =>
-  value
+const escapeHtml = (value = "") => {
+  const safe = value === null || value === undefined ? "" : String(value);
+  return safe
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+};
 
 const formatCurrency = (amount, currency = "USD") => {
   if (typeof amount !== "number" || Number.isNaN(amount)) {
@@ -90,12 +92,14 @@ module.exports = {
     const id = result?.id ?? "desconocido";
     const sessionId = payload.sessionId ?? "";
     let stripeSession = null;
-    if (sessionId) {
+    if (sessionId && sessionId.startsWith("cs_")) {
       try {
         stripeSession = await verificarEstadoTransaccion(sessionId);
       } catch (err) {
         strapi.log.warn('[client-lifecycle] No se pudo verificar la sesion Stripe', { sessionId, error: err.message });
       }
+    } else if (sessionId) {
+      strapi.log.warn('[client-lifecycle] sessionId no parece checkout session, se omite verificacion', { sessionId });
     }
     const contact = payload.contact || {};
     const shipment = payload.shipment || {};
