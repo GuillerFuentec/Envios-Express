@@ -12,18 +12,6 @@ const { mockFlag } = require("./mock-flags");
 const shouldBypassRecaptcha = () => mockFlag("MOCK_RECAPTCHA") || mockFlag("LOAD_TEST_MODE");
 
 const verifyRecaptchaToken = async (token) => {
-  if (shouldBypassRecaptcha()) {
-    console.info("[recaptcha] bypass activado (mock)");
-    return {
-      success: true,
-      score: 0.9,
-      action: "mock",
-      challengeTs: new Date().toISOString(),
-      hostname: "mock",
-      errorCodes: [],
-      raw: { bypass: true },
-    };
-  }
 
   const secretKey = getSecretKey();
   if (!secretKey) {

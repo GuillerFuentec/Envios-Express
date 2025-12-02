@@ -11,25 +11,28 @@
   },
   "pluginOptions": {},
   "attributes": {
+    "name": {
+      "type": "string"
+    },
     "address": {
+      "type": "string"
+    },
+    "stripe_acc_id": {
       "type": "string"
     },
     "place_id": {
       "type": "string"
-    },
-    "stripe_acc_id": {
-      "type": "string",
-      "required": false
-    },
-    "name": {
-      "type": "string",
-      "default": "agency llc",
-      "required": true
-    },
-    "config": {
-      "type": "json"
-    },
+      },
     "Price_lb": {
+      "type": "decimal"
+    },
+    "pick_up_price": {
+      "type": "decimal"
+    },
+    "money_cash_fee": {
+      "type": "decimal"
+    },
+    "package_price": {
       "type": "decimal"
     },
     "ciudades_de_destino_cuba": {
@@ -38,11 +41,8 @@
     "contenido_principal": {
       "type": "json"
     },
-    "stripe_processing_percent": {
-      "type": "decimal"
-    },
-    "stripe_processing_fixed": {
-      "type": "decimal"
+    "config": {
+      "type": "json"
     }
   }
 }

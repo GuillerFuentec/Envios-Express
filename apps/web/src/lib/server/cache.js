@@ -1,6 +1,6 @@
 "use strict";
 
-// Small cache helper with optional Redis backend and memory fallback.
+// Small cache helper with optional Redis backend and in-memory fallback.
 
 let redisClient;
 let redisStatus = "unknown";
@@ -17,22 +17,30 @@ const connectRedis = () => {
     redisStatus = "disabled";
     return null;
   }
+
   try {
+    // Lazy load to avoid breaking if dependency is missing at runtime.
     // eslint-disable-next-line import/no-extraneous-dependencies
     const Redis = require("ioredis");
-    redisClient = new Redis(url, { maxRetriesPerRequest: 2, enableReadyCheck: true });
+    redisClient = new Redis(url, {
+      maxRetriesPerRequest: 2,
+      enableReadyCheck: true,
+      lazyConnect: false,
+    });
     redisStatus = "ready";
     redisClient.on("error", (err) => {
       redisStatus = "error";
-      getLogger().warn("[cache] Redis error, fallback to memory", { error: err.message });
+      getLogger().warn("[cache] Redis error, falling back to memory", { error: err.message });
     });
     redisClient.on("end", () => {
       redisStatus = "ended";
-      getLogger().warn("[cache] Redis connection ended, using memory cache");
+      getLogger().warn("[cache] Redis connection ended, using memory fallback");
     });
   } catch (error) {
     redisStatus = "error";
-    getLogger().warn("[cache] Redis client not available, using memory", { error: error.message });
+    getLogger().warn("[cache] Redis client not available, using in-memory cache", {
+      error: error.message,
+    });
     redisClient = null;
   }
   return redisClient;
@@ -67,19 +75,14 @@ const getCache = async (key) => {
   return entry.value;
 };
 
-const setCache = async (key, value, ttlMs = 60_000) => {
+const setCache = async (key, value, ttlMs = 60000) => {
   const redis = connectRedis();
   const payload = JSON.stringify(value);
   if (redis) {
-    if (ttlMs && ttlMs > 0) {
-      await redis.set(key, payload, "PX", ttlMs);
-    } else {
-      await redis.set(key, payload);
-    }
+    await redis.set(key, payload, "PX", ttlMs);
     return;
   }
-  const expiresAt = ttlMs && ttlMs > 0 ? Date.now() + ttlMs : null;
-  memoryStore.set(key, { value, expiresAt });
+  memoryStore.set(key, { value, expiresAt: Date.now() + ttlMs });
 };
 
 const deleteCache = async (key) => {
@@ -101,6 +104,7 @@ const incrementWithTtl = async (key, ttlMs) => {
       .exec();
     return count?.[1] || 0;
   }
+
   cleanupMemory();
   const existing = memoryStore.get(key);
   const now = Date.now();

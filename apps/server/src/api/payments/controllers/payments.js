@@ -43,11 +43,6 @@ const pickReceiptEmail = (payload = {}) => {
 
 module.exports = {
   async createIntent(ctx) {
-    if (mockFlag('PAYMENTS_MOCK_MODE') && !mockFlag('FORCE_REAL_PAYMENTS')) {
-      ctx.body = { clientSecret: `pi_mock_${Date.now()}_secret_mock` };
-      return;
-    }
-
     const stripe = getStripeClient();
     if (!stripe) {
       ctx.throw(503, 'Stripe no esta configurado.');
